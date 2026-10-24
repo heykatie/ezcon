@@ -93,6 +93,6 @@ Cached/labeled, not live:
 
 Open items:
 - Live Universe catalog through Bright Data MCP returns only the catalog shell (6 attempts, including the All Sessions tab URL); per-session detail pages or a wait-for-element step are untested next options.
-- Vercel deployment blocked: the Vercel connector is not signed in and the CLI is not installed/logged in.
+- Vercel: cached demo deployed to production at https://ezcon-six.vercel.app (static `dist/` only, deployed with the Vercel CLI as heykatie; verified signed out: HTTP 200, cached/fictional labels, hiring connections and employer apply links render, no API calls). Redeploy with `npm run build` then `npx vercel@latest deploy --prod` from `dist/`. With real time after Oct 28 sessions read as past; use the Demo clock in the companion menu.
 - Qodo has not yet reviewed the application commits (head fac2080).
 - Bright Data balance was not rechecked in the dashboard (page did not render in the agent browser); usage was 2 Web Unlocker scrapes and 6 rendered-browser captures.
