@@ -1,6 +1,6 @@
 # ezcon screen and interaction plan
 
-Status: layout direction approved; detailed wireframes and demo dataset remain reviewable proposals. This is a screen contract, not implemented UI.
+Status: the first-build screens and core interactions are implemented in `src/web/`; this document records the approved product contract and deferred coverage, not a claim that every listed behavior is complete. Verify against the code and `BUILD_HANDOFF.md` before extending scope.
 
 ## Entry and navigation
 
