@@ -16,7 +16,9 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const schedule = () => JSON.parse(localStorage.getItem('ezcon:v1:profile/profile:demo/state') ?? '{}').schedule?.map((s: { title: string }) => s.title) ?? [];
+const stored = () => JSON.parse(localStorage.getItem('ezcon:v1:profile/profile:demo/state') ?? '{}');
+// Universe plan only; the demo also carries a finished WAD day as history.
+const schedule = () => (stored().schedule ?? []).filter((s: { eventId: string }) => s.eventId.startsWith('universe26:')).map((s: { title: string }) => s.title);
 
 async function startDemo() {
   const user = userEvent.setup();
@@ -111,6 +113,29 @@ describe('ezcon core flow', () => {
     expect(screen.getByRole('heading', { name: 'Next up' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Your day' })).toBeTruthy();
     expect(screen.getByText(/Get ready:/)).toBeTruthy();
+  });
+
+  it('shows the past WAD conference as a finished day with outcomes, not a plan', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Schedule/ }));
+    expect(screen.getByText('What I did at this event')).toBeTruthy();
+    expect(screen.getAllByText('Past event · replay').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Making “Works on All Machines”/)).toBeTruthy();
+    expect(screen.getByText('✓ Went')).toBeTruthy();
+    expect(screen.getByText('Skipped')).toBeTruthy();
+    expect(await screen.findByText('Met Michael Irwin')).toBeTruthy();
+    expect(within(screen.getByRole('main')).queryByText(/Build once|Fort Mason/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Remove' })).toBeNull();
+  });
+
+  it('puts conference search at the top of Explore and filters as you type', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const search = screen.getByRole('searchbox', { name: 'Search conferences & events' });
+    await user.type(search, 'kube');
+    expect(screen.getByText('1 verified upcoming event')).toBeTruthy();
+    expect(screen.getByText('KubeCon + CloudNativeCon North America 2026')).toBeTruthy();
   });
 
   it('labels future features as previews, not working features', async () => {

@@ -188,3 +188,4 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .big { font-size: 1.15rem; font-weight: 800; }
 .main { max-width: 720px; }
 .btn { white-space: nowrap; }
+.search input { min-height: 52px; border-radius: 999px; padding: 0 20px 0 48px; font-size: 1rem; }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { GraphPath } from '../domain/graph-types';
+import { Icon, type IconName } from './Icon';
 import type { SourceRef } from '../domain/types';
 
 const TZ = 'America/Los_Angeles';
@@ -77,7 +78,7 @@ export function SourceLine({ source, label = 'Source' }: { source: SourceRef; la
   );
 }
 
-const KIND_ICON: Record<string, string> = { Profile: '🙂', Topic: '🏷️', Session: '🎤', Person: '👤', Company: '🏢', Role: '💼' };
+const KIND_ICON: Record<string, IconName> = { Profile: 'user', Topic: 'tag', Session: 'mic', Person: 'user', Company: 'building', Role: 'briefcase' };
 
 /** Renders a path exactly as the graph store returned it: nodes in order, each edge with its evidence. */
 export function PathView({ path }: { path: GraphPath }) {
@@ -90,7 +91,7 @@ export function PathView({ path }: { path: GraphPath }) {
         return (
           <li key={`${n.id}-${i}`} style={{ listStyle: 'none' }}>
             <div className="path-node">
-              <span aria-hidden="true">{KIND_ICON[n.label]}</span>
+              <Icon name={KIND_ICON[n.label] ?? 'tag'} size={18} />
               <span className="kind">{n.label}</span>
               <span>{n.name}</span>
             </div>

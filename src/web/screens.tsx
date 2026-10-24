@@ -12,6 +12,7 @@ import { personId } from '../domain/ids';
 import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, WAD_RUN, type CompanionKind, type DemoProfile } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
+import { Icon, type IconName } from './Icon';
 import { searchEvents } from '../domain/events';
 import { UPCOMING_EVENTS } from '../data/events';
 import { compareTravel, TravelOptions } from './TravelOptions';
@@ -30,6 +31,8 @@ export interface PState {
   travelChoice?: string;
   accessoryOn: boolean;
   visited: string[];
+  /** Demo history has been written to the graph once. */
+  seeded?: boolean;
 }
 
 export interface Ctx {
@@ -71,8 +74,8 @@ export function Today(ctx: Ctx) {
   const prep = next ? prepFor(next, ctx) : undefined;
   const prepDone = next ? !!ps.prepDone[next.eventId] : false;
   const steps: Array<[string, boolean]> = [
-    ['Opportunity', ps.schedule.length > 0],
-    ['Scheduled', ps.schedule.length > 0],
+    ['Opportunity', upcoming.length > 0],
+    ['Scheduled', upcoming.length > 0],
     ['Prepared', Object.values(ps.prepDone).some(Boolean)],
     ['Commute', !!ps.travelChoice],
   ];
@@ -181,11 +184,11 @@ export function Today(ctx: Ctx) {
 }
 
 export function ComingNext() {
-  const items = [
-    ['🗺️', 'Booth routing', 'Walk between booths and talks on a verified venue map.'],
-    ['🎟️', 'Raffles', 'Sourced raffles with entry rules and draw times.'],
-    ['🎈', 'Side quests', 'Optional parties, meetups and goodies, same budget checks.'],
-    ['🛂', 'Passport rewards', 'Stamps and a companion accessory for following through.'],
+  const items: Array<[IconName, string, string]> = [
+    ['map', 'Booth routing', 'Walk between booths and talks on a verified venue map.'],
+    ['ticket', 'Raffles', 'Sourced raffles with entry rules and draw times.'],
+    ['flag', 'Side quests', 'Optional parties, meetups and goodies, same budget checks.'],
+    ['badge', 'Passport rewards', 'Stamps and a companion accessory for following through.'],
   ];
   return (
     <section className="stack" aria-labelledby="next-concepts-h">
@@ -196,8 +199,8 @@ export function ComingNext() {
       <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
         {items.map(([icon, title, text]) => (
           <li key={title} className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
-            <span aria-hidden="true" style={{ fontSize: 22 }}>
-              {icon}
+            <span className="muted" style={{ paddingTop: 2 }}>
+              <Icon name={icon} />
             </span>
             <span className="small">
               <b>{title}</b> <span className="badge">Preview</span>
@@ -282,8 +285,11 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
         {session.sessionType ?? 'Session'} · {fmtRange(session.start, session.end)} · {session.location ?? 'Location not listed'}
       </p>
       {reasons?.map((r) => (
-        <p key={r} className="small">
-          ✨ {r}
+        <p key={r} className="small row" style={{ flexWrap: 'nowrap', alignItems: 'flex-start', gap: 6 }}>
+          <span style={{ color: 'var(--accent)' }}>
+            <Icon name="spark" size={16} />
+          </span>
+          {r}
         </p>
       ))}
       <div className="row">
@@ -321,6 +327,7 @@ export function Explore(ctx: Ctx) {
         <h1>Explore</h1>
         <p className="muted">What could I do?</p>
       </header>
+      <EventSearch now={ctx.now} />
       <div className="row" role="group" aria-label="Goals (optional, choose any)">
         {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
           <button key={g} className="chip" aria-pressed={ctx.ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
@@ -347,7 +354,6 @@ export function Explore(ctx: Ctx) {
       <section className="card soft" aria-label="Side quests">
         <ComingNext />
       </section>
-      <EventSearch now={ctx.now} />
       <ResearchPanel ctx={ctx} />
     </div>
   );
@@ -358,26 +364,30 @@ function EventSearch({ now }: { now: string }) {
   const results = searchEvents(UPCOMING_EVENTS, q, now);
   const day = (d: string) => fmtDay(`${d}T12:00:00-08:00`);
   return (
-    <section className="card stack" aria-labelledby="search-h">
-      <h2 id="search-h">Search conferences &amp; events</h2>
-      <label className="field">
-        <span className="small">Name or city</span>
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. San Francisco, KubeCon" />
+    <section className="stack" aria-label="Search conferences and events" style={{ gap: 8 }}>
+      <label className="field search" style={{ position: 'relative' }}>
+        <span className="muted" style={{ position: 'absolute', left: 18, top: 16, pointerEvents: 'none' }}>
+          <Icon name="search" />
+        </span>
+        <span className="sr-only">Search conferences &amp; events</span>
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search events or cities" />
       </label>
       <p className="tiny muted" role="status" aria-live="polite">
         {results.length} verified upcoming {results.length === 1 ? 'event' : 'events'}
       </p>
-      <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+      <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
         {results.map((e) => (
-          <li key={e.id} className="card soft stack" style={{ gap: 4 }}>
+          <li key={e.id} className="card soft" style={{ padding: '10px 12px' }}>
             <div className="between">
-              <b>{e.name}</b>
+              <b className="small">{e.name}</b>
               <span className={`badge ${e.supported ? 'good' : ''}`}>{e.supported ? 'Planning available' : 'Listing only'}</span>
             </div>
-            <span className="small muted">
-              {day(e.startDate)}–{day(e.endDate)} · {e.location}
+            <span className="tiny muted">
+              {day(e.startDate)}–{day(e.endDate)} · {e.location} ·{' '}
+              <a href={e.source.url} target="_blank" rel="noopener noreferrer">
+                source
+              </a>
             </span>
-            <SourceLine source={e.source} />
           </li>
         ))}
       </ul>
@@ -468,10 +478,12 @@ interface Leg {
 
 export function Schedule(ctx: Ctx) {
   const { ps, now } = ctx;
-  const days = [...new Set(ps.schedule.map((s) => localOf(s.start).slice(0, 10)))].sort();
+  const mine = ps.schedule.filter((s) => s.eventId.startsWith(`${ctx.conference}:`));
+  const past = CONFERENCES[ctx.conference].mode === 'past';
+  const days = [...new Set(mine.map((s) => localOf(s.start).slice(0, 10)))].sort();
   const [day, setDay] = useState<string | undefined>(days[0]);
   const activeDay = day && days.includes(day) ? day : days[0];
-  const items = ps.schedule.filter((s) => localOf(s.start).slice(0, 10) === activeDay);
+  const items = mine.filter((s) => localOf(s.start).slice(0, 10) === activeDay);
   const universe = ctx.conference === 'universe26';
 
   const travel = useMemo(() => (universe ? compareTravel(items, ps.profile.budgetCents) : undefined), [items, universe, ps.profile.budgetCents]);
@@ -499,12 +511,14 @@ export function Schedule(ctx: Ctx) {
     legs.push({ at: last.end, kind: 'travel', title: 'Head home', detail: `${chosen.returnMinutes[0]}–${chosen.returnMinutes[1]} min (estimate)${chosen.lastReturnDeparture ? ` · last listed train ${fmtTime(new Date(chosen.lastReturnDeparture + ':00-07:00').toISOString())}` : ''}` });
   }
 
+  if (items.length && !chosen) items.forEach((it) => legs.push({ at: it.start, kind: 'event', title: it.title, detail: `${fmtTime(it.start)}–${fmtTime(it.end)} · ${it.location ?? ''}`, item: it }));
+
   return (
     <div className="stack">
-      <div className="between">
+      <div className="stack" style={{ gap: 10 }}>
         <header className="page-head">
           <h1>Schedule</h1>
-          <p className="muted">What have I committed to?</p>
+          <p className="muted">{past ? 'What I did at this event' : 'What have I committed to?'}</p>
         </header>
         {days.length > 1 && (
           <div className="segmented" role="tablist" aria-label="Day">
@@ -527,12 +541,19 @@ export function Schedule(ctx: Ctx) {
       {items.length > 0 && (
         <section className="card" aria-labelledby="tl-h">
           <div className="between">
-            <h2 id="tl-h">{activeDay && fmtDay(activeDay + 'T12:00:00-07:00')} at a glance</h2>
+            <h2 id="tl-h">
+              {activeDay && fmtDay(activeDay + 'T12:00:00-07:00')} {past ? '' : 'at a glance'}
+              {past && (
+                <span className="badge" style={{ marginLeft: 8 }}>
+                  Past event · replay
+                </span>
+              )}
+            </h2>
             {chosenEval && <span className={`badge ${chosenEval.status === 'within-budget' ? 'good' : chosenEval.status === 'unconfirmed' ? 'warn' : 'bad'}`}>{chosenEval.totalCents !== null ? `${money(chosenEval.totalCents)} travel` : `≥ ${money(chosenEval.knownCents)} travel`}</span>}
           </div>
           <ol className="timeline" style={{ padding: 0 }}>
             {legs.map((l, i) => (
-              <li key={i} className={`tl-item tl-kind-${l.kind}`} style={{ listStyle: 'none' }}>
+              <li key={i} className={`tl-item tl-kind-${l.kind}`} style={{ listStyle: 'none', opacity: l.item && ctx.ps.checkins[l.item.eventId] === 'skipped' ? 0.6 : 1 }}>
                 <span className="tl-time">{fmtTime(l.at)}</span>
                 <div className="tl-body stack" style={{ gap: 4 }}>
                   <span style={{ fontWeight: l.kind === 'event' ? 800 : 600 }}>{l.title}</span>
@@ -550,7 +571,7 @@ export function Schedule(ctx: Ctx) {
           <TravelOptions travel={travel} chosenId={chosenId} onChoose={(id) => ctx.update((p) => ({ ...p, travelChoice: id }))} origin={ps.profile.origin} budgetCents={ps.profile.budgetCents} />
         </section>
       )}
-      {!universe && items.length > 0 && <p className="notice">Getting-there research is only modeled for GitHub Universe in this demo.</p>}
+      {past && items.length > 0 && <p className="tiny muted">Fictional demo history from a finished conference. Sessions are real listings; attendance and the meeting are made up for the demo, and nothing sends reminders.</p>}
       <p className="tiny muted">Clock: {fmtStamp(now)}</p>
     </div>
   );
@@ -603,12 +624,14 @@ function EventActions({ ctx, item }: { ctx: Ctx; item: ScheduleItem }) {
         </div>
       )}
       <div className="row">
-        {ended && (!ci || ci === 'later') ? (
+        {ended && ci === 'met' && ctx.meetings.some((m) => m.eventId === item.eventId) ? (
+          <span className="badge good">Met {ctx.meetings.filter((m) => m.eventId === item.eventId).map((m) => m.personName).join(', ')}</span>
+        ) : ended && (!ci || ci === 'later') ? (
           <button className="btn primary small" onClick={() => ctx.openCheckIn(item)}>
             How did it go?
           </button>
         ) : ci ? (
-          <span className="badge good">{{ met: 'Met someone', went: 'Went', skipped: 'Skipped', later: 'Later' }[ci]}</span>
+          <span className={`badge ${ci === 'skipped' ? '' : 'good'}`}>{{ met: 'Met someone', went: '✓ Went', skipped: 'Skipped', later: 'Later' }[ci]}</span>
         ) : null}
         {!ended && (
           <button className="btn ghost small" onClick={() => ctx.remove(item.eventId)}>

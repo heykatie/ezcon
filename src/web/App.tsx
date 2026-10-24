@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Candidate, GraphPath, Meeting } from '../domain/graph-types';
 import type { ConferenceId, Goal, SessionRecord } from '../domain/types';
-import { rankRecommendations, toScheduleItem } from '../domain/recommend';
+import { rankRecommendations } from '../domain/recommend';
 import { hiringConnections } from '../domain/careers';
 import { addItem, defaultBuffer, removeItem, resolveConflict, type Conflict, type ScheduleItem } from '../domain/schedule';
 import { award, emptyRewards, type RewardState } from '../domain/rewards';
-import { BLANK_PROFILE, CONFERENCES, DEMO_CLOCKS, DEMO_PROFILE, ROLES, SESSIONS, SIDE_QUESTS, type DemoProfile } from '../data/demo';
+import { BLANK_PROFILE, CONFERENCES, DEMO_CLOCKS, DEMO_PAST, DEMO_PROFILE, ROLES, SESSIONS, SIDE_QUESTS, type DemoProfile } from '../data/demo';
+import { personId } from '../domain/ids';
 import { connectBackend, type Backend } from './backend';
 import { clearAll, load, profileKey, save } from './store';
 import { Companion } from './Companion';
-import { checkinAfterUndo } from './checkins';
+import { checkinAfterUndo, meetingIdFor } from './checkins';
+import { Icon, type IconName } from './Icon';
+import { toScheduleItem } from '../domain/recommend';
 import { Sheet, Toast } from './ui';
 import {
   CheckInSheet, ComingNext, ConflictSheet, Explore, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
@@ -26,11 +29,20 @@ type SheetState =
   | { kind: 'qr' | 'profile' | 'menu' | 'levelup' }
   | null;
 
+// The demo profile starts with a fictional, already-finished day at WAD 2026 so the past
+// event reads as history: attended talks, one skipped, one remembered meeting.
+const demoHistory = () => {
+  const wad = SESSIONS.wad26na;
+  const schedule = DEMO_PAST.map((p) => wad.find((s) => s.id === p.eventId)).filter((s) => !!s).map(toScheduleItem);
+  const checkins = Object.fromEntries(DEMO_PAST.map((p) => [p.eventId, p.checkin]));
+  return { schedule, checkins };
+};
+
 const fresh = (profile: DemoProfile): PState => ({
   profile,
-  schedule: [],
+  ...(profile.id === DEMO_PROFILE.id ? demoHistory() : { schedule: [], checkins: {} }),
+  seeded: profile.id !== DEMO_PROFILE.id,
   rewards: emptyRewards(),
-  checkins: {},
   prepDone: {},
   notes: {},
   followups: {},
@@ -38,12 +50,6 @@ const fresh = (profile: DemoProfile): PState => ({
   visited: [],
 });
 
-const hash = (s: string) => {
-  let h = 5381;
-  for (const c of s) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0;
-  return h.toString(36);
-};
-const meetingIdFor = (eventId: string, personId: string) => `m-${hash(`${eventId}|${personId}`)}`;
 
 /** Stamps are derived from confirmed actions, so duplicates are impossible and undo reverses them. */
 function deriveRewards(ps: PState, meetings: Meeting[], sessions: Record<string, string>): RewardState {
@@ -109,6 +115,14 @@ export function App() {
     (async () => {
       try {
         await backend.upsertProfile({ id: ps.profile.id, interests: ps.profile.interests, fictional: ps.profile.fictional, name: ps.profile.fictional ? `${ps.profile.name} (fictional demo)` : 'My profile' });
+        if (!ps.seeded) {
+          // One-time: store the demo's fictional past meeting in the graph, then never re-create it.
+          for (const p of DEMO_PAST.filter((x) => x.met)) {
+            const pid = personId(p.met!.name, p.met!.company);
+            await backend.recordMeeting(ps.profile.id, { meetingId: meetingIdFor(p.eventId, pid), personId: pid, eventId: p.eventId, at: SESSIONS.wad26na.find((s) => s.id === p.eventId)!.end, fictional: true, note: p.met!.note });
+          }
+          update((x) => ({ ...x, seeded: true }));
+        }
         const [c, h, m] = await Promise.all([backend.candidates(ps.profile.id, conference), backend.hiringPaths(conference), backend.meetings(ps.profile.id)]);
         if (!cancelled) (setCandidates(c), setHiringPaths(h), setMeetings(m), setError(undefined));
       } catch (e) {
@@ -252,11 +266,11 @@ export function App() {
   };
 
   const conf = CONFERENCES[conference];
-  const tabs: Array<[Tab, string, string]> = [
-    ['today', 'Today', '🏠'],
-    ['discover', 'Explore', '🧭'],
-    ['schedule', 'Schedule', '🗓️'],
-    ['people', 'People', '👥'],
+  const tabs: Array<[Tab, string, IconName]> = [
+    ['today', 'Today', 'home'],
+    ['discover', 'Explore', 'compass'],
+    ['schedule', 'Schedule', 'calendar'],
+    ['people', 'People', 'people'],
   ];
 
   return (
@@ -308,9 +322,7 @@ export function App() {
       <nav className="tabs" aria-label="Main">
         {tabs.map(([t, label, ico]) => (
           <button key={t} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)}>
-            <span className="ico" aria-hidden="true">
-              {ico}
-            </span>
+            <Icon name={ico} size={22} />
             {label}
           </button>
         ))}

@@ -191,6 +191,14 @@ export const UNIVERSE_TRAVEL: TravelOption[] = [
   },
 ];
 
+/** Fictional finished day at WAD NA 2026 for the demo profile (real session listings). */
+export const DEMO_PAST: Array<{ eventId: string; checkin: 'went' | 'met' | 'skipped'; met?: { name: string; company: string; note: string } }> = [
+  { eventId: 'wad26na:1917', checkin: 'met', met: { name: 'Michael Irwin', company: 'Docker', note: 'reproducible agent sandboxes with Docker' } },
+  { eventId: 'wad26na:1919', checkin: 'went' },
+  { eventId: 'wad26na:1921', checkin: 'skipped' },
+  { eventId: 'wad26na:1870', checkin: 'went' },
+];
+
 export const DEMO_CLOCKS = [
   { id: 'real', label: 'Real time', now: undefined as string | undefined },
   { id: 'wed-0800', label: 'Wed Oct 28, 8:00 AM (simulated)', now: '2026-10-28T08:00:00-07:00' },
