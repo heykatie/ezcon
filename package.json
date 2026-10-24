@@ -8,10 +8,11 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:graph": "node --env-file=.env --import tsx node_modules/vitest/vitest.mjs run tests/graph-falkor.test.ts",
+    "test:graph": "EZCON_GRAPH_TESTS=1 vitest run tests/graph-falkor.test.ts",
     "typecheck": "tsc --noEmit",
     "check:graph": "node --env-file=.env scripts/check-falkordb.mjs",
-    "snapshot:data": "node --import tsx scripts/build-snapshot.ts"
+    "snapshot:data": "node --import tsx scripts/build-snapshot.ts",
+    "research": "node --env-file=.env --import tsx scripts/research.ts"
   },
   "repository": {
     "type": "git",

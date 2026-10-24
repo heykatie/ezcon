@@ -15,6 +15,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-    exclude: ['tests/graph-falkor.test.ts'],
+    // Needs a running FalkorDB; enabled by `npm run test:graph`.
+    exclude: process.env.EZCON_GRAPH_TESTS ? [] : ['tests/graph-falkor.test.ts'],
   },
 });
