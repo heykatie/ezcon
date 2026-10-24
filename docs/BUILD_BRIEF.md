@@ -48,4 +48,14 @@ FalkorDB: multi-hop queries, explainable paths and memory. Bright Data: fresh di
 
 ## Open decisions
 
+## Booth discoveries, raffles and meeting recall
+
+Product scope includes booth giveaways, demos and raffles with sourced booth locations, eligibility, closing/draw times, timezone and whether physical presence is required. Unknown schedules are not invented. Save a ticket photo privately, extract its number and associated draw, and require user confirmation before scheduling a reminder. Preserve the original image for correction; ticket identifiers and photos never enter public source data or Git. Photos may contain barcodes or redeemable codes and should not appear in public recordings. Local in-app reminders are distinct from background/device notifications; delivery while closed or asleep is not promised until tested and supported by the chosen deployment.
+
+After a scheduled event, load available authorized/public participant records with their evidence status. Registered, RSVP accepted, publicly listed, checked-in and user-confirmed met are separate states. An event ending does not establish who attended. If verified check-in data is unavailable, show publicly listed participants and explain the limitation. Users can privately mark whom they met or add someone absent from the list; do not use photo face recognition. Ask the user to resolve duplicate names.
+
+Passport rewards include a booth discovery sticker, one raffle-participation sticker per confirmed draw, and a follow-through badge. Do not award points for uploading duplicate tickets, spending, winning or collecting personal information. Optional reminders and corrections are easy to dismiss or undo. Keep reward value modest so raffles do not override the user's learning, career, time and budget goals.
+
+Hackathon delivery: these are approved product requirements; use one bounded raffle flow as a candidate demo extension after the recommendation/memory core. Comprehensive booth schedules, verified check-in imports and reliable background notifications remain unimplemented until individually verified.
+
 Exact source subset, ranking weights, model and API budgets, latency targets, fallback dataset and hosting remain to be finalized. Pre-event code and multiple-track eligibility are user-directed planning assumptions, not organizer-confirmed rules.
