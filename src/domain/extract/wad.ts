@@ -32,14 +32,21 @@ export function parseWadSession(html: string, meta: { sourceUrl: string; retriev
   if (!date || !time) throw new Error('missing date or time');
   const location = facts.find((f) => f !== date && !/^\d{1,2}:\d{2}/.test(f));
   const pageId = /\/sessions\/(\d+)/.exec(meta.sourceUrl)?.[1] ?? meta.sourceUrl;
+  const start = parseLocalDateTime(date, time[1]!, TIMEZONE);
+  let end = parseLocalDateTime(date, time[2]!, TIMEZONE);
+  if (Date.parse(end) <= Date.parse(start)) {
+    // Ends after midnight: same clock time on the next calendar day.
+    const next = new Date(Date.parse(`${start.slice(0, 10)}T12:00:00Z`) + 86_400_000);
+    end = parseLocalDateTime(next.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric', year: 'numeric' }), time[2]!, TIMEZONE);
+  }
 
   return {
     id: `wad26na:${pageId}`,
     conference: 'wad26na',
     sourceRecordId: `wad-session-${pageId}`,
     title,
-    start: parseLocalDateTime(date, time[1]!, TIMEZONE),
-    end: parseLocalDateTime(date, time[2]!, TIMEZONE),
+    start,
+    end,
     timezone: TIMEZONE,
     location,
     speakers,

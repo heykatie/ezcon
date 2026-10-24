@@ -61,7 +61,7 @@ export function TravelOptions({
               <b>{e.totalCents !== null ? `${money(e.totalCents)} est.` : `≥ ${money(e.knownCents)}`}</b>
             </span>
             <span className="small muted">
-              ~{e.travelMinutes[0]}–{e.travelMinutes[1]} min round trip door to door · {o.walkMinutes} min walk each way
+              ~{e.travelMinutes[0]}–{e.travelMinutes[1]} min round trip door to door, including a {o.walkMinutes}-minute walk each way
             </span>
             <span className="lines">
               {e.lines.map((l, i) => (

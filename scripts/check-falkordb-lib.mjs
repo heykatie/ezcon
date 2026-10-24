@@ -21,19 +21,34 @@ export const SEED_QUERY = `MERGE (a:Attendee {id:'check:attendee'}) SET a.name='
 
 /** Remove the connection URL and each of its credential/host parts from text. */
 export function redact(text, url) {
-  let out = String(text ?? '');
-  const secrets = [url];
+  let out = String(text ?? '').split(url).join('<redacted>');
+  let creds = [];
+  let hosts = [];
   try {
     const u = new URL(url);
-    secrets.push(u.host, u.hostname, decodeURIComponent(u.username), decodeURIComponent(u.password), u.username, u.password);
+    creds = [u.username, u.password, safeDecode(u.username), safeDecode(u.password)];
+    hosts = [u.host, u.hostname];
+    if (u.username || u.password) out = out.split(`${u.username}:${u.password}@`).join('<redacted>@');
   } catch {
-    // not a parseable URL; redact the raw string only
+    // not a parseable URL; the raw string was already redacted
   }
-  for (const s of secrets.filter((x) => x && x.length >= 3).sort((a, b) => b.length - a.length)) {
-    out = out.split(s).join('<redacted>');
+  // Credentials are always redacted; short ones only where they stand alone, so ordinary words survive.
+  for (const c of [...new Set(creds.filter(Boolean))].sort((a, b) => b.length - a.length)) {
+    out = c.length >= 4 ? out.split(c).join('<redacted>') : out.replace(new RegExp(`(?<![A-Za-z0-9])${escapeRegExp(c)}(?![A-Za-z0-9])`, 'g'), '<redacted>');
   }
+  for (const h of hosts.filter((x) => x && x.length >= 3)) out = out.split(h).join('<redacted>');
   return out;
 }
+
+function safeDecode(s) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Name, code, message and stack of a failure, with connection details redacted. */
 export function describeError(error, url) {

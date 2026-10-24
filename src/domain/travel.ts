@@ -199,7 +199,8 @@ export function evaluateOption(option: TravelOption, commitments: Commitment[], 
     unknowns,
     reasons,
     lateByMinutes: lateBy,
-    travelMinutes: [option.outboundMinutes[0] + option.returnMinutes[0], option.outboundMinutes[1] + option.returnMinutes[1]],
+    // Door to door: ride time each way plus the walk at each end.
+    travelMinutes: [option.outboundMinutes[0] + option.returnMinutes[0] + 2 * option.walkMinutes, option.outboundMinutes[1] + option.returnMinutes[1] + 2 * option.walkMinutes],
     spaceGuaranteed: false,
     lines,
   };

@@ -7,6 +7,7 @@ import { isPublicFetchTarget } from '../src/domain/urls';
 import { parseUniverseCatalog } from '../src/domain/extract/universe';
 import { parseWadSession } from '../src/domain/extract/wad';
 import type { ExtractionResult } from '../src/domain/types';
+import { offTargetCalls, withDeadline } from './research-guard';
 
 export type ResearchKind = 'wad-session' | 'universe-catalog';
 
@@ -69,8 +70,13 @@ interface RawEvent {
   state?: { status?: string; message?: string; metrics?: { totalInputTokens?: number; totalOutputTokens?: number } };
 }
 
+/** One bounded research run. A single deadline covers session creation, the turn and event retrieval. */
 export async function runResearch(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {
   await assertResearchTarget(kind, url);
+  return withDeadline(runBounded(kind, url, opts), LIMITS.timeoutMs + 15_000, 'research');
+}
+
+async function runBounded(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {
   const started = Date.now();
   const retrievedAt = new Date().toISOString();
   const src = SOURCES[kind];
@@ -152,6 +158,12 @@ export async function runResearch(kind: ResearchKind, url: string, opts: { baseU
     const call = calls.get(r.toolCallId ?? '');
     return { tool: call?.tool ?? 'unknown', args: call?.args ?? null, responseChars: String(r.content ?? '').length, at: r.createdAt ?? '' };
   });
+
+  // The model chooses tool arguments; discard the run if any call left the approved URL.
+  const offTarget = offTargetCalls(trace, url);
+  if (offTarget.length) {
+    return { ...base, sessionId, trace, durationMs: Date.now() - started, status: 'failed', error: `tool call targeted an unapproved URL (${offTarget.map((c) => c.tool).join(', ')}); results discarded` };
+  }
 
   const htmlResponse = [...responses].reverse().find((r) => /<\s*(html|body|section|li)\b/i.test(String(r.content ?? '')));
   const done = events.find((e) => e.type === 'turn.done');

@@ -9,6 +9,7 @@ import { BLANK_PROFILE, CONFERENCES, DEMO_CLOCKS, DEMO_PROFILE, ROLES, SESSIONS,
 import { connectBackend, type Backend } from './backend';
 import { clearAll, load, profileKey, save } from './store';
 import { Companion } from './Companion';
+import { checkinAfterUndo } from './checkins';
 import { Sheet, Toast } from './ui';
 import {
   CheckInSheet, ConflictSheet, Discover, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
@@ -79,6 +80,10 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    // Graph data belongs to one profile; never show the previous profile's while the new one loads.
+    setCandidates([]);
+    setHiringPaths([]);
+    setMeetings([]);
     if (!activeId) return setPs(undefined);
     const base = activeId === DEMO_PROFILE.id ? DEMO_PROFILE : BLANK_PROFILE;
     const stored = load<PState>(profileKey(activeId, 'state'));
@@ -226,7 +231,7 @@ export function App() {
     update((p) => {
       const followups = { ...p.followups };
       delete followups[m.meetingId];
-      return { ...p, followups, checkins: { ...p.checkins, [m.eventId]: 'went' } };
+      return { ...p, followups, checkins: { ...p.checkins, [m.eventId]: checkinAfterUndo(meetings, m.meetingId, m.eventId) } };
     });
     setVersion((v) => v + 1);
     setSheet(null);

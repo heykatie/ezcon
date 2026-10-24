@@ -1,5 +1,6 @@
 // FalkorDB graph store. Only the fixed, parameterized templates below are executed;
 // no model-generated Cypher. Private edges always hang off a validated Profile node.
+import { randomUUID } from 'node:crypto';
 import type { FalkorDB } from 'falkordb';
 import type { ConferenceId, RoleRecord, SessionRecord } from '../src/domain/types';
 import { EVIDENCE, type Candidate, type GraphPath, type GraphStore, type Meeting, type MeetingInput, type NodeLabel, type ProfileInput } from '../src/domain/graph-types';
@@ -63,9 +64,11 @@ const Q = {
   exists: `OPTIONAL MATCH (pr:Profile {id: $pid}) OPTIONAL MATCH (p:Person {id: $personId}) OPTIONAL MATCH (s:Session {id: $eventId})
     OPTIONAL MATCH (pr)-[m:MET {id: $mid}]->()
     RETURN count(DISTINCT pr) AS profiles, count(DISTINCT p) AS persons, count(DISTINCT s) AS sessions, count(m) AS existing`,
+  // One atomic MERGE keyed by profile + meeting id; the per-call token tells us whether this call created it.
   meet: `MATCH (pr:Profile {id: $pid}), (p:Person {id: $personId})
-    CREATE (pr)-[m:MET {id: $mid}]->(p)
-    SET m.event_id = $eventId, m.at = $at, m.fictional = $fictional, m.note = $note, m.evidence = $evidence`,
+    MERGE (pr)-[m:MET {id: $mid}]->(p)
+    ON CREATE SET m.event_id = $eventId, m.at = $at, m.fictional = $fictional, m.note = $note, m.evidence = $evidence, m.created_by = $token
+    RETURN m.created_by = $token AS created`,
   unmeet: `MATCH (:Profile {id: $pid})-[m:MET {id: $mid}]->() DELETE m RETURN count(m) AS removed`,
   meetings: `MATCH (:Profile {id: $pid})-[m:MET]->(p:Person)
     RETURN m.id AS meetingId, p.id AS personId, p.name AS personName, m.event_id AS eventId, m.at AS at, m.fictional AS fictional, m.note AS note
@@ -178,7 +181,7 @@ export class FalkorGraph implements GraphStore {
     if (!row.persons) throw new Error('unknown person');
     if (!row.sessions) throw new Error('unknown event');
     if (row.existing) return { created: false };
-    await this.q(Q.meet, {
+    const [res] = await this.q<{ created: boolean }>(Q.meet, {
       pid: profileId,
       personId: m.personId,
       mid: m.meetingId,
@@ -187,8 +190,9 @@ export class FalkorGraph implements GraphStore {
       fictional: m.fictional,
       note: m.note ?? null,
       evidence: `${EVIDENCE.meeting}${m.fictional ? ' (fictional demo)' : ''}`,
+      token: randomUUID(),
     });
-    return { created: true };
+    return { created: !!res?.created };
   }
 
   async removeMeeting(profileId: string, meetingId: string) {

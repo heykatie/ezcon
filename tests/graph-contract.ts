@@ -70,6 +70,13 @@ export function graphContract(name: string, make: () => Promise<GraphStore>, cle
       expect(await g.meetings(A)).toHaveLength(1);
     });
 
+    it('creates exactly one meeting when the same check-in is submitted concurrently (Qodo finding 3)', async () => {
+      const m = { meetingId: 'm-race', personId: andrea, eventId: buildOnce, at: '2026-10-28T13:10:00-07:00', fictional: true };
+      const results = await Promise.all([g.recordMeeting(A, m), g.recordMeeting(A, m), g.recordMeeting(A, m)]);
+      expect(results.filter((r) => r.created)).toHaveLength(1);
+      expect(await g.meetings(A)).toHaveLength(1);
+    });
+
     it('never exposes one profile’s meetings or meeting-derived paths to another', async () => {
       await g.recordMeeting(A, { meetingId: 'm1', personId: andrea, eventId: buildOnce, at: '2026-10-28T13:10:00-07:00', fictional: true, note: 'private' });
       expect(await g.meetings(B)).toEqual([]);

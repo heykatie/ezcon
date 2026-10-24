@@ -28,6 +28,11 @@ export function formatOffset(minutes: number): string {
   return `${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
 }
 
+function assertCalendarDate(y: number, mo: number, d: number) {
+  const t = new Date(Date.UTC(y, mo - 1, d));
+  if (t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) throw new Error(`invalid date ${y}-${pad(mo)}-${pad(d)}`);
+}
+
 function iso(y: number, mo: number, d: number, h: number, mi: number, offsetMinutes: number): string {
   // Normalize day overflow (e.g. an end time past midnight).
   const t = new Date(Date.UTC(y, mo - 1, d, h, mi));
@@ -58,6 +63,7 @@ export function parseCatalogTimes(dateText: string, timeText: string, year: numb
   const month = MONTHS.indexOf(dm[2]!.toLowerCase()) + 1;
   const day = Number(dm[3]);
   if (month < 1) throw new Error(`unrecognized month "${dm[2]}"`);
+  assertCalendarDate(year, month, day);
   const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
   if (WEEKDAYS[weekday] !== dm[1]!.toLowerCase()) {
     throw new Error(`weekday "${dm[1]}" does not match ${year}-${pad(month)}-${pad(day)}`);
@@ -85,6 +91,7 @@ export function parseLocalDateTime(dateText: string, clock: string, timeZone: st
   if (month < 1) throw new Error(`unrecognized month "${dm[1]}"`);
   const y = Number(dm[3]);
   const d = Number(dm[2]);
+  assertCalendarDate(y, month, d);
   const c = parseClock(clock);
   return iso(y, month, d, c.h, c.m, zoneOffsetMinutes(timeZone, y, month, d, c.h, c.m));
 }
