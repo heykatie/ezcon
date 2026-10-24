@@ -23,7 +23,7 @@
       ],
       "source": {
         "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1917-making-works-on-all",
-        "retrievedAt": "2026-10-24T21:30:41.787Z",
+        "retrievedAt": "2026-10-24T22:06:05.087Z",
         "via": "bright-data",
         "status": "verified"
       }
@@ -51,8 +51,8 @@
       ],
       "source": {
         "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1919-tools-sandboxes-and",
-        "retrievedAt": "2026-10-24T22:31:24.928Z",
-        "via": "official-page",
+        "retrievedAt": "2026-10-24T22:48:33.708Z",
+        "via": "bright-data",
         "status": "verified"
       }
     },
@@ -79,8 +79,8 @@
       ],
       "source": {
         "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1888-the-ai-ready",
-        "retrievedAt": "2026-10-24T22:31:24.592Z",
-        "via": "official-page",
+        "retrievedAt": "2026-10-24T22:48:27.440Z",
+        "via": "bright-data",
         "status": "verified"
       }
     },
@@ -107,8 +107,8 @@
       ],
       "source": {
         "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1921-give-the-agent-its",
-        "retrievedAt": "2026-10-24T22:31:25.299Z",
-        "via": "official-page",
+        "retrievedAt": "2026-10-24T22:48:46.223Z",
+        "via": "bright-data",
         "status": "verified"
       }
     },
@@ -145,37 +145,27 @@
       ],
       "source": {
         "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1870-manufacturing-trust",
-        "retrievedAt": "2026-10-24T22:31:24.095Z",
-        "via": "official-page",
+        "retrievedAt": "2026-10-24T22:48:20.329Z",
+        "via": "bright-data",
         "status": "verified"
       }
     }
   ],
   "run": {
     "model": "openai/gpt-5-4-nano",
-    "durationMs": 45291,
+    "durationMs": 5035,
     "usage": {
-      "inputTokens": 33132,
-      "outputTokens": 166
+      "inputTokens": 29134,
+      "outputTokens": 68
     },
     "trace": [
       {
-        "tool": "unknown",
-        "args": null,
-        "responseChars": 29,
-        "at": "2026-10-24T21:30:49.614Z"
-      },
-      {
-        "tool": "unknown",
-        "args": null,
-        "responseChars": 330,
-        "at": "2026-10-24T21:30:51.097Z"
-      },
-      {
-        "tool": "unknown",
-        "args": null,
-        "responseChars": 81827,
-        "at": "2026-10-24T21:31:25.373Z"
+        "tool": "scrape_as_html",
+        "args": {
+          "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1921-give-the-agent-its"
+        },
+        "responseChars": 81260,
+        "at": "2026-10-24T22:48:50.452Z"
       }
     ]
   }

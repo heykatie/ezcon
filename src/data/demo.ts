@@ -4,6 +4,7 @@ import type { ParkingRule, TravelOption } from '../domain/travel';
 import universe from './universe26.json';
 import wad from './wad26na.json';
 import roles from './roles.json';
+import { checked } from './checked';
 
 export const SNAPSHOT_DATE = '2026-10-24';
 
@@ -13,7 +14,10 @@ export const SESSIONS: Record<ConferenceId, SessionRecord[]> = {
 };
 
 export const WAD_RUN = wad.run;
-export const ROLES = roles as RoleRecord[];
+export const ROLES = (roles as RoleRecord[]).map((r) => {
+  const c = checked(`role-${r.source.note?.replace(/\D/g, '')}`, r.source);
+  return c.via === 'bright-data' ? { ...r, source: { ...r.source, note: `${r.source.note}; listing page also retrieved via Bright Data ${c.retrievedAt.slice(0, 16).replace('T', ' ')} UTC` } } : r;
+});
 
 export const CONFERENCES: Record<ConferenceId, Conference> = {
   universe26: {
@@ -135,13 +139,13 @@ export const SIDE_QUESTS: SideQuest[] = [
 
 // ---- Getting there: Downtown Oakland → Fort Mason Center, Wed Oct 28 -------------------
 
-const FORT_MASON_SOURCE: SourceRef = {
+const FORT_MASON_SOURCE: SourceRef = checked('fort-mason-parking', {
   url: 'https://fortmason.org/visit/directions-parking/',
   retrievedAt: '2026-10-24T21:20:00Z',
   via: 'manual-browser',
   status: 'verified',
   note: 'Event-day rates; the page says fees may increase on high-attendance dates.',
-};
+});
 
 export const FORT_MASON_LOT: ParkingRule = {
   id: 'fort-mason-center',
@@ -153,7 +157,7 @@ export const FORT_MASON_LOT: ParkingRule = {
 };
 
 const BART: SourceRef = { url: 'https://api.bart.gov/api/sched.aspx?cmd=fare&orig=12th&dest=embr&date=10/28/2026', retrievedAt: '2026-10-24T21:15:00Z', via: 'official-api', status: 'verified', note: 'Clipper adult fare 12th St Oakland ↔ Embarcadero on Oct 28, 2026' };
-const MUNI: SourceRef = { url: 'https://www.sfmta.com/getting-around/muni/fares', retrievedAt: '2026-10-24T21:50:00Z', via: 'manual-browser', status: 'verified', note: 'Adult Clipper single ride; a $2.85 inter-agency transfer discount may apply and is not counted' };
+const MUNI: SourceRef = checked('muni-fare', { url: 'https://www.sfmta.com/getting-around/muni/fares', retrievedAt: '2026-10-24T21:50:00Z', via: 'manual-browser', status: 'verified', note: 'Adult Clipper single ride; a $2.85 inter-agency transfer discount may apply and is not counted' });
 const TOLL: SourceRef = { url: 'https://mtc.ca.gov/about-mtc/authorities/bay-area-toll-authority/2026-toll-increase-high-occupancy-vehicle-hov-policy-updates', retrievedAt: '2026-10-24T21:50:00Z', via: 'manual-browser', status: 'verified', note: 'Two-axle toll $8.50 from Jan 1, 2026; Bay Bridge collects westbound only' };
 
 export const UNIVERSE_TRAVEL: TravelOption[] = [

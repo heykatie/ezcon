@@ -154,6 +154,18 @@ describe('ezcon core flow', () => {
     expect(within(card).getByRole('link', { name: 'LinkedIn ↗' }).getAttribute('href')).toMatch(/^https:\/\/www\.linkedin\.com\/in\//);
   });
 
+  it('lets you pick a route before adding the event', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const card = screen.getByRole('button', { name: /Build once, run on any agent/ }).closest('article')!;
+    await user.click(within(card).getByRole('button', { name: 'Getting there' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Getting there' });
+    await user.click(within(dialog).getAllByRole('button', { name: 'Use this route' })[1]!);
+    await user.click(within(dialog).getByRole('button', { name: /Add to Schedule with Drive/ }));
+    expect(schedule()).toEqual(['Build once, run on any agent: a practical guide to agent skills']);
+    expect(stored().travelChoice).toBe('drive');
+  });
+
   it('records a self-reported application without applying', async () => {
     const user = await startDemo();
     await openExplore(user);
@@ -179,8 +191,8 @@ describe('ezcon core flow', () => {
 
   it('labels future features as previews, not working features', async () => {
     const user = await startDemo();
-    await user.click(screen.getByRole('button', { name: 'Level Up' }));
-    const preview = within(await screen.findByRole('dialog', { name: 'Level Up' })).getByRole('heading', { name: 'Coming next' }).closest('section')!;
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Next' }));
+    const preview = screen.getByRole('heading', { name: 'Coming next', level: 3 }).closest('section')!;
     expect(within(preview).getByText('Concept preview — not working yet')).toBeTruthy();
     for (const f of ['Booth routing', 'Raffles', 'Side quests', 'Passport rewards']) expect(within(preview).getByText(f)).toBeTruthy();
     expect(within(preview).queryByRole('button')).toBeNull();

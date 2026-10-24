@@ -33,7 +33,7 @@ export function TravelOptions({
   origin: string;
   budgetCents: number;
 }) {
-  const chosen = travel.options.find((o) => o.id === chosenId) ?? travel.options.find((o) => o.id === travel.cards[0]?.optionId);
+  const chosen = travel.options.find((o) => o.id === chosenId);
 
   return (
     <div className="stack">
@@ -79,7 +79,7 @@ export function TravelOptions({
             {o.sources?.map((s) => <SourceLine key={s.url} source={s} />)}
             {onChoose && (
               <button className="btn small" aria-pressed={selected} onClick={() => onChoose(c.optionId)}>
-                {selected ? '✓ Using this for my day' : 'Use this option'}
+                {selected ? '✓ Selected' : 'Use this route'}
               </button>
             )}
           </article>

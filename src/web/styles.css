@@ -125,7 +125,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .badge.career { background: var(--career-soft); color: var(--career); }
 .badge.accent { background: var(--accent-soft); color: var(--accent); }
 
-.tabs { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
+.tabs { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
 .tabs button { min-height: 52px; border: 0; background: none; border-radius: 14px; font-weight: 800; color: var(--ink-3); cursor: pointer; display: grid; place-items: center; gap: 2px; font-size: 0.8rem; }
 .tabs button .ico { font-size: 1.2rem; line-height: 1; }
 .tabs button[aria-current='page'] { color: var(--accent); background: var(--accent-soft); }

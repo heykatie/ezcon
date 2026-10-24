@@ -20,7 +20,7 @@ import {
   type CheckIn, type Ctx, type PState,
 } from './screens';
 
-type Tab = 'today' | 'discover' | 'schedule' | 'people';
+type Tab = 'today' | 'discover' | 'schedule' | 'people' | 'next';
 type SheetState =
   | { kind: 'why'; title: string; paths: GraphPath[]; note?: string }
   | { kind: 'conflict'; item: ScheduleItem; conflicts: Conflict[] }
@@ -223,7 +223,7 @@ export function App() {
     openCheckIn: (item) => setSheet({ kind: 'checkin', item }),
     openPerson: (id) => setSheet({ kind: 'person', id }),
     openTravel: (session) => setSheet({ kind: 'travel', session }),
-    openLevelUp: () => setSheet({ kind: 'levelup' }),
+    openLevelUp: () => setTab('next'),
     openProfile: () => setSheet({ kind: 'profile' }),
     goTab: setTab,
   };
@@ -273,6 +273,7 @@ export function App() {
     ['discover', 'Explore', 'compass'],
     ['schedule', 'Schedule', 'calendar'],
     ['people', 'People', 'people'],
+    ['next', 'Next', 'spark'],
   ];
 
   return (
@@ -324,6 +325,17 @@ export function App() {
           {tab === 'discover' && <Explore {...ctx} />}
           {tab === 'schedule' && <Schedule {...ctx} />}
           {tab === 'people' && <People {...ctx} />}
+          {tab === 'next' && (
+            <div className="stack">
+              <header className="page-head">
+                <h1>Coming next</h1>
+                <p className="muted">Ideas after the core flow — not working yet.</p>
+              </header>
+              <div className="card">
+                <ComingNext />
+              </div>
+            </div>
+          )}
         </div>
 
       </main>
@@ -354,12 +366,6 @@ export function App() {
       )}
       {sheet?.kind === 'checkin' && <CheckInSheet ctx={ctx} item={sheet.item} onClose={() => setSheet(null)} onSubmit={(c, p, n) => checkIn(sheet.item, c, p, n)} />}
       {sheet?.kind === 'person' && <PersonSheet ctx={ctx} id={sheet.id} onClose={() => setSheet(null)} onUndoMeeting={undoMeeting} />}
-      {sheet?.kind === 'levelup' && (
-        <Sheet title="Level Up" onClose={() => setSheet(null)}>
-          <p className="small muted">Your plan progress is on Today. Rewards for exploring and following through are still a concept.</p>
-          <ComingNext />
-        </Sheet>
-      )}
       {sheet?.kind === 'travel' && <TravelSheet ctx={ctx} session={sheet.session} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'qr' && <QrSheet ps={psView} onClose={() => setSheet(null)} onEdit={() => setSheet({ kind: 'profile' })} />}
       {sheet?.kind === 'profile' && (

@@ -21,13 +21,18 @@ const runs = (existsSync('.cache/research') ? readdirSync('.cache/research') : [
   .sort()
   .reverse()
   .map((f) => JSON.parse(readFileSync(`.cache/research/${f}`, 'utf8')) as { status: string; records: SessionRecord[]; trace: unknown[]; sessionId: string; durationMs: number; model: string; usage: unknown });
-const ok = runs.find((r) => r.status === 'ok');
-if (ok) {
+// Newest successful Bright Data run per session.
+const okRuns = runs.filter((r) => r.status === 'ok');
+const byId = new Map<string, SessionRecord>();
+for (const r of okRuns) for (const rec of r.records) if (!byId.has(rec.id)) byId.set(rec.id, rec);
+const latest = okRuns[0];
+if (latest && byId.size) {
+  const records = [...byId.values()].sort((a, b) => a.start.localeCompare(b.start));
   writeFileSync(
     'src/data/wad26na.json',
-    JSON.stringify({ records: ok.records, run: { model: ok.model, durationMs: ok.durationMs, usage: ok.usage, trace: ok.trace } }, null, 2) + '\n',
+    JSON.stringify({ records, run: { model: latest.model, durationMs: latest.durationMs, usage: latest.usage, trace: latest.trace } }, null, 2) + '\n',
   );
-  console.log(`wad26na: ${ok.records.length} session from live run`);
+  console.log(`wad26na: ${records.length} sessions from live Bright Data runs`);
 } else {
   console.log('wad26na: no successful live research run found; src/data/wad26na.json left unchanged');
 }

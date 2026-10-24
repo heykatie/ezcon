@@ -1,8 +1,9 @@
 // Verified upcoming events (official pages checked Oct 24, 2026). Past editions such as
 // WeAreDevelopers North America 2026 live in the demo/replay data, not here.
 import type { EventListing } from '../domain/events';
+import { checked } from './checked';
 
-const checked = '2026-10-24T22:10:00Z';
+const checkedAt = '2026-10-24T22:10:00Z';
 
 export const UPCOMING_EVENTS: EventListing[] = [
   {
@@ -22,7 +23,7 @@ export const UPCOMING_EVENTS: EventListing[] = [
     endDate: '2026-11-12',
     location: 'Salt Palace Convention Center, Salt Lake City, UT',
     timezone: 'America/Denver',
-    source: { url: 'https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/', retrievedAt: checked, via: 'official-page', status: 'verified' },
+    source: checked('event-kubecon', { url: 'https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/', retrievedAt: checkedAt, via: 'official-page', status: 'verified' }),
   },
   {
     id: 'ignite-26',
@@ -31,7 +32,7 @@ export const UPCOMING_EVENTS: EventListing[] = [
     endDate: '2026-11-20',
     location: 'San Francisco, CA and online',
     timezone: 'America/Los_Angeles',
-    source: { url: 'https://www.microsoft.com/en-us/security/blog/2026/09/30/secure-whats-next-your-guide-to-microsoft-security-at-microsoft-ignite-2026/', retrievedAt: checked, via: 'official-page', status: 'verified' },
+    source: checked('event-ignite', { url: 'https://www.microsoft.com/en-us/security/blog/2026/09/30/secure-whats-next-your-guide-to-microsoft-security-at-microsoft-ignite-2026/', retrievedAt: checkedAt, via: 'official-page', status: 'verified' }),
   },
   {
     id: 'reinvent-26',
@@ -40,6 +41,6 @@ export const UPCOMING_EVENTS: EventListing[] = [
     endDate: '2026-12-04',
     location: 'Las Vegas, NV',
     timezone: 'America/Los_Angeles',
-    source: { url: 'https://aws.amazon.com/events/reinvent/', retrievedAt: checked, via: 'official-page', status: 'verified' },
+    source: checked('event-reinvent', { url: 'https://aws.amazon.com/events/reinvent/', retrievedAt: checkedAt, via: 'official-page', status: 'verified' }),
   },
 ];

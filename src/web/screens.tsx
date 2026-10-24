@@ -414,9 +414,6 @@ export function Explore(ctx: Ctx) {
         ))}
       </section>
 
-      <section className="card soft" aria-label="Side quests">
-        <ComingNext />
-      </section>
       <ResearchPanel ctx={ctx} />
     </div>
   );
@@ -1094,6 +1091,7 @@ export function WhySheet({ title, paths, note, onClose }: { title: string; paths
 export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: SessionRecord; onClose: () => void }) {
   const travel = compareTravel([{ eventId: session.id, start: session.start, end: session.end }], ctx.ps.profile.budgetCents);
   const scheduled = isScheduled(ctx, session.id);
+  const [route, setRoute] = useState<string | undefined>(ctx.ps.travelChoice);
   return (
     <Sheet title="Getting there" onClose={onClose}>
       <p className="small">
@@ -1104,9 +1102,20 @@ export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: Sess
         </span>
       </p>
       <p className="tiny muted">Compared for this event alone: arrive 15 minutes early, head home when it ends. Your full-day plan on Schedule shares one commute across events.</p>
-      {travel && <TravelOptions travel={travel} origin={ctx.ps.profile.origin} budgetCents={ctx.ps.profile.budgetCents} />}
-      <button className="btn primary" disabled={scheduled} onClick={() => (ctx.add(session), onClose())}>
-        {scheduled ? 'On your schedule' : 'Add event to Schedule'}
+      <p className="small">
+        <b>Choose a route (optional)</b> — it sets your leave-by time and travel cost on Schedule.
+      </p>
+      {travel && <TravelOptions travel={travel} chosenId={route} onChoose={(id) => setRoute(route === id ? undefined : id)} origin={ctx.ps.profile.origin} budgetCents={ctx.ps.profile.budgetCents} />}
+      <button
+        className="btn primary"
+        disabled={scheduled}
+        onClick={() => {
+          if (route) ctx.update((p) => ({ ...p, travelChoice: route }));
+          ctx.add(session);
+          onClose();
+        }}
+      >
+        {scheduled ? 'On your schedule' : route ? `Add to Schedule with ${travel?.options.find((o) => o.id === route)?.name ?? 'this route'}` : 'Add event to Schedule'}
       </button>
     </Sheet>
   );
