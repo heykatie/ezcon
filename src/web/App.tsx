@@ -16,11 +16,11 @@ import { HeaderSearch } from './HeaderSearch';
 import { toScheduleItem } from '../domain/recommend';
 import { Sheet, Toast } from './ui';
 import {
-  CheckInSheet, ComingNext, ConflictSheet, Explore, PassportSheet, People, RaffleSection, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
+  CheckInSheet, ConflictSheet, Explore, PassportSheet, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
   type CheckIn, type Ctx, type PState,
 } from './screens';
 
-type Tab = 'today' | 'discover' | 'schedule' | 'people' | 'next';
+type Tab = 'today' | 'discover' | 'schedule' | 'people';
 type SheetState =
   | { kind: 'why'; title: string; paths: GraphPath[]; note?: string }
   | { kind: 'conflict'; item: ScheduleItem; conflicts: Conflict[] }
@@ -275,7 +275,6 @@ export function App() {
     ['discover', 'Explore', 'compass'],
     ['schedule', 'Schedule', 'calendar'],
     ['people', 'People', 'people'],
-    ['next', 'Goodies', 'ticket'],
   ];
 
   return (
@@ -327,18 +326,6 @@ export function App() {
           {tab === 'discover' && <Explore {...ctx} />}
           {tab === 'schedule' && <Schedule {...ctx} />}
           {tab === 'people' && <People {...ctx} />}
-          {tab === 'next' && (
-            <div className="stack">
-              <header className="page-head">
-                <h1>Goodies &amp; side quests</h1>
-                <p className="muted">Optional fun — never counts toward your budget.</p>
-              </header>
-              <RaffleSection {...ctx} />
-              <div className="card">
-                <ComingNext />
-              </div>
-            </div>
-          )}
         </div>
 
       </main>

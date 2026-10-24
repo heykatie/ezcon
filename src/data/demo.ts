@@ -121,7 +121,18 @@ export interface SideQuest {
   unknowns: string[];
   conference: ConferenceId;
   source: SourceRef;
+  draw?: string;
+  historical?: boolean;
+  sampleTicket?: string;
 }
+
+const WAD_EVENT_APP_SOURCE: SourceRef = {
+  url: 'https://app.wearedevelopers.com/events/18/goodies',
+  retrievedAt: '2026-10-24T23:08:02Z',
+  via: 'manual-browser',
+  status: 'verified',
+  note: 'Inspected in the signed-in attendee app with the owner’s permission to show these event listings publicly; past-event replay, not a current offer.',
+};
 
 export const SIDE_QUESTS: SideQuest[] = [
   {
@@ -135,6 +146,55 @@ export const SIDE_QUESTS: SideQuest[] = [
     conference: 'universe26',
     source: { url: 'https://tailscale.com/universe-26', retrievedAt: '2026-10-24T21:45:00Z', via: 'manual-browser', status: 'verified' },
   },
+  {
+    id: 'sidequest:wad26na:tuxcare-airpods',
+    title: 'Day 1 Raffle to win Apple AirPods Pro 3',
+    host: 'TuxCare',
+    where: 'Booth 631',
+    prize: 'Apple AirPods Pro 3',
+    entry: 'The event listing does not state how to enter.',
+    unknowns: ['Entry conditions and whether the winner had to be present were not stated'],
+    conference: 'wad26na',
+    source: { ...WAD_EVENT_APP_SOURCE, url: 'https://app.wearedevelopers.com/events/18/activity/179' },
+    draw: 'Winner announced September 24, 2026 at 4:00 PM PDT',
+    historical: true,
+    sampleTicket: 'DEMO-0427',
+  },
+  {
+    id: 'sidequest:wad26na:textcontrol-ps5',
+    title: 'Win a PlayStation 5',
+    host: 'Text Control',
+    where: 'Booth 624',
+    prize: 'PlayStation 5',
+    entry: 'Scan the QR code at booth 624 to enter.',
+    unknowns: ['Draw time and whether the winner had to be present were not stated'],
+    conference: 'wad26na',
+    source: { ...WAD_EVENT_APP_SOURCE, url: 'https://app.wearedevelopers.com/events/18/goodie/265' },
+    historical: true,
+  },
+];
+
+/** Curated items visibly listed in the authenticated WAD attendee app's Goodies catalog. */
+export const WAD_GOODIES = [
+  { name: 'Owl Plushie', host: 'Twilio' },
+  { name: 'Owl Builder Set', host: 'Twilio' },
+  { name: 'Get Inked!', host: 'SAP' },
+  { name: 'Unique Smart Tag', host: 'SAP' },
+  { name: 'Beats Solo 4 Headset', host: 'SAP' },
+  { name: 'Lego Pacman Arcade', host: 'SAP' },
+  { name: 'Desk Cable Organizer', host: 'SAP' },
+  { name: 'Quack! Quack!', host: 'SAP' },
+  { name: 'Webcam cover', host: 'SAP' },
+  { name: 'Laptop Stickers', host: 'Entire' },
+  { name: 'Entire Tees', host: 'Entire' },
+  { name: 'Tote bag', host: 'Entire' },
+  { name: 'Free yo-yos!', host: 'Text Control' },
+  { name: 'California Calling: Grab a Frisbee!', host: 'Text Control' },
+  { name: 'LavinMQ book', host: 'LavinMQ' },
+  { name: 'Stickers', host: 'LavinMQ' },
+  { name: 'Wooden cup', host: 'LavinMQ' },
+  { name: 'Pen', host: 'LavinMQ' },
+  { name: 'RabbitMQ book', host: 'LavinMQ' },
 ];
 
 // ---- Getting there: Downtown Oakland → Fort Mason Center, Wed Oct 28 -------------------
