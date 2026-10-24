@@ -34,7 +34,7 @@ Use large tap targets, visible focus, labeled controls, short text and no hover-
 - October 24: WeAreDevelopers sign-in confirmed in browser; no separate event-app access verified.
 - October 24: Docker restarted; ezcon-falkordb running, restart unless-stopped, volume ezcon-falkordb-data mounted at /var/lib/falkordb/data, ports bound to 127.0.0.1. Read-only query returned 3 synthetic setup nodes after restart. This is not application integration proof.
 - TrueForge 0.180.0 is present in local npm cache. Saved OpenAI key previously entered by user; credits and successful model execution remain unverified. Restarted and browser verified at localhost:8790/settings; UI shows OpenAI Connected. No model request made.
-- Qodo generated a PR summary, but its code review reported a server-side failure: https://github.com/heykatie/ezcon/pull/1#issuecomment-6387784958 . Do not count the summary as completed code review.
+- Qodo generated a PR summary, but its code review reported a server-side failure: https://github.com/heykatie/ezcon/pull/1#issuecomment-6388415240 . A manual retry also failed on the provider side. Do not count the summary as completed code review; try a meaningful code PR, then provider support or Toolbox if it still fails.
 - Bright Data dashboard shows 5,000/5,000 free credits, renewal November 1, 2026. The $50 hackathon promo, product coverage and API retrieval remain unverified. No personal API spending is authorized.
 
 ## Evaluation and acceptance
@@ -58,3 +58,7 @@ Initial audience: budget-conscious attendees who need relevant conversations and
 - Verify multiple-track eligibility, pre-event code rules and exact submission deadline with organizers; planning assumptions are not official rules.
 
 This document is a handoff for work in the existing repository, not authorization to create another Codex task.
+
+## Organizer timing verified October 24
+
+[Official schedule](https://www.wemakedevs.org/hackathons/ptc/schedule): build/submit block ends at 5:30 PM Pacific; presentations 5:30–6:30 PM, winners 6:30 PM, wrap 7 PM. Exact submission mechanics/cutoff still need organizer confirmation. [Overview](https://www.wemakedevs.org/hackathons/ptc) says OpenAI credits are claimed at the venue; Bright Data promo is patch50. It does not establish multiple-track winning eligibility or pre-event-code permission.
