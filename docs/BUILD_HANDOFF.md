@@ -83,3 +83,9 @@ OpenAI billing page remained on browser verification; user handoff required befo
 October 24: billing UI showed $50 available API credit in Personal organization. Credit Grants showed received October 23, 2026, state Available, balance $50/$50, expires November 22, 2026. No payment method was added.
 
 TrueForge local UI: selected gpt-5-4-nano and sent a synthetic connectivity-only prompt with no tools. Response was EZCON_OK, displayed about two seconds after submission. This verifies one model response through the saved provider, not a sponsor workflow, tool call, model evaluation or measured billing cost. Trace/session remains local. Next step is a bounded real tool call through the application integration. No secrets or personal profile data were transmitted in this test.
+
+## TrueForge + OpenAI + Bright Data verified together
+
+October 24, 12:35:37–12:36:09 Pacific: user connected Bright Data using private key entry; settings showed Connected. New TrueForge chat selected gpt-5-4-nano with Bright Data attached. Agent trace showed tool listing, three tool-schema lookups and one scrape_as_markdown call. Retrieved source response and final output matched all requested session fields: title, Michael Irwin, Docker, September 23 10:00–10:30, Stage 1 and source URL. One external page retrieval observed; no research retries. Approximately 32 seconds end-to-end from displayed timestamps, not a performance benchmark; exact tokens/provider cost not measured.
+
+This verifies live model-driven research in TrueForge UI. It does not verify the ezcon SDK/API, structured-output enforcement, graph ingestion or complete application. Discovery overhead should be reduced with a small enabled tool list and an explicit extraction schema. The markdown preview resolves relative links against localhost in the harness UI; normalize source links against the fetched page URL in application code. Do not copy harness-rendered localhost links into source records.
