@@ -21,13 +21,17 @@ Open from a card into a mobile sheet or desktop detail panel. Show goal match, c
 
 If options clash, compare them directly: goal relevance, full cost, travel, fixed commitments and unique value. User chooses; no silent removal. Unknown costs produce an unconfirmed estimate, not a within-budget guarantee.
 
+## Getting there
+
+Event details and My Day offer Cheapest overall / Closest practical parking / Best transit option, with no duplicate filler. Include all daily legs, known cost ranges, walking, waits, date/time restrictions and return feasibility. Show unconfirmed status when inputs or evidence are missing. Follow TRAVEL_PLAN.md.
+
 ## My Day and preparation
 
 Chronological fixed commitments with realistic buffers; flexible booth stops distinct. Add/remove/undo with explicit conflict response. One prep card: prerequisite/tool, question to ask, role research or introduction. Optional route preview only after verified walking edges. Public cached demo can simulate planning locally but cannot claim fresh research or real background reminders.
 
 ## People and meeting check-in
 
-People list is bounded to sourced speakers/participants; listed is not attended or met. After a planned event: Met someone / Not yet / Later. Pick person or add privately, optional short note, explicit confirmation. Save scoped meeting; then offer one editable follow-up draft. Never send automatically. Undo/correct meeting also reverses dependent achievements.
+People list is bounded to sourced speakers/participants; listed is not attended or met. After a planned event: Met someone / Went, didn’t connect / Skipped, with Later. Pick person or add privately, optional short note, explicit confirmation. Save scoped meeting; then offer one editable follow-up draft. Never send automatically. Undo/correct meeting also reverses dependent achievements.
 
 ## Passport
 
@@ -53,3 +57,15 @@ Four companion choices, name/color, goals, skills, budget, availability and tran
 ## Proposed build cuts
 
 Protect source retrieval, returned graph path, schedule constraints, persistent meeting and follow-up. Cut order: founder switch, route preview, photo extraction, extra accessories, extra quests. Keep one raffle card, QR and one sticker simple. These do not justify delaying the main sponsor evidence.
+
+## Review baseline
+
+- Opening story: fictional React/Python developer, career motivation, learning/networking journey; no suitable verified job required for demo success.
+- Budget: free/pass-covered admission, $20/day round-trip transport, lowest-cost preference, food separate and unknowns visible.
+- Comparison: up to three qualifying choices, no filler.
+- Save: immediate with Undo if conflict-free; otherwise Keep existing / Replace / Cancel.
+- Preparation: one Get ready action with More tips.
+- Check-in: Met someone / Went, didn’t connect / Skipped / Later.
+- Passport: Explorer, Connection, Follow-through; first Connection unlocks one accessory, no XP economy.
+
+The linked in-conversation wireframe is an interaction preview. Its state and illustrative comparison records are not a real itinerary, database integration or evidence of current availability. Final source subset still requires verification.

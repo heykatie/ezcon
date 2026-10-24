@@ -107,3 +107,9 @@ The first implementation should reuse this connection and replace fixture-only p
 ## Latest approved product decisions (supersede earlier proposals)
 
 Read SCREEN_PLAN.md for screen contracts. MVP core plus networking QR, one sticker and one sourced raffle card approved. Public deployment: Vercel cached fictional demo; video shows live local integrations. Visual: warm companion dashboard plus Adventure passport; Today remains primary with goal chips, Next Up, recommendations, optional side quests and small passport strip. Separate Passport screen. Four soft 3D companions approved: robot, duck, pixel cat, fox. Default character still proposed. Entry: Try the demo opens Today; Make it yours opens setup. Goals: Find my next opportunity / Learn & build / Meet people / Explore & have fun. No required questionnaire. All features described here remain planned until implemented and tested.
+
+## Final interaction decisions
+
+BUILD_BRIEF.md and SCREEN_PLAN.md now contain the approved fictional demo persona, $20 transport-only cap with free/pass-covered entry, lowest-cost preference, up to three qualifying comparisons, explicit conflict replacement, one preparation action, four check-in choices and stamp-based accessory unlock. No separate XP economy. Use these latest rules over older shorthand. Problem framing is before/during/after conference value, not a general event directory or game.
+
+Travel/parking is now a required planning output; read TRAVEL_PLAN.md. The implementation must compare the best verified options found for actual event times, compute full-day totals without double counting, and preserve unknowns. Start with one bounded comparison, not a claim of worldwide live parking coverage.

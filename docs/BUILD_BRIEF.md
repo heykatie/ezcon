@@ -4,7 +4,9 @@ Status: approved product direction; implementation and integrations require veri
 
 ## Problem and promise
 
-Conference opportunities are scattered across agendas, speaker pages, company sites and side-event listings. Attendees struggle to decide where to go, whom to meet, what they can afford and how to follow through. ezcon connects evidence to personal goals, creates a feasible plan and remembers what happens next.
+Conferences are full of opportunities, but information is scattered across agendas, company pages, booth listings and side events. Attendees struggle to decide where to spend limited time and money; afterward, valuable conversations often go nowhere. ezcon turns goals into a practical plan, explains who and what is worth the attendee's time, and remembers interactions so they know what to do next.
+
+Before: what is worth attending for me? During: where should I go and whom should I meet? After: what did we discuss and what should I do next? Companions, quests and stamps make the journey enjoyable; the core value is relevant opportunities, a feasible plan and useful follow-through.
 
 ## Users and scope
 
@@ -79,3 +81,19 @@ Keep My QR reachable in one tap from the dashboard. Store editable GitHub, Linke
 Warm companion dashboard combined with Adventure passport rewards. Cute, fun and gamified, with optional side quests. Today order: companion greeting and goal chips; Next Up; two or three For your goals recommendations; optional side quests; a small passport-progress strip. Separate Passport screen. No scheduled item: Next Up becomes Let’s plan your first stop. My QR is always easy to reach.
 
 Four companion choices in the approved soft 3D concept direction: pocket robot, rubber duck, pixel cat and circuit fox. Editable name and accent color; identical abilities; one unlockable accessory. Pocket robot is a proposed demo default, not a confirmed user choice. Small celebrations, no punitive streaks, no pressure to complete all quests. Spending and prize winnings never determine progression.
+
+## Approved demo persona and decision rules
+
+Use a fictional early-career React/Python developer interested in AI tools. Career is the motivation; learning and networking anchor the demo. Real suitable jobs are optional evidence-backed opportunities, never fabricated dependencies.
+
+Admission must be confirmed free or already covered by the user's pass. Daily transport allowance: $20 total for round-trip transit or gas/tolls/parking; food remains separate. Lowest cost is the preferred route/itinerary ordering within hard schedule constraints; display the time tradeoff. Unknown costs remain unconfirmed. Booth access is no extra cost after admission, not a claim that conference entry is free.
+
+Show up to three qualifying options to compare, with goal fit, full cost, travel time and evidence status. Do not manufacture choices to fill slots. Saving adds immediately if no conflict and supports Undo. Conflicts including travel buffers show Keep existing / Replace / Cancel; never silently rearrange.
+
+After scheduling, show one Get ready action with More tips: prerequisites/tools, introduction/questions, role preparation or raffle entry rules. After event: Met someone / Went, didn't connect / Skipped, plus Later. Optional notes and editable drafts; no automatic messages. Attendance/rewards require confirmation.
+
+Progress uses stamps, not a separate XP economy: Explorer (confirmed event/booth visit), Connection (confirmed meeting), Follow-through (completed preparation/follow-up). First Connection unlocks one accessory. Deterministic per-action IDs prevent duplicates; corrections reverse dependent rewards. No penalties, spending rewards or prize-winning rewards.
+
+## Getting there is core
+
+Every scheduled event and day must provide best verified parking/commute options found, with date/time-specific rules, door-to-door time, return travel and full daily cost. See TRAVEL_PLAN.md for acceptance cases and scope. Parking research is a primary attendee pain, not a generic map link. First build supports one bounded sourced comparison; arbitrary-city coverage and live availability are not promised.
