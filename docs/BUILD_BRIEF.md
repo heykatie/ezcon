@@ -10,7 +10,9 @@ Conference opportunities are scattered across agendas, speaker pages, company si
 
 Primary demo: an early-career developer seeking relevant roles, learning and conversations. Secondary fictional founder: hiring, customers and partnerships. Editable local profiles; no registration. Public recordings use fictional profile details and meeting notes. Real personal information stays local and out of Git.
 
-Start with GitHub Universe 2026 and known official source pages; refresh real information and accept a public side-event URL. Do not claim exhaustive event or attendee coverage.
+Use a conference card and known official source pages; refresh real information and accept a public side-event URL. GitHub Universe 2026 is the default for upcoming discovery, current role research, preparation and future scheduling. Use a completed WeAreDevelopers conference edition for retrospective features when its verified published data is richer. Select the exact edition/date and verify each source before ingestion; no assumption that maps, attendee lists or raffle times are public. Do not claim exhaustive event or attendee coverage.
+
+Each feature may use the conference that best demonstrates it. Conference/edition and Past event or Upcoming labels stay visible. Retrospective memories use genuine user-authorized notes or clearly fictional demo interactions, never inferred meetings. Distinguish currently open roles from historical openings; present-day hiring is not evidence a role existed at the past event. Do not silently combine venue maps, booth locations, schedules or attendee records across conferences. A demonstration replay uses an explicit simulated clock and never sends real reminders.
 
 ## Core journey
 

@@ -2,6 +2,10 @@
 
 Judging emphasis: problem statement and demonstration. Target recording: four minutes. All integrations shown as live must be live; label cached, fictional and post-event-preview data.
 
+## Conference selection
+
+Use GitHub Universe for upcoming research, relevant current opportunities, preparation and future scheduling. Prefer a completed WeAreDevelopers edition for meeting recall, historical agenda/route replay, event recap, follow-up and passport progress when verified public data supports those features. Choose maps, booths and raffles by source completeness rather than conference preference. The exact WeAreDevelopers edition remains to be verified. Show an explicit conference switch and time/status label; fictional interactions and a replay clock remain labeled. Keep one user-goal story across the switch rather than implying both conferences are one itinerary.
+
 | Time | Story | Visible evidence |
 | --- | --- | --- |
 | 0:00–0:30 | Events, people, jobs and travel information are scattered; attendees need a useful plan and follow-through | One clear attendee goal and constraints |
