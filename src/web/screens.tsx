@@ -167,7 +167,9 @@ function HiringSection(ctx: Ctx) {
         <h2 id="hiring-h">Hiring connections</h2>
         <span className="tiny muted">Your career opportunity plan</span>
       </div>
-      <p className="small muted">Each card pairs a currently open role with a talk at the conference by someone listed with that company, then helps you schedule it, prepare and get there.</p>
+      <p className="small muted">
+        Each card pairs a role that {ctx.backend.mode === 'live' ? 'is open on the employer’s careers site' : 'was open when last checked (cached snapshot)'} with a talk at the conference by someone listed with that company, then helps you schedule it, prepare and get there.
+      </p>
       {ctx.hiring.length === 0 ? (
         <p className="card soft small">No verified open role is connected to an upcoming event right now. Sessions still appear below as learning or networking matches.</p>
       ) : (

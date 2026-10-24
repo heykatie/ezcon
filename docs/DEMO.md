@@ -40,8 +40,8 @@ Target 4:30. Record the **local live** app (`http://localhost:5173`, badge “Li
 
 ### Pre-flight (5 minutes before recording)
 
-- [ ] TrueForge running on localhost:8790; ezcon API (`npm run dev:api`) and web (`npm run dev`) running.
-- [ ] `npm run check:roles` — roles must have been checked within 72 hours or Hiring connections hide them.
+- [ ] `npm run check:roles` first — roles must have been checked within 72 hours or Hiring connections hide them.
+- [ ] Then start (or restart) the ezcon API (`npm run dev:api`) so it seeds the graph with the rechecked roles; web (`npm run dev`) and TrueForge on localhost:8790 running.
 - [ ] Companion menu → Reset demo data, then Try the demo. Demo clock: Real time.
 - [ ] Close `.env`, terminals with secrets, the TrueForge settings page and personal tabs. No real names beyond public speaker listings.
 - [ ] Tabs ready: ezcon local; TrueForge UI; FalkorDB Cloud graph browser (graph `ezcon`); PR #1 review and triage comment; terminal with `npm test` / `npm run test:graph` output.

@@ -42,6 +42,9 @@ describe('ezcon core flow', () => {
     expect(apply.getAttribute('rel')).toContain('noopener');
     expect(within(card).getByRole('button', { name: 'Add event to Schedule' })).toBeTruthy();
     expect(within(card).getByText(/Open role · checked/)).toBeTruthy();
+    // Cached mode must not claim a role is open now (Qodo re-review finding 4).
+    expect(screen.queryByText(/currently open role/)).toBeNull();
+    expect(screen.getByText(/open when last checked/)).toBeTruthy();
     expect(within(card).getByText(/isn’t a referral/)).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Find my next opportunity' }));
