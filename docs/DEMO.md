@@ -4,7 +4,7 @@ Judging emphasis: problem statement and demonstration. Target recording: four mi
 
 ## Conference selection
 
-Use GitHub Universe for upcoming research, relevant current opportunities, preparation and future scheduling. Prefer a completed WeAreDevelopers edition for meeting recall, historical agenda/route replay, event recap, follow-up and passport progress when verified public data supports those features. Choose maps, booths and raffles by source completeness rather than conference preference. The exact WeAreDevelopers edition remains to be verified. Show an explicit conference switch and time/status label; fictional interactions and a replay clock remain labeled. Keep one user-goal story across the switch rather than implying both conferences are one itinerary.
+Use GitHub Universe for upcoming research, relevant current opportunities, preparation and future scheduling. Prefer a completed WeAreDevelopers edition for meeting recall, historical agenda/route replay, event recap, follow-up and passport progress when verified public data supports those features. Choose maps, booths and raffles by source completeness rather than conference preference. Verified historical edition: World Congress 2026 North America, September 23–25 in San José. The public archive lists 315 sessions, with sampled session time/stage/speaker/company fields. Its map and participant directory remain unverified. Show an explicit conference switch and time/status label; fictional interactions and a replay clock remain labeled. Keep one user-goal story across the switch rather than implying both conferences are one itinerary.
 
 | Time | Story | Visible evidence |
 | --- | --- | --- |
