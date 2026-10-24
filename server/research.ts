@@ -72,8 +72,9 @@ interface RawEvent {
 
 /** One bounded research run. A single deadline covers session creation, the turn and event retrieval. */
 export async function runResearch(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {
-  await assertResearchTarget(kind, url);
-  return withDeadline(runBounded(kind, url, opts), LIMITS.timeoutMs + 15_000, 'research');
+  // The deadline also covers target validation, which resolves DNS.
+  const run = assertResearchTarget(kind, url).then(() => runBounded(kind, url, opts));
+  return withDeadline(run, LIMITS.timeoutMs + 15_000, 'research');
 }
 
 async function runBounded(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {

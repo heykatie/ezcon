@@ -11,6 +11,7 @@ export const UPCOMING_EVENTS: EventListing[] = [
     startDate: '2026-10-28',
     endDate: '2026-10-29',
     location: 'Fort Mason Center, San Francisco, CA',
+    timezone: 'America/Los_Angeles',
     supported: true,
     source: { url: 'https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog', retrievedAt: '2026-10-24T21:05:00Z', via: 'manual-browser', status: 'verified' },
   },
@@ -20,6 +21,7 @@ export const UPCOMING_EVENTS: EventListing[] = [
     startDate: '2026-11-09',
     endDate: '2026-11-12',
     location: 'Salt Palace Convention Center, Salt Lake City, UT',
+    timezone: 'America/Denver',
     source: { url: 'https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/', retrievedAt: checked, via: 'official-page', status: 'verified' },
   },
   {
@@ -28,6 +30,7 @@ export const UPCOMING_EVENTS: EventListing[] = [
     startDate: '2026-11-17',
     endDate: '2026-11-20',
     location: 'San Francisco, CA and online',
+    timezone: 'America/Los_Angeles',
     source: { url: 'https://www.microsoft.com/en-us/security/blog/2026/09/30/secure-whats-next-your-guide-to-microsoft-security-at-microsoft-ignite-2026/', retrievedAt: checked, via: 'official-page', status: 'verified' },
   },
   {
@@ -36,6 +39,7 @@ export const UPCOMING_EVENTS: EventListing[] = [
     startDate: '2026-11-30',
     endDate: '2026-12-04',
     location: 'Las Vegas, NV',
+    timezone: 'America/Los_Angeles',
     source: { url: 'https://aws.amazon.com/events/reinvent/', retrievedAt: checked, via: 'official-page', status: 'verified' },
   },
 ];

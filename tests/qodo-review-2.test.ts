@@ -77,3 +77,13 @@ describe('finding 4: undoing one meeting keeps other meetings at the event', () 
     expect(checkinAfterUndo([m('a', 'e1'), m('c', 'e2')], 'a', 'e1')).toBe('went');
   });
 });
+
+// Re-review 5640233124 findings.
+describe('re-review finding 17: the full hostname is redacted even when it contains a credential', () => {
+  it('redacts the host before credentials', () => {
+    const url = 'falkors://user:prod@prod-db.example.cloud:6380';
+    const out = describeError(new Error('ECONNREFUSED prod-db.example.cloud:6380'), url);
+    expect(out).not.toContain('example.cloud');
+    expect(out).not.toContain('-db.');
+  });
+});

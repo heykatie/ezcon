@@ -32,11 +32,12 @@ export function redact(text, url) {
   } catch {
     // not a parseable URL; the raw string was already redacted
   }
+  // Hosts first (longest first) so a credential inside a hostname can't split it and leave part visible.
+  for (const h of hosts.filter((x) => x && x.length >= 3).sort((a, b) => b.length - a.length)) out = out.split(h).join('<redacted>');
   // Credentials are always redacted; short ones only where they stand alone, so ordinary words survive.
   for (const c of [...new Set(creds.filter(Boolean))].sort((a, b) => b.length - a.length)) {
     out = c.length >= 4 ? out.split(c).join('<redacted>') : out.replace(new RegExp(`(?<![A-Za-z0-9])${escapeRegExp(c)}(?![A-Za-z0-9])`, 'g'), '<redacted>');
   }
-  for (const h of hosts.filter((x) => x && x.length >= 3)) out = out.split(h).join('<redacted>');
   return out;
 }
 

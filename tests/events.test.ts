@@ -27,6 +27,7 @@ describe('conference search', () => {
       startDate: '2026-09-23',
       endDate: '2026-09-25',
       location: 'San José, CA',
+      timezone: 'America/Los_Angeles',
       source: { url: 'https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions', retrievedAt: '2026-10-24T21:30:41Z', via: 'bright-data', status: 'verified' },
     };
     expect(searchEvents([...UPCOMING_EVENTS, wad], 'wearedevelopers', NOW)).toEqual([]);
@@ -46,5 +47,13 @@ describe('conference search', () => {
       expect(e.source.status).toBe('verified');
       expect(Number.isNaN(Date.parse(e.source.retrievedAt))).toBe(false);
     }
+  });
+});
+
+describe('re-review finding 5: "ended" is judged in the event’s own timezone', () => {
+  it('drops a Salt Lake City event once it is the next day there, even if still the last day in Los Angeles', () => {
+    // 23:30 PST on Nov 12 is 00:30 MST on Nov 13 in Salt Lake City.
+    expect(searchEvents(UPCOMING_EVENTS, 'kubecon', '2026-11-12T23:30:00-08:00')).toEqual([]);
+    expect(searchEvents(UPCOMING_EVENTS, 'kubecon', '2026-11-12T21:00:00-08:00')).toHaveLength(1);
   });
 });
