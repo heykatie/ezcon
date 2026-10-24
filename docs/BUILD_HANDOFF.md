@@ -55,10 +55,25 @@ Initial audience: budget-conscious attendees who need relevant conversations and
 - Proposed: one sourced raffle card demonstrates research and graph use; defer photo extraction and routing until core works. User asked about sponsor value; final inclusion priority is still pending.
 - Redeem/check Bright Data credits privately; confirm OpenAI sponsor credit access privately. Do not paste credentials into chat or Git.
 - WAD event app is https://app.wearedevelopers.com/events/18/map ; authenticated access verified. See DATA_SOURCES.md for concrete raffle source and routing limitations.
-- Verify multiple-track eligibility, pre-event code rules and exact submission deadline with organizers; planning assumptions are not official rules.
+- User confirmed all four tracks can be entered. Whether one project can win multiple prizes remains distinct; pre-event-code rules and exact submission mechanics still require organizer confirmation.
 
 This document is a handoff for work in the existing repository, not authorization to create another Codex task.
 
 ## Organizer timing verified October 24
 
 [Official schedule](https://www.wemakedevs.org/hackathons/ptc/schedule): build/submit block ends at 5:30 PM Pacific; presentations 5:30–6:30 PM, winners 6:30 PM, wrap 7 PM. Exact submission mechanics/cutoff still need organizer confirmation. [Overview](https://www.wemakedevs.org/hackathons/ptc) says OpenAI credits are claimed at the venue; Bright Data promo is patch50. It does not establish multiple-track winning eligibility or pre-event-code permission.
+
+## Additional verification October 24
+
+Separate synthetic graph ezcon_handoff_check: an unmet-speaker query initially returned synthetic-person; after MERGE of a profile-scoped MET relationship it returned no unmet person. This verifies database query behavior, not app-level authorization or recommendation quality. FalkorDB rejected traversal-pattern EXISTS syntax; use OPTIONAL MATCH plus m IS NULL for this tested query. SAVE succeeded. Keep this fixture separate from public conference facts.
+
+Bright Data current free-tier documentation confirms Web Unlocker, SERP, Scraper and Browser APIs share the allowance; Browser API uses 5 credits per MB. See https://docs.brightdata.com/general/account/billing-and-pricing/free-tier . Free allowance is not 5,000 equivalent browser requests.
+
+## Bright Data playground smoke tests
+
+October 24, two manually triggered Web Unlocker requests using the existing authenticated playground and confirmed free-credit allowance:
+
+1. WAD Docker session page: HTTP 200; returned title, Michael Irwin, Docker, September 23 10:00–10:30, Stage 1, matching previously inspected public browser fields. Retrieval works in provider playground; no ezcon API/SDK wiring yet.
+2. Universe session catalog: HTTP 200, but preview only exposed page header/footer and no sessions. Treat as incomplete content, not successful catalog extraction. Next: test Browser API/rendered retrieval or an official data endpoint. No repeated requests made.
+
+OpenAI billing page remained on browser verification; user handoff required before balance verification. No OpenAI model requests made and no personal funds authorized. Qodo remains blocked by previously observed provider review errors; do not repeatedly retry documentation reviews.

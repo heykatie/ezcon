@@ -1,6 +1,6 @@
 # Conference source inventory
 
-Checked October 24, 2026. Public availability is not a license to redistribute media or an assurance of complete coverage. Sources have been inspected manually; no Bright Data ingestion has yet been verified.
+Checked October 24, 2026. Public availability is not a license to redistribute media or an assurance of complete coverage. Sources have been inspected manually; one Bright Data playground retrieval has been verified; no ezcon ingestion pipeline exists.
 
 | Source | Established facts | Limits and use |
 | --- | --- | --- |
@@ -26,3 +26,5 @@ Event ID 18 is World Congress 2026 North America.
 - [TuxCare AirPods Pro 3](https://app.wearedevelopers.com/events/18/activity/179): winner announced September 24 at 4 PM at booth 631. This historical listing supports a scheduled raffle replay; entry conditions and mandatory presence are not stated in the inspected detail. Preserve source wording; confirm venue timezone when normalizing.
 
 These pages were inspected using the user's authenticated browser. Do not pass browser cookies or credentials to Bright Data, or label these as verified public/API-accessible sources. Keep authenticated-source captures local unless publication is separately authorized. Test public retrieval separately. A source-backed raffle card is now supported; a small route preview is feasible after manually validating walkable edges and labeling travel estimates. Do not claim optimized or accessible routes until tested.
+
+Bright Data smoke checks: WAD sampled session returned matching title/speaker/company/time/stage through Web Unlocker (HTTP 200). Universe catalog Web Unlocker preview returned only shell content despite HTTP 200; rendered retrieval remains necessary. These checks did not use the authenticated WAD event-app cookies.

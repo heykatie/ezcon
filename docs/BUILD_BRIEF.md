@@ -68,7 +68,7 @@ Hackathon delivery: these are approved product requirements; use one bounded raf
 
 ## Remaining decisions
 
-Exact source subset, ranking weights, model and API budgets, latency targets, fallback dataset and hosting remain to be finalized. Pre-event code and multiple-track eligibility are user-directed planning assumptions, not organizer-confirmed rules.
+Exact source subset, ranking weights, model and API budgets, latency targets, fallback dataset and hosting remain to be finalized. User confirms all four tracks can be entered. Multiple-prize eligibility and pre-event-code permission are separate and remain unverified.
 
 ## Quick networking card
 
