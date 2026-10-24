@@ -78,12 +78,15 @@ export function Today(ctx: Ctx) {
   const start = !next ? ctx.hiring.find((h) => !isScheduled(ctx, h.session.id)) : undefined;
   const prep = next ? prepFor(next, ctx) : undefined;
   const prepDone = next ? !!ps.prepDone[next.eventId] : false;
-  const steps: Array<[string, boolean]> = [
-    ['Opportunity', upcoming.length > 0],
-    ['Scheduled', upcoming.length > 0],
-    ['Prepared', Object.values(ps.prepDone).some(Boolean)],
-    ['Commute', !!ps.travelChoice],
+  const applied = (ps.applications ?? []).length > 0;
+  const steps: Array<{ label: string; done: boolean; action: string; go: () => void }> = [
+    { label: 'Add an opportunity to Schedule', done: upcoming.length > 0, action: 'Explore', go: () => ctx.goTab('discover') },
+    { label: 'Get ready for it', done: Object.values(ps.prepDone).some(Boolean), action: 'Schedule', go: () => ctx.goTab('schedule') },
+    { label: 'Choose how you’ll get there', done: !!ps.travelChoice, action: 'Schedule', go: () => ctx.goTab('schedule') },
+    { label: 'Apply to the role', done: applied, action: 'Explore', go: () => ctx.goTab('discover') },
   ];
+  const doneCount = steps.filter((x) => x.done).length;
+  const nextStep = steps.find((x) => !x.done);
   return (
     <div className="stack">
       <header className="page-head">
@@ -171,18 +174,32 @@ export function Today(ctx: Ctx) {
         </section>
       )}
 
-      <section className="card passport-strip between" aria-label="Plan progress">
-        <ol className="row" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
-          {steps.map(([label, done]) => (
-            <li key={label} className={`badge ${done ? 'good' : ''}`}>
-              {done ? '✓ ' : ''}
-              {label}
+      <section className="card stack" aria-labelledby="plan-h">
+        <div className="between">
+          <h2 id="plan-h">
+            Your plan · {doneCount} of {steps.length} done
+          </h2>
+          <button className="btn small" onClick={ctx.openLevelUp}>
+            Passport · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'stamp' : 'stamps'}
+          </button>
+        </div>
+        <ol className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
+          {steps.map((x, i) => (
+            <li key={x.label} className="between" style={{ opacity: x.done ? 0.7 : 1 }}>
+              <span className="small" style={{ fontWeight: x === nextStep ? 800 : 600 }}>
+                <span className={`badge ${x.done ? 'good' : x === nextStep ? 'accent' : ''}`} style={{ marginRight: 8 }}>
+                  {x.done ? '✓' : i + 1}
+                </span>
+                {x.label}
+              </span>
+              {x === nextStep && (
+                <button className="btn primary small" onClick={x.go}>
+                  {x.action}
+                </button>
+              )}
             </li>
           ))}
         </ol>
-        <button className="btn small" onClick={ctx.openLevelUp}>
-          Level Up · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'stamp' : 'stamps'}
-        </button>
       </section>
     </div>
   );

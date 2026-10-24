@@ -199,7 +199,7 @@ describe('ezcon core flow', () => {
     const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
     await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
     await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
-    await user.click(screen.getByRole('button', { name: /Level Up · \d+ stamps?/ }));
+    await user.click(screen.getByRole('button', { name: /Passport · \d+ stamps?/ }));
     const passport = await screen.findByRole('dialog', { name: 'Passport' });
     expect(within(passport).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
   });
