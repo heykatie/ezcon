@@ -4,7 +4,7 @@ Status: layout direction approved; detailed wireframes and demo dataset remain r
 
 ## Entry and navigation
 
-Try the demo → Today with a clearly labeled fictional profile and cached data notice on the public site. Make it yours → companion/profile setup, no registration. Main navigation: Today, My Day, People, Quests, Side Quests, Passport. Keep all six visible with labels; mobile layout must wrap or otherwise avoid cramped tap targets. Companion portrait opens profile/customization; My QR remains in the header. Chat is optional; every core task has a visible button. Desktop expands the same hierarchy into Today content plus day timeline; mobile keeps one main column.
+Try the demo → Today with a clearly labeled fictional profile and cached data notice on the public site. Make it yours → companion/profile setup, no registration. Bottom navigation: Today, Discover, Schedule, People. Discover contains Quests / Side Quests. Passport opens from Today’s progress strip or companion menu; companion menu includes My companion, Passport, Profile & preferences. My QR stays directly accessible in the header. Companion portrait opens profile/customization; My QR remains in the header. Chat is optional; every core task has a visible button. Desktop expands the same hierarchy into Today content plus day timeline; mobile keeps one main column.
 
 ## Today
 
@@ -39,7 +39,7 @@ Collected event stamps, self-confirmed achievements and companion accessory. One
 
 ## Profile and networking card
 
-Four companion choices, name/color, goals, skills, budget, availability and transport; progressive disclosure for details. More preferences is optional, but feasibility cannot be certified without required constraints. My QR: LinkedIn/GitHub switch, large URL QR, Open profile, Copy link; no OAuth. No real QR or private contact details in public fixtures without authorization.
+Four companion choices, name/color, goals, skills, budget, availability and transport; progressive disclosure for details. More preferences is optional, but feasibility cannot be certified without required constraints. My QR: GitHub / LinkedIn / Personal or Portfolio switch, large URL QR, Open link, Copy link; editable HTTPS URLs, no OAuth. Hide missing-link options or offer Add link; do not generate a QR for a blank or invalid URL. No real QR or private contact details in public fixtures without authorization.
 
 ## Acceptance checkpoints
 
@@ -81,3 +81,9 @@ The linked in-conversation wireframe is an interaction preview. Its state and il
 - Today keeps compact summaries and links to these catalogs; do not cram every opportunity into the home screen.
 
 First build: one public-profile enrichment example with honest missing fields, Want to meet/Met views, one sourced main quest, one sourced raffle side quest and full-day overview. Extensive people enrichment and arbitrary event discovery are later coverage, not assumed complete.
+
+## Navigation and networking card update
+
+Approved bottom navigation is Today / Discover / Schedule / People. Schedule replaces the label My Day everywhere in product copy. Quests means goal-directed learning, career and networking opportunities; Side Quests means optional social/fun discoveries. Both live inside Discover; overlapping items share one record with both labels. Passport is secondary through companion menu and Today strip.
+
+My QR supports three equally accessible destinations: GitHub, LinkedIn, Personal / Portfolio. The third accepts an editable personal-site or portfolio HTTPS URL; it does not require an account connection. QR generation, displayed destination, Open link and Copy link must agree with the selected option. Validate URLs and preserve per-profile isolation; do not expose private contact details. Network requests are not needed to generate the QR. A user can leave any link blank. Offline availability remains a verification requirement.
