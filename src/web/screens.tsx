@@ -9,7 +9,7 @@ import type { ScheduleItem, Conflict } from '../domain/schedule';
 import { STAMP_TEXT, ACCESSORY, unlockedAccessories, type RewardState, type Stamp } from '../domain/rewards';
 import { validateProfileLink, type LinkKind } from '../domain/urls';
 import { personId } from '../domain/ids';
-import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_GOODIES, WAD_RUN, type CompanionKind, type DemoProfile, type SideQuest } from '../data/demo';
+import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_GOODIES, WAD_GOODIES_SOURCE, WAD_RUN, type CompanionKind, type DemoProfile, type SideQuest } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
 import PEOPLE_LINKS from '../data/people-links.json';
@@ -1297,7 +1297,7 @@ export function RaffleSection(ctx: Ctx) {
           <ul className="goodies-list">
             {WAD_GOODIES.map((item) => <li key={`${item.host}:${item.name}`}><b>{item.name}</b><span>{item.host}</span></li>)}
           </ul>
-          <SourceLine source={quests[0]!.source} label="Event app catalog" />
+          <SourceLine source={WAD_GOODIES_SOURCE} label="Event app catalog" />
         </section>
       )}
     </section>

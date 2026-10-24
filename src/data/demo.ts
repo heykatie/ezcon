@@ -126,7 +126,7 @@ export interface SideQuest {
   sampleTicket?: string;
 }
 
-const WAD_EVENT_APP_SOURCE: SourceRef = {
+export const WAD_GOODIES_SOURCE: SourceRef = {
   url: 'https://app.wearedevelopers.com/events/18/goodies',
   retrievedAt: '2026-10-24T23:08:02Z',
   via: 'manual-browser',
@@ -155,7 +155,7 @@ export const SIDE_QUESTS: SideQuest[] = [
     entry: 'The event listing does not state how to enter.',
     unknowns: ['Entry conditions and whether the winner had to be present were not stated'],
     conference: 'wad26na',
-    source: { ...WAD_EVENT_APP_SOURCE, url: 'https://app.wearedevelopers.com/events/18/activity/179' },
+    source: { ...WAD_GOODIES_SOURCE, url: 'https://app.wearedevelopers.com/events/18/activity/179' },
     draw: 'Winner announced September 24, 2026 at 4:00 PM PDT',
     historical: true,
     sampleTicket: 'DEMO-0427',
@@ -169,7 +169,7 @@ export const SIDE_QUESTS: SideQuest[] = [
     entry: 'Scan the QR code at booth 624 to enter.',
     unknowns: ['Draw time and whether the winner had to be present were not stated'],
     conference: 'wad26na',
-    source: { ...WAD_EVENT_APP_SOURCE, url: 'https://app.wearedevelopers.com/events/18/goodie/265' },
+    source: { ...WAD_GOODIES_SOURCE, url: 'https://app.wearedevelopers.com/events/18/goodie/265' },
     historical: true,
   },
 ];

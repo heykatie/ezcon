@@ -231,6 +231,8 @@ describe('ezcon core flow', () => {
     expect(screen.getByText(/Fictional sample ticket · DEMO-0427/)).toBeTruthy();
     expect(screen.getByText(/No real entry, reminder or reward is recorded/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Snap ticket photo/ })).toBeNull();
+    const pastGiveaways = screen.getByRole('heading', { name: 'Past giveaways' }).closest('section')!;
+    expect(within(pastGiveaways).getByRole('link', { name: 'app.wearedevelopers.com' }).getAttribute('href')).toBe('https://app.wearedevelopers.com/events/18/goodies');
     expect(stored().raffleTickets).toBeUndefined();
   });
 
