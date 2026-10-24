@@ -206,7 +206,8 @@ describe('ezcon core flow', () => {
 
   it('saves a raffle ticket number with a confirmed entry', async () => {
     const user = await startDemo();
-    await openExplore(user);
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Goodies' }));
+    expect(screen.getByRole('heading', { name: 'Goodies & side quests' })).toBeTruthy();
     const raffle = screen.getByRole('heading', { name: 'Tailscale keyboard raffle' }).closest('article')!;
     await user.type(within(raffle).getByRole('textbox', { name: /Ticket number/ }), '0427');
     await user.click(within(raffle).getByRole('button', { name: 'Save ticket' }));
@@ -228,7 +229,7 @@ describe('ezcon core flow', () => {
 
   it('labels future features as previews, not working features', async () => {
     const user = await startDemo();
-    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Next' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Goodies' }));
     const preview = screen.getByRole('heading', { name: 'Coming next', level: 3 }).closest('section')!;
     expect(within(preview).getByText('Concept preview — not working yet')).toBeTruthy();
     for (const f of ['Booth routing', 'Raffle ticket reading', 'Side quests']) expect(within(preview).getByText(f)).toBeTruthy();

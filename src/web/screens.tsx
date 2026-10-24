@@ -402,7 +402,6 @@ export function Explore(ctx: Ctx) {
       {!upcoming && <p className="notice">Past event · replay. Sessions are for recall and research; nothing sends reminders.</p>}
       {upcoming && ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
 
-      <RaffleSection {...ctx} />
       <section className="stack" aria-labelledby="quests-h">
         <div className="section-title">
           <h2 id="quests-h">Quests</h2>
@@ -1249,12 +1248,12 @@ async function shrinkPhoto(file: File, max = 480): Promise<string> {
   }
 }
 
-function RaffleSection(ctx: Ctx) {
+export function RaffleSection(ctx: Ctx) {
   const [photo, setPhoto] = useState<string>();
   const [number, setNumber] = useState('');
   const [error, setError] = useState<string>();
   const q = SIDE_QUESTS.find((x) => x.conference === ctx.conference);
-  if (!q) return null;
+  if (!q) return <p className="card soft small">No sourced raffles for this conference.</p>;
   const saved = (ctx.ps.raffleTickets ?? []).find((t) => t.questId === q.id);
   return (
     <section className="stack" aria-labelledby="raffle-h">

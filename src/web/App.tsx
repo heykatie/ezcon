@@ -16,7 +16,7 @@ import { HeaderSearch } from './HeaderSearch';
 import { toScheduleItem } from '../domain/recommend';
 import { Sheet, Toast } from './ui';
 import {
-  CheckInSheet, ComingNext, ConflictSheet, Explore, PassportSheet, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
+  CheckInSheet, ComingNext, ConflictSheet, Explore, PassportSheet, People, RaffleSection, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
   type CheckIn, type Ctx, type PState,
 } from './screens';
 
@@ -275,7 +275,7 @@ export function App() {
     ['discover', 'Explore', 'compass'],
     ['schedule', 'Schedule', 'calendar'],
     ['people', 'People', 'people'],
-    ['next', 'Next', 'spark'],
+    ['next', 'Goodies', 'ticket'],
   ];
 
   return (
@@ -330,9 +330,10 @@ export function App() {
           {tab === 'next' && (
             <div className="stack">
               <header className="page-head">
-                <h1>Coming next</h1>
-                <p className="muted">Ideas after the core flow — not working yet.</p>
+                <h1>Goodies &amp; side quests</h1>
+                <p className="muted">Optional fun — never counts toward your budget.</p>
               </header>
+              <RaffleSection {...ctx} />
               <div className="card">
                 <ComingNext />
               </div>
