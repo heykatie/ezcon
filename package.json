@@ -1,0 +1,23 @@
+{
+  "name": "ezcon",
+  "version": "1.0.0",
+  "description": "smooth out your convention experience",
+  "scripts": {
+    "check:graph": "node --env-file=.env scripts/check-falkordb.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heykatie/ezcon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/heykatie/ezcon/issues"
+  },
+  "homepage": "https://github.com/heykatie/ezcon#readme",
+  "dependencies": {
+    "falkordb": "6.9.2"
+  },
+  "private": true
+}

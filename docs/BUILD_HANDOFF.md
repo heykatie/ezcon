@@ -93,3 +93,13 @@ This verifies live model-driven research in TrueForge UI. It does not verify the
 ## FalkorDB lab and track evidence
 
 October 24: lab page https://labs.falkordb.cloud/labs/ptc shows Ready and TLS enabled, with a 48-hour lifetime. Cloud credentials were not copied or stored and no cloud connection was attempted. Local ezcon-falkordb remains running with named persistent volume; a fresh synthetic MATCH p=(Profile)-[:MET]->(Person)-[:SPEAKS_AT]->(Event) RETURN p returned a nonempty two-hop path. This is infrastructure/query verification only; the application must still implement and display a relevant sourced domain path. Use local persistence as default; cloud is optional, ephemeral and requires export before expiry if used. DEMO.md now explicitly maps every FalkorDB judging criterion to a required visible action.
+
+## Cloud lab connected and checked
+
+October 24: official falkordb Node client installed at pinned version in package.json. Lab TLS URL is stored locally as FALKORDB_URL in .env (mode 0600); .env is ignored and must not be committed, displayed or copied into handoff text. Run npm ci, then npm run check:graph. The script requires a TLS URL, uses a connection timeout/no reconnect loop, and logs only nonsecret checks. It MERGEs a bounded setup fixture into conference, preserving other nodes.
+
+PASS TLS query; PASS 5 fixture nodes; PASS 5 edges after synthetic meeting; PASS real three-hop returned path; PASS one synthetic MET relationship after closing/reopening connection. Repeated run kept counts at 5/5. Browser login and conference graph visualization independently verified. Missing FALKORDB_URL fails clearly. Installed package audit reported zero vulnerabilities at installation, not a comprehensive security audit.
+
+Fixture: real public session/speaker/stage with source URL, derived Topic, fictional Attendee and fictional MET. A fixture is not a user recommendation or real attendance record. Cloud persistence was checked across client reconnect, not server restart. Cloud lab lifetime remains 48 hours. Before expiry export its RDB through the lab's Export RDB snapshot control if retaining new data; preserve local database as fallback. Cloud URL is local only and must be privately re-entered in any different workspace.
+
+The first implementation should reuse this connection and replace fixture-only paths with validated domain queries. No app UI, TrueForge-to-graph tool, routing or source ingestion pipeline is implemented yet. Qodo now has a substantive connection-check script to review; completed review still needs verification.
