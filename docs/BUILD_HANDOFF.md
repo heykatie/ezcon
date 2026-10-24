@@ -76,3 +76,23 @@ Inspect running responsive UI, keyboard flow, phone QR scanning, reload persiste
 ## Last pre-handoff checks
 
 Universe structured browser snapshot extraction matched one session's actual DOM-contained title, speaker, time and venue; see DATA_SOURCES.md for golden record and neighboring regression candidates. This resolves source-access uncertainty, not full-catalog extraction quality. Qodo reinstall and workspace linking are verified: installation 174936514 is scoped to ezcon, portal sync reports one repository, connection is Healthy, code review is enabled, and PR history indexing is Active. A fresh review on PR #1 completed with three inline findings. See https://github.com/heykatie/ezcon/pull/1#issuecomment-6389524759 and https://github.com/heykatie/ezcon/pull/1#pullrequestreview-5640025345 . No plan purchased or extra repositories granted. All three findings are fixed with regression tests (see Sponsor setup item 1).
+
+## Implementation status (October 24, 2026, end of first build session)
+
+Implemented and verified:
+- React/TypeScript app (Vite) with Today, Discover, Schedule and People; My QR; companion/profile setup. Working flow: opportunity → Hiring connections (career goal) / goal matches → Add to Schedule with Undo or Keep existing / Replace / Cancel → Get ready step → per-event and full-day Getting there comparison (up to three labeled options, never padded).
+- Hiring connections: two Microsoft "Software Engineer - Forward Deployed Engineer" roles (jobs 200057324, 200060976) verified open on Microsoft's official careers API with live application pages, paired with talks by speakers listed with Microsoft (Landon Cox, Pamela Fox). GitHub SWE III roles were checked and excluded (Bachelor's + 2 years minimum). `npm run check:roles` rechecks; roles older than 72 hours stop counting as open.
+- FalkorDB: application graph `ezcon` on the cloud lab via the local API (loopback only). Verified live: recommendation paths, meeting-derived MET → WORKS_AT → WORKS_AT → SPEAKS_AT paths, persistence across a dropped/reopened connection, profile isolation, input rejection and undo. Contract tests run against local Docker (`npm run test:graph`).
+- TrueForge + Bright Data: `npm run research -- wad-session <url>` ran gpt-5.4-nano with only `scrape_as_html` allowed; Bright Data returned 81,827 chars; ezcon's parser extracted the golden WAD fields (45 s, 33,132 input tokens). TrueForge's large-tool-response offload is disabled per session so raw HTML reaches the parser.
+- Travel facts: BART $4.50 Clipper 12th St ↔ Embarcadero for Oct 28 (official BART API), Muni $2.85 (SFMTA; transfer discount not applied), Bay Bridge $8.50 westbound only (BATA), Fort Mason event-day lot $6/h to $30, fees 7 AM–midnight, may increase on high-attendance dates.
+- Tests: 106 unit/integration tests plus 8 FalkorDB contract tests.
+
+Cached/labeled, not live:
+- Public build uses the in-browser graph and the Oct 24 snapshot (Universe sessions from the browser-verified capture; WAD session from the live Bright Data run). Badges show cached mode, fictional profile and simulated clock.
+- Booth routing, raffles, side quests and Passport rewards appear only as a labeled "Coming next" concept preview.
+
+Open items:
+- Live Universe catalog through Bright Data MCP returns only the catalog shell (6 attempts, including the All Sessions tab URL); per-session detail pages or a wait-for-element step are untested next options.
+- Vercel deployment blocked: the Vercel connector is not signed in and the CLI is not installed/logged in.
+- Qodo has not yet reviewed the application commits (head fac2080).
+- Bright Data balance was not rechecked in the dashboard (page did not render in the agent browser); usage was 2 Web Unlocker scrapes and 6 rendered-browser captures.
