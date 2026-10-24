@@ -48,6 +48,14 @@ FalkorDB: multi-hop queries, explainable paths and memory. Bright Data: fresh di
 
 ## Open decisions
 
+## On-the-go mode and venue routes
+
+Use a companion dashboard with a persistent Next Up card, large thumb-reachable controls and optional nonblocking bottom-sheet prompts. Each contextual prompt has at most three primary choices and Later/Dismiss, preserves entered state, supports undo, and never interrupts typing, camera use or another prompt. Default prompts: leave for a fixed commitment, mark arrival/skip/replan, confirm a raffle reminder, and a deferred post-event meeting check-in. Quiet mode and grouped overdue prompts prevent alert fatigue. In-app timing does not imply background notification delivery or live location tracking.
+
+Map and timeline represent the same itinerary. Fixed talks/workshops/meetings/raffles constrain flexible booth stops. Offer Best opportunities, Least walking and Balanced routes with tradeoffs; compute paths over verified walkable edges, accounting for floors and accessibility. Use manual current-location selection and Arrived in MVP. Public campus images and sponsor building/floor statements do not establish exact booth coordinates, accessible paths or indoor positioning. If detailed verified geography is unavailable, use a visibly labeled schematic and estimated travel buffers; do not claim turn-by-turn or live indoor navigation.
+
+Research evidence checked October 24, 2026: https://tailscale.com/universe-26 publicly identifies Gateway Pavilion level 2, links a campus-map image and advertises demo-related plushies and a keyboard raffle. Draw time and precise booth position were not established. Public availability does not establish redistribution permission for the map asset. Verify asset usage rights before embedding.
+
 ## Booth discoveries, raffles and meeting recall
 
 Product scope includes booth giveaways, demos and raffles with sourced booth locations, eligibility, closing/draw times, timezone and whether physical presence is required. Unknown schedules are not invented. Save a ticket photo privately, extract its number and associated draw, and require user confirmation before scheduling a reminder. Preserve the original image for correction; ticket identifiers and photos never enter public source data or Git. Photos may contain barcodes or redeemable codes and should not appear in public recordings. Local in-app reminders are distinct from background/device notifications; delivery while closed or asleep is not promised until tested and supported by the chosen deployment.
