@@ -235,13 +235,19 @@ function HiringSection(ctx: Ctx) {
 
 export function HiringCard({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
   const scheduled = isScheduled(ctx, h.session.id);
+  const [open, setOpen] = useState(false);
   return (
     <article className="card career stack" aria-label={`Hiring connection: ${h.role.title} at ${h.role.company}`}>
       <div className="row">
         <span className="badge good">Open role · checked {fmtStamp(h.role.checkedAt)}</span>
       </div>
       <div>
-        <h3>{h.role.title}</h3>
+        <h3>
+          <button className="card-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+            {h.role.title}
+            <span className="tiny muted">{open ? 'Less' : 'More info'}</span>
+          </button>
+        </h3>
         <p className="small muted">
           {h.role.company} · {h.role.location}
         </p>
@@ -275,16 +281,69 @@ export function HiringCard({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
           Why this fits
         </button>
       </div>
+      {open && (
+        <div className="stack" style={{ gap: 8, borderTop: '1px dashed var(--line)', paddingTop: 10 }}>
+          <p className="small">
+            <b>Role requirements:</b> {h.role.requirementSummary || 'Not stated in the listing summary.'}
+          </p>
+          <p className="small">
+            <b>Why this pairing:</b> {h.explanation}
+          </p>
+          <SourceLine source={h.role.source} label="Role source" />
+          <SessionDetails session={h.session} />
+        </div>
+      )}
     </article>
+  );
+}
+
+function SessionDetails({ session }: { session: SessionRecord }) {
+  const links = PEOPLE_LINKS as Record<string, { status: string; url?: string }>;
+  return (
+    <div className="stack" style={{ gap: 8, borderTop: '1px dashed var(--line)', paddingTop: 10 }}>
+      {session.summary && <p className="small">{session.summary}</p>}
+      {session.speakers.length > 0 && (
+        <ul className="stack small" style={{ margin: 0, paddingLeft: 18, gap: 4 }}>
+          {session.speakers.map((sp) => {
+            const li = links[personId(sp.name, sp.company)];
+            return (
+              <li key={sp.name}>
+                <b>{sp.name}</b>
+                {[sp.title, sp.company].filter(Boolean).length ? ` — ${[sp.title, sp.company].filter(Boolean).join(', ')}` : ''}
+                {li?.status === 'found' && li.url && (
+                  <>
+                    {' '}
+                    ·{' '}
+                    <a href={li.url} target="_blank" rel="noopener noreferrer">
+                      LinkedIn ↗
+                    </a>
+                  </>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p className="tiny muted">
+        {[session.sessionType, ...session.topics].filter(Boolean).join(' · ') || 'No topics listed'}
+      </p>
+      <SourceLine source={session.source} />
+    </div>
   );
 }
 
 function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: SessionRecord; reasons?: string[]; paths: GraphPath[] }) {
   const scheduled = isScheduled(ctx, session.id);
   const past = Date.parse(session.start) <= Date.parse(ctx.now);
+  const [open, setOpen] = useState(false);
   return (
     <article className="card stack">
-      <h3>{session.title}</h3>
+      <h3>
+        <button className="card-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {session.title}
+          <span className="tiny muted">{open ? 'Less' : 'More info'}</span>
+        </button>
+      </h3>
       <p className="small muted">
         {session.sessionType ?? 'Session'} · {fmtRange(session.start, session.end)} · {session.location ?? 'Location not listed'}
       </p>
@@ -309,7 +368,7 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
           {paths.length ? 'Why this fits' : 'No path from your interests'}
         </button>
       </div>
-      <SourceLine source={session.source} />
+      {open && <SessionDetails session={session} />}
     </article>
   );
 }

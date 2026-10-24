@@ -141,6 +141,19 @@ describe('ezcon core flow', () => {
     expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
   });
 
+  it('expands a session card in place for more information', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const toggle = screen.getByRole('button', { name: /Build once, run on any agent/ });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    await user.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    const card = toggle.closest('article')!;
+    expect(within(card).getByText(/Most developers use AI the same way/)).toBeTruthy();
+    expect(within(card).getByText(/Shishir Tewari/)).toBeTruthy();
+    expect(within(card).getByRole('link', { name: 'LinkedIn ↗' }).getAttribute('href')).toMatch(/^https:\/\/www\.linkedin\.com\/in\//);
+  });
+
   it('records a self-reported application without applying', async () => {
     const user = await startDemo();
     await openExplore(user);

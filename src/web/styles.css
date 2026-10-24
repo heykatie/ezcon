@@ -198,3 +198,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .header-search-option[aria-selected='true'] { background: var(--accent-soft); }
 @media (max-width: 640px) { .header-search { order: 10; flex-basis: 100%; max-width: none; } }
 @media (max-width: 640px) { .header select { max-width: 32vw !important; flex: 1 1 auto; min-width: 0; } .header { gap: 8px; } }
+.card-toggle { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; width: 100%; font: inherit; font-weight: 800; color: var(--ink); }
+.card-toggle:focus-visible { box-shadow: var(--focus); border-radius: 8px; }
+.card-toggle .tiny { font-weight: 700; white-space: nowrap; color: var(--accent); }
