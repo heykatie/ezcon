@@ -19,8 +19,8 @@ Each feature may use the conference that best demonstrates it. Conference/editio
 ## Core journey
 
 1. Try the demo opens Today with a preconfigured fictional profile and default companion. Make it yours starts companion/profile setup. Customization remains available later.
-2. Research sessions, speakers, workshop hosts, represented companies, side events and official job openings.
-3. Explain recommendations through evidence paths. Roles must connect to companies represented at the event; sponsorship, employee participation and booth presence are distinct facts.
+2. Research sessions, speakers, workshop hosts, represented companies, side events and currently open official job listings with direct application links.
+3. Make career matches explicit: pair a verified open role with the event touchpoint connected to its company (booth/company event, or a talk/workshop/event with a verified host or speaker affiliated with that company). Show the title, employer, current-open status/check time and employer application link. Explain the source-backed event → person/company → role connection. Never imply referral access or direct availability without evidence.
 4. Compare relevant events and full itineraries by admission, gas/tolls/parking or transit, likely food spending and travel buffers. Enforce hard constraints. Unknown cost means feasibility is unconfirmed; prizes do not offset expenses.
 5. Add to a schedule and offer one preparation step: tools/prerequisites, role research, introduction practice or questions.
 6. Post-event: Went / Met someone / Skipped; optional quick note. Persist meetings and suggest editable next actions.
@@ -30,7 +30,7 @@ Goal prompt: What would make today a win? Optional, multi-select one-tap choices
 
 ## Demo MVP
 
-One conference week, 5–10 selected events, a bounded people/company graph, a few current roles, one parking comparison, one persistent interaction and one follow-up draft. Companion dashboard: opportunity cards, timeline and chat drawer. One accessory unlock. No automatic email, applications, purchases or bookings. Full arbitrary-conference discovery and elaborate avatar creation are deferred.
+One conference week, 5–10 selected events, a bounded people/company graph, a few current roles paired with relevant event touchpoints and employer application links, one parking comparison, one persistent interaction and one follow-up draft. Companion dashboard: opportunity cards, timeline and chat drawer. One accessory unlock. No automatic email, applications, purchases or bookings. Full arbitrary-conference discovery and elaborate avatar creation are deferred.
 
 ## Product validation and business
 

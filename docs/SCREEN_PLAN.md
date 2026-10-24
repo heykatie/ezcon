@@ -11,13 +11,19 @@ Try the demo → Today with a clearly labeled fictional profile and cached data 
 - Greeting with small companion and conference/edition. Past/replay and upcoming modes never merge silently.
 - What would make today a win? Four optional multi-select goal chips from BUILD_BRIEF.md. Selection updates recommendations; no full-screen onboarding gate.
 - Next Up: title, time, location, next action. Nothing scheduled: Let’s plan your first stop.
-- For your goals: 2–3 opportunities with short reason, time/location, known cost or unknown status, Save and Why this fits.
+- For your goals: 2–3 opportunities with short reason, time/location, known cost or unknown status, Save and Why this fits. When Career is selected, put verified hiring connections first and label them clearly as a role plus the related conference touchpoint.
 - Side quests: optional relevant booth/raffle/social activity; disclose commitment and eligibility unknowns. Never outrank a hard schedule constraint.
 - Passport strip: latest stamp/progress; tap opens Passport.
 
 ## Opportunity and comparison
 
 Open from a card into a mobile sheet or desktop detail panel. Show goal match, company/person relationship, time/location, source and retrieval date, evidence status, cost/travel range, eligibility and a single Add to Schedule action. Why this fits expands an actual graph path with source-backed edges. No job match unless a represented company and real suitable opening are verified. A session does not guarantee access to its speaker.
+
+### Career opportunity card
+
+Make the career use case explicit in Today and Quests. A hiring connection pairs **a currently open role** with **a relevant conference touchpoint**: a company booth/event, or a talk/workshop/event whose verified host or speaker is affiliated with that hiring company. Show the role title and company, a clear `Open role` status with when it was checked, the named booth/session/person and time/location, one sentence explaining the evidence-backed connection, and a direct `View role & apply` link to the employer's application page. Keep `Add event to Schedule` separate from the application link. `Why this fits` must show the source path from event → company/person → role; don't imply a person is hiring, can refer the attendee or will be available unless that is separately confirmed.
+
+Only call a role open when the official job listing is still live and has a working application URL at retrieval time. Show the employer source and retrieval time. If the role is closed, stale, inaccessible or not verified, don't present a hiring connection or invent an apply link; the event can still appear as a learning/networking match with that status clearly separated. Never auto-apply or submit profile data.
 
 If options clash, compare them directly: goal relevance, full cost, travel, fixed commitments and unique value. User chooses; no silent removal. Unknown costs produce an unconfirmed estimate, not a within-budget guarantee.
 
