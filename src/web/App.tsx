@@ -12,6 +12,7 @@ import { clearAll, load, profileKey, save } from './store';
 import { Companion } from './Companion';
 import { checkinAfterUndo, meetingIdFor } from './checkins';
 import { Icon, type IconName } from './Icon';
+import { HeaderSearch } from './HeaderSearch';
 import { toScheduleItem } from '../domain/recommend';
 import { Sheet, Toast } from './ui';
 import {
@@ -293,7 +294,14 @@ export function App() {
           <option value="universe26">GitHub Universe 2026 · Upcoming</option>
           <option value="wad26na">WAD NA 2026 · Past</option>
         </select>
-        <span className="spacer" />
+        <HeaderSearch
+          now={now}
+          onSelectConference={(c) => {
+            save('conference', c);
+            setConference(c);
+            setTab('discover');
+          }}
+        />
         <button className="btn small primary" onClick={() => setSheet({ kind: 'qr' })} aria-label="My QR">
           My QR
         </button>

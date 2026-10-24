@@ -140,13 +140,16 @@ describe('ezcon core flow', () => {
     expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
   });
 
-  it('puts conference search at the top of Explore and filters as you type', async () => {
+  it('searches upcoming events from the header dropdown', async () => {
     const user = await startDemo();
-    await openExplore(user);
-    const search = screen.getByRole('searchbox', { name: 'Search conferences & events' });
+    const search = screen.getByRole('combobox', { name: 'Search conferences & events' });
+    await user.click(search);
+    const list = screen.getByRole('listbox', { name: 'Upcoming events' });
+    expect(within(list).getAllByRole('option')).toHaveLength(4);
     await user.type(search, 'kube');
-    expect(screen.getByText('1 verified upcoming event')).toBeTruthy();
-    expect(screen.getByText('KubeCon + CloudNativeCon North America 2026')).toBeTruthy();
+    expect(within(list).getAllByRole('option').map((o) => o.textContent)).toEqual([expect.stringContaining('KubeCon')]);
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).toBeNull();
   });
 
   it('labels future features as previews, not working features', async () => {

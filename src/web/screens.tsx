@@ -16,8 +16,6 @@ import PEOPLE_LINKS from '../data/people-links.json';
 import { slug } from '../domain/ids';
 import { ROLES } from '../data/demo';
 import { Icon, type IconName } from './Icon';
-import { searchEvents } from '../domain/events';
-import { UPCOMING_EVENTS } from '../data/events';
 import { compareTravel, TravelOptions } from './TravelOptions';
 import { fmtDay, fmtRange, fmtStamp, fmtTime, localOf, money, PathView, Sheet, SourceLine } from './ui';
 
@@ -331,7 +329,6 @@ export function Explore(ctx: Ctx) {
         <h1>Explore</h1>
         <p className="muted">What could I do?</p>
       </header>
-      <EventSearch now={ctx.now} />
       <div className="row" role="group" aria-label="Goals (optional, choose any)">
         {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
           <button key={g} className="chip" aria-pressed={ctx.ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
@@ -360,42 +357,6 @@ export function Explore(ctx: Ctx) {
       </section>
       <ResearchPanel ctx={ctx} />
     </div>
-  );
-}
-
-function EventSearch({ now }: { now: string }) {
-  const [q, setQ] = useState('');
-  const results = searchEvents(UPCOMING_EVENTS, q, now);
-  const day = (d: string) => fmtDay(`${d}T12:00:00-08:00`);
-  return (
-    <section className="stack" aria-label="Search conferences and events" style={{ gap: 8 }}>
-      <label className="field search" style={{ position: 'relative' }}>
-        <span className="muted" style={{ position: 'absolute', left: 18, top: 16, pointerEvents: 'none' }}>
-          <Icon name="search" />
-        </span>
-        <span className="sr-only">Search conferences &amp; events</span>
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search events or cities" />
-      </label>
-      <p className="tiny muted" role="status" aria-live="polite">
-        {results.length} verified upcoming {results.length === 1 ? 'event' : 'events'}
-      </p>
-      <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
-        {results.map((e) => (
-          <li key={e.id} className="card soft" style={{ padding: '10px 12px' }}>
-            <div className="between">
-              <b className="small">{e.name}</b>
-              <span className={`badge ${e.supported ? 'good' : ''}`}>{e.supported ? 'Planning available' : 'Listing only'}</span>
-            </div>
-            <span className="tiny muted">
-              {day(e.startDate)}–{day(e.endDate)} · {e.location} ·{' '}
-              <a href={e.source.url} target="_blank" rel="noopener noreferrer">
-                source
-              </a>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 
