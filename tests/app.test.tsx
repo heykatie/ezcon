@@ -135,9 +135,21 @@ describe('ezcon core flow', () => {
     await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Explore/ }));
     expect(screen.getByRole('heading', { name: 'Open roles at companies from this event' })).toBeTruthy();
     expect(screen.getByText(/No verified open roles yet at Docker/)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your applications from this event' })).toBeTruthy();
     expect(await screen.findByText('Michael Irwin')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Add to Schedule' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
+  });
+
+  it('records a self-reported application without applying', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
+    await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
+    expect(within(card).getByRole('button', { name: '✓ Applied' })).toBeTruthy();
+    expect(stored().applications).toEqual([expect.objectContaining({ company: 'Microsoft', title: 'Software Engineer - Forward Deployed Engineer' })]);
+    await user.click(within(card).getByRole('button', { name: '✓ Applied' }));
+    expect(stored().applications).toEqual([]);
   });
 
   it('searches upcoming events from the header dropdown', async () => {

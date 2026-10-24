@@ -32,6 +32,8 @@ export interface PState {
   travelChoice?: string;
   accessoryOn: boolean;
   visited: string[];
+  /** Self-reported applications; ezcon never applies on the user's behalf. */
+  applications?: Array<{ roleId: string; title: string; company: string; applyUrl: string; eventId: string; appliedAt: string }>;
   /** Demo history has been written to the graph once. */
   seeded?: boolean;
 }
@@ -259,6 +261,7 @@ export function HiringCard({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
         <a className="btn career small" href={h.applyUrl} target="_blank" rel="noopener noreferrer">
           View role &amp; apply ↗
         </a>
+        <AppliedToggle ctx={ctx} h={h} />
         <button className="btn primary small" disabled={scheduled} onClick={() => ctx.add(h.session)}>
           {scheduled ? 'Event on your schedule' : 'Add event to Schedule'}
         </button>
@@ -1069,6 +1072,7 @@ function PastExplore(ctx: Ctx) {
   const companies = [...new Set(ctx.sessions.flatMap((s) => s.speakers.map((sp) => sp.company).filter((c): c is string => !!c)))].sort();
   const roles = ROLES.filter((r) => r.status === 'open' && companies.some((c) => slug(c) === slug(r.company)));
   const met = ctx.meetings.filter((m) => ctx.sessions.some((s) => s.id === m.eventId));
+  const applied = (ctx.ps.applications ?? []).filter((a) => ctx.sessions.some((s) => s.id === a.eventId));
   return (
     <div className="stack">
       <header className="page-head">
@@ -1091,6 +1095,27 @@ function PastExplore(ctx: Ctx) {
           <p className="card soft small">No verified open roles yet at {companies.join(', ')}. ezcon only shows roles checked on the employer’s own careers site.</p>
         )}
       </section>
+      <section className="stack" aria-labelledby="past-apps-h">
+        <h2 id="past-apps-h">Your applications from this event</h2>
+        {applied.length ? (
+          applied.map((a) => (
+            <article key={a.roleId} className="card between">
+              <span>
+                <b>{a.title}</b>
+                <br />
+                <span className="small muted">
+                  {a.company} · marked applied {fmtStamp(a.appliedAt)} · linked to {ctx.sessions.find((s) => s.id === a.eventId)?.title}
+                </span>
+              </span>
+              <a className="btn small" href={a.applyUrl} target="_blank" rel="noopener noreferrer">
+                Listing ↗
+              </a>
+            </article>
+          ))
+        ) : (
+          <p className="card soft small">No applications logged from this event. Use “Mark as applied” on a hiring connection; ezcon never applies for you.</p>
+        )}
+      </section>
       <section className="stack" aria-labelledby="past-follow-h">
         <h2 id="past-follow-h">Follow up</h2>
         {met.length ? (
@@ -1110,5 +1135,25 @@ function PastExplore(ctx: Ctx) {
       </section>
       <ResearchPanel ctx={ctx} />
     </div>
+  );
+}
+
+function AppliedToggle({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
+  const applied = (ctx.ps.applications ?? []).some((a) => a.roleId === h.role.id);
+  return (
+    <button
+      className="btn small"
+      aria-pressed={applied}
+      onClick={() =>
+        ctx.update((p) => ({
+          ...p,
+          applications: applied
+            ? (p.applications ?? []).filter((a) => a.roleId !== h.role.id)
+            : [...(p.applications ?? []), { roleId: h.role.id, title: h.role.title, company: h.role.company, applyUrl: h.applyUrl, eventId: h.session.id, appliedAt: new Date().toISOString() }],
+        }))
+      }
+    >
+      {applied ? '✓ Applied' : 'Mark as applied'}
+    </button>
   );
 }
