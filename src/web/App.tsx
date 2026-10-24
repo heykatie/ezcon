@@ -12,7 +12,7 @@ import { Companion } from './Companion';
 import { checkinAfterUndo } from './checkins';
 import { Sheet, Toast } from './ui';
 import {
-  CheckInSheet, ConflictSheet, Discover, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
+  CheckInSheet, ComingNext, ConflictSheet, Explore, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
   type CheckIn, type Ctx, type PState,
 } from './screens';
 
@@ -23,7 +23,7 @@ type SheetState =
   | { kind: 'checkin'; item: ScheduleItem }
   | { kind: 'person'; id: string }
   | { kind: 'travel'; session: SessionRecord }
-  | { kind: 'qr' | 'profile' | 'menu' }
+  | { kind: 'qr' | 'profile' | 'menu' | 'levelup' }
   | null;
 
 const fresh = (profile: DemoProfile): PState => ({
@@ -207,6 +207,7 @@ export function App() {
     openCheckIn: (item) => setSheet({ kind: 'checkin', item }),
     openPerson: (id) => setSheet({ kind: 'person', id }),
     openTravel: (session) => setSheet({ kind: 'travel', session }),
+    openLevelUp: () => setSheet({ kind: 'levelup' }),
     openProfile: () => setSheet({ kind: 'profile' }),
     goTab: setTab,
   };
@@ -253,7 +254,7 @@ export function App() {
   const conf = CONFERENCES[conference];
   const tabs: Array<[Tab, string, string]> = [
     ['today', 'Today', '🏠'],
-    ['discover', 'Discover', '🧭'],
+    ['discover', 'Explore', '🧭'],
     ['schedule', 'Schedule', '🗓️'],
     ['people', 'People', '👥'],
   ];
@@ -294,18 +295,14 @@ export function App() {
         {error && <span className="badge bad">Graph unavailable: showing what loaded</span>}
       </div>
 
-      <main className={`main ${tab === 'today' ? 'split' : ''}`}>
+      <main className="main">
         <div>
           {tab === 'today' && <Today {...ctx} />}
-          {tab === 'discover' && <Discover {...ctx} />}
+          {tab === 'discover' && <Explore {...ctx} />}
           {tab === 'schedule' && <Schedule {...ctx} />}
           {tab === 'people' && <People {...ctx} />}
         </div>
-        {tab === 'today' && (
-          <aside className="desktop-only" aria-label="Your day">
-            <Schedule {...ctx} />
-          </aside>
-        )}
+
       </main>
 
       <nav className="tabs" aria-label="Main">
@@ -336,6 +333,12 @@ export function App() {
       )}
       {sheet?.kind === 'checkin' && <CheckInSheet ctx={ctx} item={sheet.item} onClose={() => setSheet(null)} onSubmit={(c, p, n) => checkIn(sheet.item, c, p, n)} />}
       {sheet?.kind === 'person' && <PersonSheet ctx={ctx} id={sheet.id} onClose={() => setSheet(null)} onUndoMeeting={undoMeeting} />}
+      {sheet?.kind === 'levelup' && (
+        <Sheet title="Level Up" onClose={() => setSheet(null)}>
+          <p className="small muted">Your plan progress is on Today. Rewards for exploring and following through are still a concept.</p>
+          <ComingNext />
+        </Sheet>
+      )}
       {sheet?.kind === 'travel' && <TravelSheet ctx={ctx} session={sheet.session} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'qr' && <QrSheet ps={psView} onClose={() => setSheet(null)} onEdit={() => setSheet({ kind: 'profile' })} />}
       {sheet?.kind === 'profile' && (

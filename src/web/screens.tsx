@@ -50,6 +50,7 @@ export interface Ctx {
   openCheckIn: (item: ScheduleItem) => void;
   openPerson: (id: string) => void;
   openTravel: (s: SessionRecord) => void;
+  openLevelUp: () => void;
   openProfile: () => void;
   goTab: (t: 'today' | 'discover' | 'schedule' | 'people') => void;
 }
@@ -64,95 +65,145 @@ const whyNote = (ctx: Ctx) =>
 
 export function Today(ctx: Ctx) {
   const { ps, now } = ctx;
-  const conf = CONFERENCES[ctx.conference];
-  const next = ps.schedule.find((s) => Date.parse(s.end) > Date.parse(now));
-  const career = ps.profile.goals.includes('career');
+  const upcoming = ps.schedule.filter((s) => Date.parse(s.end) > Date.parse(now));
+  const next = upcoming[0];
+  const start = !next ? ctx.hiring.find((h) => !isScheduled(ctx, h.session.id)) : undefined;
+  const prep = next ? prepFor(next, ctx) : undefined;
+  const prepDone = next ? !!ps.prepDone[next.eventId] : false;
+  const steps: Array<[string, boolean]> = [
+    ['Opportunity', ps.schedule.length > 0],
+    ['Scheduled', ps.schedule.length > 0],
+    ['Prepared', Object.values(ps.prepDone).some(Boolean)],
+    ['Commute', !!ps.travelChoice],
+  ];
   return (
     <div className="stack">
-      <div className="card companion-hero">
-        <button className="icon-btn" style={{ width: 84, height: 84, padding: 0 }} onClick={ctx.openProfile} aria-label="Customize companion and profile">
-          <Companion kind={ps.profile.companion} color={ps.profile.color} size={80} label={`${ps.profile.companionName}, your ${COMPANIONS[ps.profile.companion]}`} />
-        </button>
-        <div className="stack" style={{ gap: 4 }}>
-          <h1>Hi{ps.profile.name ? `, ${ps.profile.name}` : ''}! {ps.profile.companionName} is ready.</h1>
-          <p className="muted small">
-            {conf.name} {conf.edition} · {conf.mode === 'upcoming' ? `Upcoming, ${fmtDay(conf.startDate + 'T12:00:00-07:00')}–${fmtDay(conf.endDate + 'T12:00:00-07:00')}` : 'Past event · replay'} · {conf.venue}
-          </p>
+      <header className="page-head">
+        <div className="between">
+          <div>
+            <h1>Today</h1>
+            <p className="muted">What should I do now?</p>
+          </div>
+          <button className="icon-btn" style={{ width: 64, height: 64, padding: 0 }} onClick={ctx.openProfile} aria-label="Customize companion and profile">
+            <Companion kind={ps.profile.companion} color={ps.profile.color} size={60} label={`${ps.profile.companionName}, your ${COMPANIONS[ps.profile.companion]}`} />
+          </button>
         </div>
-      </div>
-
-      <section className="stack" aria-labelledby="goals-h">
-        <h2 id="goals-h">What would make today a win?</h2>
-        <div className="row" role="group" aria-label="Goals (optional, choose any)">
-          {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
-            <button key={g} className="chip" aria-pressed={ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
-              {GOAL_LABELS[g]}
-            </button>
-          ))}
-        </div>
-      </section>
+      </header>
 
       <section className="card stack" aria-labelledby="next-h">
-        <h2 id="next-h">Next up</h2>
+        <h2 id="next-h">{next ? 'Next up' : start ? 'Start here' : 'Next up'}</h2>
         {next ? (
-          <div className="between">
-            <div>
-              <p style={{ fontWeight: 800 }}>{next.title}</p>
-              <p className="small muted">
-                {fmtRange(next.start, next.end)} · {next.location}
-              </p>
+          <>
+            <p className="big">{next.title}</p>
+            <p className="small muted">
+              {fmtRange(next.start, next.end)} · {next.location}
+            </p>
+            <div className="row">
+              <button className="btn primary" onClick={() => ctx.goTab('schedule')}>
+                See my day
+              </button>
             </div>
-            <button className="btn small" onClick={() => ctx.goTab('schedule')}>
-              See my day
-            </button>
-          </div>
+          </>
+        ) : start ? (
+          <>
+            <p className="big">
+              {start.role.title} · {start.role.company}
+            </p>
+            <p className="small muted">
+              Go to “{start.session.title}” · {fmtRange(start.session.start, start.session.end)}
+            </p>
+            <div className="row">
+              <button className="btn primary" onClick={() => ctx.add(start.session)}>
+                Add event to Schedule
+              </button>
+              <button className="btn" onClick={() => ctx.goTab('discover')}>
+                Explore
+              </button>
+            </div>
+          </>
         ) : (
-          <div className="between">
+          <>
             <p>Let’s plan your first stop.</p>
-            <button className="btn small primary" onClick={() => ctx.goTab('discover')}>
-              Find a stop
+            <button className="btn primary" onClick={() => ctx.goTab('discover')}>
+              Explore
             </button>
-          </div>
+          </>
         )}
       </section>
 
-      {career && <HiringSection {...ctx} />}
+      {prep && next && (
+        <section className="card soft between" aria-label="Get ready">
+          <span className="small">
+            <b>Get ready:</b> {prep.main}
+          </span>
+          <button className="btn small" aria-pressed={prepDone} onClick={() => ctx.update((p) => ({ ...p, prepDone: { ...p.prepDone, [next.eventId]: !prepDone } }))}>
+            {prepDone ? '✓ Ready' : 'Done'}
+          </button>
+        </section>
+      )}
 
-      <section className="stack" aria-labelledby="recs-h">
-        <div className="section-title">
-          <h2 id="recs-h">{career ? 'Also worth your time' : 'For your goals'}</h2>
-          <span className="tiny muted">{career ? 'Learning and networking picks · secondary' : 'Up to 3 that fit your schedule'}</span>
-        </div>
-        {ctx.recs.length === 0 && <p className="card soft">Nothing else qualifies right now without a schedule conflict. Try another goal or check Discover.</p>}
-        {ctx.recs.map((r) => (
-          <SessionCard key={r.session.id} ctx={ctx} session={r.session} reasons={r.reasons} paths={r.paths} />
-        ))}
+      {upcoming.length > 0 && (
+        <section className="card stack" aria-labelledby="day-h">
+          <div className="between">
+            <h2 id="day-h">Your day</h2>
+            <button className="btn ghost small" onClick={() => ctx.goTab('schedule')}>
+              Full schedule
+            </button>
+          </div>
+          <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
+            {upcoming.slice(0, 4).map((s) => (
+              <li key={s.eventId} className="row" style={{ flexWrap: 'nowrap' }}>
+                <span className="tl-time" style={{ minWidth: 64 }}>
+                  {fmtTime(s.start)}
+                </span>
+                <span className="small">{s.title}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="card passport-strip between" aria-label="Plan progress">
+        <ol className="row" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
+          {steps.map(([label, done]) => (
+            <li key={label} className={`badge ${done ? 'good' : ''}`}>
+              {done ? '✓ ' : ''}
+              {label}
+            </li>
+          ))}
+        </ol>
+        <button className="btn small" onClick={ctx.openLevelUp}>
+          Level Up
+        </button>
       </section>
-
-      <ComingNext />
     </div>
   );
 }
 
 export function ComingNext() {
   const items = [
-    ['🗺️', 'Booth routing', 'Plan a walk between booths and sessions on a verified venue map.'],
-    ['🎟️', 'Raffles', 'Track sourced raffles with entry rules and draw times when published.'],
-    ['🎈', 'Side quests', 'Optional parties, meetups and goodies with the same budget and time checks.'],
-    ['🛂', 'Passport rewards', 'Self-confirmed stamps and one companion accessory for exploring and following through.'],
+    ['🗺️', 'Booth routing', 'Walk between booths and talks on a verified venue map.'],
+    ['🎟️', 'Raffles', 'Sourced raffles with entry rules and draw times.'],
+    ['🎈', 'Side quests', 'Optional parties, meetups and goodies, same budget checks.'],
+    ['🛂', 'Passport rewards', 'Stamps and a companion accessory for following through.'],
   ];
   return (
-    <section className="card soft stack" aria-labelledby="next-concepts-h">
+    <section className="stack" aria-labelledby="next-concepts-h">
       <div className="between">
-        <h2 id="next-concepts-h">Coming next</h2>
+        <h3 id="next-concepts-h">Coming next</h3>
         <span className="badge warn">Concept preview — not working yet</span>
       </div>
-      <p className="small muted">Ideas we’re designing after the core flow. They are not available in this demo.</p>
       <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
         {items.map(([icon, title, text]) => (
           <li key={title} className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
-            <span aria-hidden="true" style={{ fontSize: 22 }}>{icon}</span>
-            <span className="small"><b>{title}</b> <span className="badge">Preview</span><br /><span className="muted">{text}</span></span>
+            <span aria-hidden="true" style={{ fontSize: 22 }}>
+              {icon}
+            </span>
+            <span className="small">
+              <b>{title}</b> <span className="badge">Preview</span>
+              <br />
+              <span className="muted">{text}</span>
+            </span>
           </li>
         ))}
       </ul>
@@ -165,13 +216,10 @@ function HiringSection(ctx: Ctx) {
     <section className="stack" aria-labelledby="hiring-h">
       <div className="section-title">
         <h2 id="hiring-h">Hiring connections</h2>
-        <span className="tiny muted">Your career opportunity plan</span>
+        <span className="tiny muted">{ctx.backend.mode === 'live' ? 'Open on employer sites' : 'open when last checked (cached snapshot)'}</span>
       </div>
-      <p className="small muted">
-        Each card pairs a role that {ctx.backend.mode === 'live' ? 'is open on the employer’s careers site' : 'was open when last checked (cached snapshot)'} with a talk at the conference by someone listed with that company, then helps you schedule it, prepare and get there.
-      </p>
       {ctx.hiring.length === 0 ? (
-        <p className="card soft small">No verified open role is connected to an upcoming event right now. Sessions still appear below as learning or networking matches.</p>
+        <p className="card soft small">No verified open role connects to an upcoming talk right now.</p>
       ) : (
         ctx.hiring.map((h) => <HiringCard key={h.role.id} ctx={ctx} h={h} />)
       )}
@@ -183,48 +231,43 @@ export function HiringCard({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
   const scheduled = isScheduled(ctx, h.session.id);
   return (
     <article className="card career stack" aria-label={`Hiring connection: ${h.role.title} at ${h.role.company}`}>
-      <div className="between">
-        <span className="badge career">Hiring connection</span>
+      <div className="row">
         <span className="badge good">Open role · checked {fmtStamp(h.role.checkedAt)}</span>
       </div>
       <div>
         <h3>{h.role.title}</h3>
         <p className="small muted">
           {h.role.company} · {h.role.location}
-          {h.role.source.note ? ` · ${h.role.source.note}` : ''}
-        </p>
-        {h.role.requirementSummary && <p className="tiny muted">Requires: {h.role.requirementSummary}</p>}
-        <p className="tiny">
-          <b>Honest fit check:</b> {h.role.minYearsExperience === 0 ? 'no minimum years of experience are listed, so an early-career application is reasonable' : `the listing asks for ${h.role.minYearsExperience}+ years`}; read the full listing for location, work arrangement and team before applying.
         </p>
       </div>
       <div className="card soft" style={{ padding: 10 }}>
         <p className="small">
-          <b>{h.session.title}</b>
+          <b>Go to:</b> {h.session.title}
         </p>
         <p className="small muted">
-          {h.person.name}
-          {h.person.title ? `, ${h.person.title}` : ''} · {fmtRange(h.session.start, h.session.end)} · {h.session.location}
+          {h.person.name} ({h.role.company}) · {fmtRange(h.session.start, h.session.end)} · {h.session.location}
         </p>
       </div>
-      <p className="small">{h.explanation}</p>
-      <p className="tiny muted">A listed speaker isn’t a referral, recruiter or guaranteed contact. ezcon never applies for you.</p>
-      {ctx.backend.mode === 'cached' && <p className="tiny muted">Status recorded in the Oct 24 snapshot — recheck the listing before applying.</p>}
+      <p className="tiny">
+        <b>Fit:</b> {h.role.minYearsExperience === 0 ? 'no minimum years listed' : `asks for ${h.role.minYearsExperience}+ years`} — check location and team in the listing. A listed speaker isn’t a referral; ezcon never applies for you.
+      </p>
       <div className="row">
         <a className="btn career small" href={h.applyUrl} target="_blank" rel="noopener noreferrer">
           View role &amp; apply ↗
         </a>
-        <button className="btn small" disabled={scheduled} onClick={() => ctx.add(h.session)}>
+        <button className="btn primary small" disabled={scheduled} onClick={() => ctx.add(h.session)}>
           {scheduled ? 'Event on your schedule' : 'Add event to Schedule'}
         </button>
         <button className="btn small" onClick={() => ctx.openTravel(h.session)}>
           Getting there
         </button>
-        <button className="btn ghost small" onClick={() => ctx.openWhy(`Why ${h.role.company} × ${h.session.title}`, [h.path, ...h.otherTouchpoints.map((t) => t.path)], whyNote(ctx))}>
+        <button
+          className="btn ghost small"
+          onClick={() => ctx.openWhy(`Why ${h.role.company} × ${h.session.title}`, [h.path, ...h.otherTouchpoints.map((t) => t.path)], `${h.explanation} ${whyNote(ctx)}`)}
+        >
           Why this fits
         </button>
       </div>
-      {h.otherTouchpoints.length > 0 && <p className="tiny muted">Also at the conference: {h.otherTouchpoints.map((t) => `${t.person.name} — ${t.session.title} (${fmtDay(t.session.start)} ${fmtTime(t.session.start)})`).join('; ')}</p>}
     </article>
   );
 }
@@ -234,21 +277,15 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
   const past = Date.parse(session.start) <= Date.parse(ctx.now);
   return (
     <article className="card stack">
-      <div className="between">
-        <span className="badge accent">{session.sessionType ?? 'Session'}</span>
-        <span className="badge good">Covered by pass</span>
-      </div>
       <h3>{session.title}</h3>
       <p className="small muted">
-        {fmtRange(session.start, session.end)} · {session.location ?? 'Location not listed'}
+        {session.sessionType ?? 'Session'} · {fmtRange(session.start, session.end)} · {session.location ?? 'Location not listed'}
       </p>
-      {session.speakers.length > 0 && <p className="small">{session.speakers.map((s) => `${s.name}${s.company ? ` (${s.company})` : ''}`).join(', ')}</p>}
       {reasons?.map((r) => (
         <p key={r} className="small">
           ✨ {r}
         </p>
       ))}
-      <SourceLine source={session.source} />
       <div className="row">
         <button className="btn primary small" disabled={scheduled || past} onClick={() => ctx.add(session)}>
           {scheduled ? 'On your schedule' : past ? 'Already started' : 'Add to Schedule'}
@@ -262,27 +299,56 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
           {paths.length ? 'Why this fits' : 'No path from your interests'}
         </button>
       </div>
+      <SourceLine source={session.source} />
     </article>
   );
 }
 
 // ---------------------------------------------------------------------------------------
-// Discover
+// Explore
 
-export function Discover(ctx: Ctx) {
+export function Explore(ctx: Ctx) {
   const conf = CONFERENCES[ctx.conference];
-  const quests = ctx.sessions.filter((s) => s.catalogs.includes('quest')).sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const upcoming = conf.mode === 'upcoming';
+  const hiringIds = new Set(ctx.hiring.map((h) => h.session.id));
+  const recIds = new Set(ctx.recs.map((r) => r.session.id));
+  const rest = ctx.sessions
+    .filter((s) => s.catalogs.includes('quest') && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   return (
     <div className="stack">
-      <h1>Discover</h1>
+      <header className="page-head">
+        <h1>Explore</h1>
+        <p className="muted">What could I do?</p>
+      </header>
+      <div className="row" role="group" aria-label="Goals (optional, choose any)">
+        {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
+          <button key={g} className="chip" aria-pressed={ctx.ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
+            {GOAL_LABELS[g]}
+          </button>
+        ))}
+      </div>
+      {!upcoming && <p className="notice">Past event · replay. Sessions are for recall and research; nothing sends reminders.</p>}
+      {upcoming && ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
+
+      <section className="stack" aria-labelledby="quests-h">
+        <div className="section-title">
+          <h2 id="quests-h">Quests</h2>
+          <span className="tiny muted">Learning & networking for your goals</span>
+        </div>
+        {ctx.recs.map((r) => (
+          <SessionCard key={r.session.id} ctx={ctx} session={r.session} reasons={r.reasons} paths={r.paths} />
+        ))}
+        {rest.map((s) => (
+          <SessionCard key={s.id} ctx={ctx} session={s} paths={pathsFor(ctx, s.id)} />
+        ))}
+      </section>
+
+      <section className="card soft" aria-label="Side quests">
+        <ComingNext />
+      </section>
       <EventSearch now={ctx.now} />
       <ResearchPanel ctx={ctx} />
-      {conf.mode === 'past' && <p className="notice">Past event · replay. Historical sessions are shown for recall and research; nothing here sends reminders.</p>}
-      {ctx.ps.profile.goals.includes('career') && conf.mode === 'upcoming' && <HiringSection {...ctx} />}
-      <h2>Learning, career & networking</h2>
-      {quests.map((s) => (
-        <SessionCard key={s.id} ctx={ctx} session={s} paths={pathsFor(ctx, s.id)} />
-      ))}
     </div>
   );
 }
@@ -436,7 +502,10 @@ export function Schedule(ctx: Ctx) {
   return (
     <div className="stack">
       <div className="between">
-        <h1>My day</h1>
+        <header className="page-head">
+          <h1>Schedule</h1>
+          <p className="muted">What have I committed to?</p>
+        </header>
         {days.length > 1 && (
           <div className="segmented" role="tablist" aria-label="Day">
             {days.map((d) => (

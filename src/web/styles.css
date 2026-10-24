@@ -182,3 +182,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 @media (max-width: 899px) { .desktop-only { display: none; } }
+
+.page-head h1 { font-size: 2rem; letter-spacing: -0.02em; }
+.page-head p { margin-top: 2px; }
+.big { font-size: 1.15rem; font-weight: 800; }
+.main { max-width: 720px; }
+.btn { white-space: nowrap; }
