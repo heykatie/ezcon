@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Core flow through the real UI: opportunity → schedule (undo, conflicts) → travel comparison.
-import { cleanup, render, screen, within, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../src/web/App';
 
@@ -67,6 +67,22 @@ describe('ezcon core flow', () => {
     expect(schedule()).toEqual(['Build once, run on any agent: a practical guide to agent skills']);
     await user.click(screen.getByRole('button', { name: 'Undo' }));
     expect(schedule()).toEqual([]);
+  });
+
+  it('dismisses the Undo toast on its own, even after re-renders', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      render(<App />);
+      await user.click(await screen.findByRole('button', { name: 'Try the demo' }));
+      await user.click(await screen.findByRole('button', { name: 'Add event to Schedule' }));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeTruthy();
+      await user.hover(screen.getByRole('button', { name: 'Undo' })); // a tap on touch screens
+      await act(() => vi.advanceTimersByTimeAsync(16_000));
+      expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('asks Keep existing / Replace / Cancel on a conflict and never rearranges silently', async () => {
@@ -177,6 +193,27 @@ describe('ezcon core flow', () => {
     expect(stored().applications).toEqual([]);
   });
 
+  it('earns a Follow-through stamp for applying, shown in the Passport', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
+    await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
+    await user.click(screen.getByRole('button', { name: /Level Up · \d+ stamps?/ }));
+    const passport = await screen.findByRole('dialog', { name: 'Passport' });
+    expect(within(passport).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
+  });
+
+  it('saves a raffle ticket number with a confirmed entry', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const raffle = screen.getByRole('heading', { name: 'Tailscale keyboard raffle' }).closest('article')!;
+    await user.type(within(raffle).getByRole('textbox', { name: /Ticket number/ }), '0427');
+    await user.click(within(raffle).getByRole('button', { name: 'Save ticket' }));
+    expect(within(raffle).getByText('Ticket #0427')).toBeTruthy();
+    expect(stored().raffleTickets).toEqual([expect.objectContaining({ number: '0427' })]);
+  });
+
   it('searches upcoming events from the header dropdown', async () => {
     const user = await startDemo();
     const search = screen.getByRole('combobox', { name: 'Search conferences & events' });
@@ -194,7 +231,7 @@ describe('ezcon core flow', () => {
     await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Next' }));
     const preview = screen.getByRole('heading', { name: 'Coming next', level: 3 }).closest('section')!;
     expect(within(preview).getByText('Concept preview — not working yet')).toBeTruthy();
-    for (const f of ['Booth routing', 'Raffles', 'Side quests', 'Passport rewards']) expect(within(preview).getByText(f)).toBeTruthy();
+    for (const f of ['Booth routing', 'Raffle ticket reading', 'Side quests']) expect(within(preview).getByText(f)).toBeTruthy();
     expect(within(preview).queryByRole('button')).toBeNull();
   });
 });

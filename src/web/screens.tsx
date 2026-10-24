@@ -9,7 +9,7 @@ import type { ScheduleItem, Conflict } from '../domain/schedule';
 import { STAMP_TEXT, ACCESSORY, unlockedAccessories, type RewardState, type Stamp } from '../domain/rewards';
 import { validateProfileLink, type LinkKind } from '../domain/urls';
 import { personId } from '../domain/ids';
-import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, WAD_RUN, type CompanionKind, type DemoProfile } from '../data/demo';
+import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_RUN, type CompanionKind, type DemoProfile } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
 import PEOPLE_LINKS from '../data/people-links.json';
@@ -34,6 +34,8 @@ export interface PState {
   visited: string[];
   /** Self-reported applications; ezcon never applies on the user's behalf. */
   applications?: Array<{ roleId: string; title: string; company: string; applyUrl: string; eventId: string; appliedAt: string }>;
+  /** Raffle entries: ticket number confirmed by the user, photo kept on this device only. */
+  raffleTickets?: Array<{ questId: string; number: string; photo?: string; savedAt: string }>;
   /** Demo history has been written to the graph once. */
   seeded?: boolean;
 }
@@ -179,7 +181,7 @@ export function Today(ctx: Ctx) {
           ))}
         </ol>
         <button className="btn small" onClick={ctx.openLevelUp}>
-          Level Up
+          Level Up · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'stamp' : 'stamps'}
         </button>
       </section>
     </div>
@@ -189,9 +191,8 @@ export function Today(ctx: Ctx) {
 export function ComingNext() {
   const items: Array<[IconName, string, string]> = [
     ['map', 'Booth routing', 'Walk between booths and talks on a verified venue map.'],
-    ['ticket', 'Raffles', 'Sourced raffles with entry rules and draw times.'],
+    ['ticket', 'Raffle ticket reading', 'Read the ticket number from your photo automatically.'],
     ['flag', 'Side quests', 'Optional parties, meetups and goodies, same budget checks.'],
-    ['badge', 'Passport rewards', 'Stamps and a companion accessory for following through.'],
   ];
   return (
     <section className="stack" aria-labelledby="next-concepts-h">
@@ -401,6 +402,7 @@ export function Explore(ctx: Ctx) {
       {!upcoming && <p className="notice">Past event · replay. Sessions are for recall and research; nothing sends reminders.</p>}
       {upcoming && ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
 
+      <RaffleSection {...ctx} />
       <section className="stack" aria-labelledby="quests-h">
         <div className="section-title">
           <h2 id="quests-h">Quests</h2>
@@ -1223,5 +1225,104 @@ function AppliedToggle({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
     >
       {applied ? '✓ Applied' : 'Mark as applied'}
     </button>
+  );
+}
+
+/** Shrink a photo to a small JPEG data URL so it fits in browser storage. Stays on this device. */
+async function shrinkPhoto(file: File, max = 480): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = url;
+    });
+    const scale = Math.min(1, max / Math.max(img.width, img.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.7);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function RaffleSection(ctx: Ctx) {
+  const [photo, setPhoto] = useState<string>();
+  const [number, setNumber] = useState('');
+  const [error, setError] = useState<string>();
+  const q = SIDE_QUESTS.find((x) => x.conference === ctx.conference);
+  if (!q) return null;
+  const saved = (ctx.ps.raffleTickets ?? []).find((t) => t.questId === q.id);
+  return (
+    <section className="stack" aria-labelledby="raffle-h">
+      <div className="section-title">
+        <h2 id="raffle-h">Raffles</h2>
+        <span className="tiny muted">Optional · prizes never count toward your budget</span>
+      </div>
+      <article className="card stack">
+        <h3>{q.title}</h3>
+        <p className="small muted">
+          {q.prize} · {q.where}
+        </p>
+        <p className="small">How to enter: {q.entry}</p>
+        <p className="tiny muted">Unknown: {q.unknowns.join('; ')}.</p>
+        {saved ? (
+          <div className="row" style={{ alignItems: 'center' }}>
+            {saved.photo && <img src={saved.photo} alt="Your raffle ticket" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12 }} />}
+            <span className="small">
+              <b>Ticket #{saved.number}</b> saved {fmtStamp(saved.savedAt)}
+            </span>
+            <button className="btn ghost small" onClick={() => ctx.update((p) => ({ ...p, raffleTickets: (p.raffleTickets ?? []).filter((t) => t.questId !== q.id) }))}>
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="stack" style={{ gap: 8 }}>
+            <label className="btn small" style={{ width: 'fit-content' }}>
+              {photo ? 'Retake photo' : 'Snap ticket photo'}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="sr-only"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  try {
+                    setPhoto(await shrinkPhoto(f));
+                    setError(undefined);
+                  } catch {
+                    setError('Couldn’t read that photo. Try another one.');
+                  }
+                }}
+              />
+            </label>
+            {photo && <img src={photo} alt="Ticket photo preview" style={{ width: 120, borderRadius: 12 }} />}
+            <label className="field">
+              <span className="small">Ticket number (check it against the photo)</span>
+              <input inputMode="numeric" value={number} maxLength={20} onChange={(e) => setNumber(e.target.value.replace(/[^0-9A-Za-z-]/g, ''))} />
+            </label>
+            {error && <p className="error">{error}</p>}
+            <button
+              className="btn primary small"
+              style={{ width: 'fit-content' }}
+              disabled={!number}
+              onClick={() => {
+                ctx.update((p) => ({ ...p, raffleTickets: [...(p.raffleTickets ?? []).filter((t) => t.questId !== q.id), { questId: q.id, number, photo, savedAt: new Date().toISOString() }] }));
+                setPhoto(undefined);
+                setNumber('');
+              }}
+            >
+              Save ticket
+            </button>
+            <p className="tiny muted">The photo stays on this device and never goes into public data. Keep it out of recordings — tickets can carry barcodes.</p>
+          </div>
+        )}
+        <SourceLine source={q.source} />
+      </article>
+    </section>
   );
 }

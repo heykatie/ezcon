@@ -16,7 +16,7 @@ import { HeaderSearch } from './HeaderSearch';
 import { toScheduleItem } from '../domain/recommend';
 import { Sheet, Toast } from './ui';
 import {
-  CheckInSheet, ComingNext, ConflictSheet, Explore, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
+  CheckInSheet, ComingNext, ConflictSheet, Explore, PassportSheet, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
   type CheckIn, type Ctx, type PState,
 } from './screens';
 
@@ -27,7 +27,7 @@ type SheetState =
   | { kind: 'checkin'; item: ScheduleItem }
   | { kind: 'person'; id: string }
   | { kind: 'travel'; session: SessionRecord }
-  | { kind: 'qr' | 'profile' | 'menu' | 'levelup' }
+  | { kind: 'qr' | 'profile' | 'menu' | 'passport' }
   | null;
 
 // The demo profile starts with a fictional, already-finished day at WAD 2026 so the past
@@ -58,6 +58,8 @@ function deriveRewards(ps: PState, meetings: Meeting[], sessions: Record<string,
   for (const [eventId, c] of Object.entries(ps.checkins)) {
     if (c === 'went' || c === 'met') r = award(r, 'explorer', `visit:${eventId}`, `Went to ${sessions[eventId] ?? 'an event'} (self-reported)`);
   }
+  for (const a of ps.applications ?? []) r = award(r, 'follow-through', `applied:${a.roleId}`, `Applied to ${a.title} at ${a.company} (self-reported)`);
+  for (const t of ps.raffleTickets ?? []) r = award(r, 'explorer', `raffle:${t.questId}`, `Entered the ${SIDE_QUESTS.find((q) => q.id === t.questId)?.title ?? 'raffle'} (self-reported)`);
   for (const id of ps.visited) r = award(r, 'explorer', `booth:${id}`, `Visited ${SIDE_QUESTS.find((q) => q.id === id)?.title ?? 'a booth'} (self-reported)`);
   for (const m of meetings) {
     r = award(r, 'connection', `meeting:${m.meetingId}`, `Met ${m.personName}${m.fictional ? ' (fictional demo)' : ''}`);
@@ -223,7 +225,7 @@ export function App() {
     openCheckIn: (item) => setSheet({ kind: 'checkin', item }),
     openPerson: (id) => setSheet({ kind: 'person', id }),
     openTravel: (session) => setSheet({ kind: 'travel', session }),
-    openLevelUp: () => setTab('next'),
+    openLevelUp: () => setSheet({ kind: 'passport' }),
     openProfile: () => setSheet({ kind: 'profile' }),
     goTab: setTab,
   };
@@ -366,6 +368,7 @@ export function App() {
       )}
       {sheet?.kind === 'checkin' && <CheckInSheet ctx={ctx} item={sheet.item} onClose={() => setSheet(null)} onSubmit={(c, p, n) => checkIn(sheet.item, c, p, n)} />}
       {sheet?.kind === 'person' && <PersonSheet ctx={ctx} id={sheet.id} onClose={() => setSheet(null)} onUndoMeeting={undoMeeting} />}
+      {sheet?.kind === 'passport' && <PassportSheet ps={psView} onClose={() => setSheet(null)} onToggleAccessory={() => update((p) => ({ ...p, accessoryOn: !p.accessoryOn }))} onCustomize={() => setSheet({ kind: 'profile' })} />}
       {sheet?.kind === 'travel' && <TravelSheet ctx={ctx} session={sheet.session} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'qr' && <QrSheet ps={psView} onClose={() => setSheet(null)} onEdit={() => setSheet({ kind: 'profile' })} />}
       {sheet?.kind === 'profile' && (

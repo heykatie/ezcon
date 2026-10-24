@@ -122,20 +122,21 @@ export function PathView({ path }: { path: GraphPath }) {
 }
 
 export function Toast({ message, action, onAction, onDone }: { message: string; action?: string; onAction?: () => void; onDone: () => void }) {
-  // Long enough to act on, and paused while the pointer or keyboard focus is on it.
+  // Long enough to act on; paused only while keyboard focus is inside (a touch "hover" never ends).
+  // The latest onDone lives in a ref so re-renders don't restart the timer.
   const [paused, setPaused] = useState(false);
+  const done = useRef(onDone);
+  done.current = onDone;
   useEffect(() => {
     if (paused) return;
-    const t = setTimeout(onDone, 15_000);
+    const t = setTimeout(() => done.current(), 15_000);
     return () => clearTimeout(t);
-  }, [onDone, paused, message]);
+  }, [paused, message]);
   return (
     <div
       className="toast"
       role="status"
       aria-live="polite"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
