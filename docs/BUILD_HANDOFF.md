@@ -77,3 +77,9 @@ October 24, two manually triggered Web Unlocker requests using the existing auth
 2. Universe session catalog: HTTP 200, but preview only exposed page header/footer and no sessions. Treat as incomplete content, not successful catalog extraction. Next: test Browser API/rendered retrieval or an official data endpoint. No repeated requests made.
 
 OpenAI billing page remained on browser verification; user handoff required before balance verification. No OpenAI model requests made and no personal funds authorized. Qodo remains blocked by previously observed provider review errors; do not repeatedly retry documentation reviews.
+
+## OpenAI credit and connectivity verification
+
+October 24: billing UI showed $50 available API credit in Personal organization. Credit Grants showed received October 23, 2026, state Available, balance $50/$50, expires November 22, 2026. No payment method was added.
+
+TrueForge local UI: selected gpt-5-4-nano and sent a synthetic connectivity-only prompt with no tools. Response was EZCON_OK, displayed about two seconds after submission. This verifies one model response through the saved provider, not a sponsor workflow, tool call, model evaluation or measured billing cost. Trace/session remains local. Next step is a bounded real tool call through the application integration. No secrets or personal profile data were transmitted in this test.
