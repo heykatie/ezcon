@@ -974,7 +974,7 @@ export function QrSheet({ ps, onClose, onEdit }: { ps: PState; onClose: () => vo
               Edit links
             </button>
           </div>
-          {ps.profile.fictional && <p className="tiny muted">Demo profile links are placeholders, not a real person’s accounts.</p>}
+          {ps.profile.fictional && <p className="tiny muted">Demo persona is fictional; these links go to the ezcon creator’s real profiles.</p>}
           <p className="tiny muted">A plain URL QR generated on this device — not a platform-issued identity code.</p>
         </div>
       )}

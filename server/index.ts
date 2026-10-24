@@ -5,6 +5,8 @@ import { FalkorDB } from 'falkordb';
 import { z } from 'zod';
 import { FalkorGraph } from './graph';
 import { runResearch } from './research';
+import { checkRoles } from './roles';
+import type { RoleRecord } from '../src/domain/types';
 import { describeError } from '../scripts/check-falkordb-lib.mjs';
 import { SESSIONS, ROLES } from '../src/data/demo';
 import type { ConferenceId } from '../src/domain/types';
@@ -18,6 +20,24 @@ const connect = () => FalkorDB.connect({ url, socket: { connectTimeout: 10_000, 
 let graph = new FalkorGraph(await connect(), GRAPH, connect);
 await graph.seedPublic([...SESSIONS.universe26, ...SESSIONS.wad26na]);
 await graph.seedRoles(ROLES);
+
+// Keep roles fresh without manual reruns: recheck on startup and every 6 hours.
+// The snapshot stays in place if a recheck fails.
+let roles: RoleRecord[] = ROLES;
+async function refreshRoles() {
+  try {
+    const fresh = await checkRoles();
+    if (fresh.some((r) => r.status === 'open')) {
+      roles = fresh;
+      await graph.seedRoles(fresh);
+      console.log(`roles rechecked: ${fresh.filter((r) => r.status === 'open').length} open`);
+    }
+  } catch (err) {
+    console.error('role recheck failed; keeping previous roles', (err as Error).message);
+  }
+}
+void refreshRoles();
+setInterval(refreshRoles, 6 * 60 * 60 * 1000).unref();
 
 const ProfileId = z.string().regex(/^profile:[a-z0-9-]{1,40}$/);
 const Conference = z.enum(['universe26', 'wad26na']);
@@ -60,6 +80,7 @@ const server = createServer(async (req, res) => {
     if (req.method === 'GET' && u.pathname === '/api/candidates') {
       return send(res, 200, await graph.candidates(ProfileId.parse(q('profile')), Conference.parse(q('conference')) as ConferenceId));
     }
+    if (req.method === 'GET' && u.pathname === '/api/roles') return send(res, 200, roles);
     if (req.method === 'GET' && u.pathname === '/api/hiring-paths') return send(res, 200, await graph.hiringPaths(Conference.parse(q('conference')) as ConferenceId));
     if (u.pathname === '/api/meetings') {
       if (req.method === 'GET') return send(res, 200, await graph.meetings(ProfileId.parse(q('profile'))));

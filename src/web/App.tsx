@@ -78,6 +78,7 @@ export function App() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [hiringPaths, setHiringPaths] = useState<GraphPath[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [roles, setRoles] = useState(ROLES);
   const [version, setVersion] = useState(0);
   const [error, setError] = useState<string>();
 
@@ -123,8 +124,8 @@ export function App() {
           }
           update((x) => ({ ...x, seeded: true }));
         }
-        const [c, h, m] = await Promise.all([backend.candidates(ps.profile.id, conference), backend.hiringPaths(conference), backend.meetings(ps.profile.id)]);
-        if (!cancelled) (setCandidates(c), setHiringPaths(h), setMeetings(m), setError(undefined));
+        const [c, h, m, r] = await Promise.all([backend.candidates(ps.profile.id, conference), backend.hiringPaths(conference), backend.meetings(ps.profile.id), backend.roles()]);
+        if (!cancelled) (setCandidates(c), setHiringPaths(h), setMeetings(m), setRoles(r), setError(undefined));
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       }
@@ -143,14 +144,14 @@ export function App() {
     if (!ps || !backend) return undefined;
     const rewards = deriveRewards(ps, meetings, titles);
     const recs = rankRecommendations(candidates, sessions, { goals: ps.profile.goals, schedule: ps.schedule, now });
-    const verifyAt = backend.mode === 'cached' ? ROLES.map((r) => r.checkedAt).sort().at(-1) : new Date().toISOString();
+    const verifyAt = backend.mode === 'cached' ? roles.map((r) => r.checkedAt).sort().at(-1) : new Date().toISOString();
     const hiring = ps.profile.goals.includes('career') && CONFERENCES[conference].mode === 'upcoming'
-      ? hiringConnections(hiringPaths, ROLES, sessions, { now, verifyAt, profile: { maxYearsExperience: ps.profile.maxYearsExperience } })
+      ? hiringConnections(hiringPaths, roles, sessions, { now, verifyAt, profile: { maxYearsExperience: ps.profile.maxYearsExperience } })
       : [];
     // Hiring touchpoints lead; don't repeat them in the general list.
     const hiringIds = new Set(hiring.map((h) => h.session.id));
     return { rewards, recs: recs.filter((r) => !hiringIds.has(r.session.id)), hiring };
-  }, [ps, backend, meetings, candidates, hiringPaths, sessions, now, conference, titles]);
+  }, [ps, backend, meetings, candidates, hiringPaths, roles, sessions, now, conference, titles]);
 
   const showUndo = (message: string, previous: ScheduleItem[]) =>
     setToast({ message, action: 'Undo', onAction: () => (update((p) => ({ ...p, schedule: previous })), setToast(undefined)) });

@@ -78,8 +78,8 @@ export const DEMO_PROFILE: DemoProfile = {
   companion: 'robot',
   companionName: 'Bolt',
   color: '#7c6cf2',
-  // GitHub's public mascot account and a reserved example domain; no real person's links.
-  links: { github: 'https://github.com/octocat', linkedin: '', personal: 'https://example.com/riley' },
+  // The demo persona is fictional; its QR shares the ezcon creator's real public profile (approved by the owner).
+  links: { github: 'https://github.com/heykatie', linkedin: '', personal: '' },
 };
 
 export const BLANK_PROFILE: DemoProfile = {

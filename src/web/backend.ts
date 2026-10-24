@@ -2,7 +2,7 @@
 // Cached mode (public site): the in-browser graph seeded from the labeled snapshot.
 import { MemoryGraph, type MemoryState } from '../domain/memory-graph';
 import type { Candidate, GraphPath, Meeting, MeetingInput, ProfileInput } from '../domain/graph-types';
-import type { ConferenceId } from '../domain/types';
+import type { ConferenceId, RoleRecord } from '../domain/types';
 import { ROLES, SESSIONS } from '../data/demo';
 import { load, save } from './store';
 
@@ -12,6 +12,8 @@ export interface Backend {
   upsertProfile(p: ProfileInput): Promise<void>;
   candidates(profileId: string, c: ConferenceId): Promise<Candidate[]>;
   hiringPaths(c: ConferenceId): Promise<GraphPath[]>;
+  /** Roles as last checked: rechecked by the local API, or the snapshot in cached mode. */
+  roles(): Promise<RoleRecord[]>;
   recordMeeting(profileId: string, m: MeetingInput): Promise<{ created: boolean }>;
   removeMeeting(profileId: string, meetingId: string): Promise<{ removed: boolean }>;
   meetings(profileId: string): Promise<Meeting[]>;
@@ -46,6 +48,7 @@ function liveBackend(graphHost: string): Backend {
     upsertProfile: async (p) => void (await api('/api/profile', { method: 'POST', body: JSON.stringify(p) })),
     candidates: (id, c) => api(`/api/candidates?profile=${encodeURIComponent(id)}&conference=${c}`),
     hiringPaths: (c) => api(`/api/hiring-paths?conference=${c}`),
+    roles: () => api('/api/roles'),
     recordMeeting: (profileId, meeting) => api('/api/meetings', { method: 'POST', body: JSON.stringify({ profileId, meeting }) }),
     removeMeeting: (id, mid) => api(`/api/meetings?profile=${encodeURIComponent(id)}&id=${encodeURIComponent(mid)}`, { method: 'DELETE' }),
     meetings: (id) => api(`/api/meetings?profile=${encodeURIComponent(id)}`),
@@ -67,6 +70,7 @@ async function cachedBackend(): Promise<Backend> {
     upsertProfile: (p) => g.upsertProfile(p),
     candidates: (id, c) => g.candidates(id, c),
     hiringPaths: (c) => g.hiringPaths(c),
+    roles: async () => ROLES,
     recordMeeting: (id, m) => g.recordMeeting(id, m),
     removeMeeting: (id, mid) => g.removeMeeting(id, mid),
     meetings: (id) => g.meetings(id),
