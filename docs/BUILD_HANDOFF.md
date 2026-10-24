@@ -1,119 +1,78 @@
 # ezcon implementation handoff
 
-## Start here
+Current checkpoint: October 24, 2026. This replaces earlier chronological notes. Requirements are approved; app implementation is not complete.
 
-Read BUILD_BRIEF.md, ARCHITECTURE.md, DEMO.md and DATA_SOURCES.md. Product requirements are approved direction; they do not establish implementation. Repository: heykatie/ezcon. Continue docs/ezcon-build-plan and existing PR #1 unless user chooses another branch. Do not merge, overwrite unrelated work, or publish private profile data. At this checkpoint the repo contains documentation, README and license; no application implementation.
+## Repository and first action
 
-## First implementation milestone
+Repo: https://github.com/heykatie/ezcon . Local checkout: /Users/ktl/.codex/.chatgpt-projects/g-p-6ac0ad85292c819193bd2cb8455afc50/ezcon . Branch: docs/ezcon-build-plan. Existing PR: https://github.com/heykatie/ezcon/pull/1 . Verify cwd, remote, branch and working tree before editing; preserve unrelated work. Do not merge/rewrite history without authorization. Read applicable AGENTS.md, then BUILD_BRIEF.md, SCREEN_PLAN.md, TRAVEL_PLAN.md, ARCHITECTURE.md, DATA_SOURCES.md and DEMO.md. This document is the implementation entry point; latest approved decisions here and in those contracts override earlier proposals.
 
-One developer journey: edit local profile → research a bounded conference → explain a recommendation through real graph paths → compare feasible options → schedule and prepare → confirm meeting → remember it and draft a follow-up. Add networking QR and one reversible sticker. Founder, elaborate avatar, route replay and raffle photo flow remain extensions unless user explicitly reprioritizes.
+Only official FalkorDB client and a cloud verification script are implemented. There is no React frontend, application API, ingestion pipeline, agent-to-graph connector or Vercel deployment. The root package has falkordb 6.9.2 and npm run check:graph. All other features below are planned.
 
-Use React/TypeScript with a Node/TypeScript API, TrueForge SDK and OpenAI, Bright Data research and the official FalkorDB Node client. Prefer a small local app and a local demo recording before hosting. Vercel is not a prerequisite; do not expose local databases or TrueForge without authentication. Pin SDK/package versions when adding dependencies, then verify interoperability. Avoid extra orchestration/memory frameworks initially.
+## Problem and demo story
 
-## Minimal screens and interactions
+Conference information is scattered; attendees must decide which opportunities matter, fit them into a realistic affordable day, and turn conversations into next steps while busy on the go. ezcon connects goals to evidence, explains recommendations and remembers interactions. Career is the motivation; learning/networking is the dependable core journey.
 
-1. **Today:** companion greeting; persistent Next Up; relevant opportunity cards; day timeline. My QR and Edit profile always reachable. Chat is an optional drawer.
-2. **Opportunity detail:** why it fits, source/time, company/person evidence, estimated cost/travel, Add to plan. Show unknown costs and eligibility clearly.
-3. **Plan:** conflict-aware timeline; comparison of transport options and full cost; one preparation action.
-4. **Meeting check-in:** Met / Not yet / Later; choose a public listed person or add one privately, optional note, editable follow-up. Undo available.
-5. **Profile:** goals, skills, budget, availability, transport, companion name/color/character, GitHub/LinkedIn URLs. No signup.
-6. **My QR:** one large locally generated URL QR, GitHub/LinkedIn toggle, Open profile, Copy link. Test phone scanning and offline display.
+Use a fictional early-career React/Python developer interested in AI tools. Real career listings only when verified suitable and tied to a represented company; no invented openings. Developer experience first; founder is optional later. No signup. Real personal notes stay local; public demo data and meeting history are fictional and labeled.
 
-Use large tap targets, visible focus, labeled controls, short text and no hover-only interactions. Prompts are nonblocking, dismissible and suppressed during typing/camera use. Never require chat for basic actions.
+## Approved MVP and UI
 
-## Integration verification order
+Warm companion dashboard plus Adventure passport rewards. Bottom tabs: Today / Discover / Schedule / People. My QR in header. Companion menu: My companion / Passport / Profile & preferences. Passport also opens from a small Today progress strip.
 
-1. Read-only Bright Data request against one selected public source; compare normalized fields with browser evidence. Confirm credits and spending controls first.
-2. OpenAI-powered TrueForge call to one bounded tool; capture actual trace and usage without secrets. A configured provider is not proof a call works.
-3. Query FalkorDB for real relationship paths. Write a profile-scoped synthetic meeting, reload and verify it changes retrieval.
-4. Build a meaningful PR, receive a completed Qodo review, evaluate findings, fix valid ones and add regression tests.
-5. Exercise the complete UI and record a 3–5 minute demonstration. Label cached, synthetic and replay data.
+- Try the demo opens Today with fictional preconfigured profile. Make it yours opens companion/profile setup. Use robot as a provisional demo default; editable, not a gate.
+- Four approved soft 3D companion concepts: pocket robot, rubber duck, pixel cat, circuit fox. Same abilities, name/color customization, one accessory.
+- Today: companion and optional goal chips, Next Up, up to three qualifying recommendations, optional side-quest summary, passport strip. Empty schedule: Let’s plan your first stop.
+- Goals: Find my next opportunity / Learn & build / Meet people / Explore & have fun. Multi-select, optional; developer starts career + learning.
+- Discover: Quests for goal-directed learning/career/networking; Side Quests for parties, happy hours, goodies, games and raffles. Shared canonical event IDs, no duplicate schedule/reward records.
+- Schedule: entire day at a glance, including departure, arrival/check-in, fixed and flexible stops, breaks/open time, between-event travel and return. One Get ready action; More tips expands.
+- Add immediately if conflict-free, with Undo. If time/travel conflicts: Keep existing / Replace / Cancel. Never silently rearrange.
+- People: Want to meet / Met. One bounded professional enrichment flow from supported public sources; official bios, personal/company pages or accessible LinkedIn. Source and timestamp per fact; no guessed identity merges, private-data scraping or inferred attendance/staffing/availability. Private notes are separate.
+- Check-in: Met someone / Went, didn’t connect / Skipped / Later. Optional note, editable follow-up draft, never send automatically.
+- Passport shows companion and Explorer / Connection / Follow-through stamps. First Connection unlocks one accessory. Idempotent, reversible awards; no XP economy, penalties, spending or winning rewards.
+- My QR: GitHub / LinkedIn / Personal or Portfolio. Optional validated HTTPS links. QR, open and copy agree with selection; no OAuth. Verify scanning and offline display.
 
-## Checkpoint evidence
+Large tap targets, visible keyboard focus, reduced-motion alternative, no hover-only controls. Prompts are optional/nonblocking and do not interrupt camera/typing. Core actions never require chat.
 
-- October 24: WeAreDevelopers sign-in confirmed in browser; separate event app ID 18 now verified with goodies and booth activity details; Floor 2 map rendered and visually inspected; walking graph, scale and accessibility remain unverified.
-- October 24: Docker restarted; ezcon-falkordb running, restart unless-stopped, volume ezcon-falkordb-data mounted at /var/lib/falkordb/data, ports bound to 127.0.0.1. Read-only query returned 3 synthetic setup nodes after restart. This is not application integration proof.
-- TrueForge 0.180.0 is present in local npm cache. Saved OpenAI key previously entered by user; credits and successful model execution remain unverified. Restarted and browser verified at localhost:8790/settings; UI shows OpenAI Connected. No model request made.
-- Qodo generated a PR summary, but its code review reported a server-side failure: https://github.com/heykatie/ezcon/pull/1#issuecomment-6388415240 . A manual retry also failed on the provider side. Do not count the summary as completed code review; try a meaningful code PR, then provider support or Toolbox if it still fails.
-- Bright Data dashboard shows 5,000/5,000 free credits, renewal November 1, 2026. The $50 hackathon promo, product coverage and API retrieval remain unverified. No personal API spending is authorized.
+## Travel and parking are core
 
-## Evaluation and acceptance
+Free/pass-covered admission. $20/day maximum for round-trip transport, gas/tolls/parking; food separate. Lowest cost preferred within hard constraints; show extra travel time. Unknown costs cannot certify feasibility; prizes never offset costs.
 
-Write failing behavior tests before implementation. Use at least the ten cases in ARCHITECTURE.md plus unsafe profile URLs, QR link correctness, private note isolation and reward reversal. Baseline: source-supported lookup with deterministic filtering, before model ranking. Compare the same cases after adding the agent.
+Every scheduled event/day exposes best verified options found: Cheapest overall / Closest practical parking / Best transit. One candidate can have multiple labels. Include door-to-door time, station access, waits/transfers, walking, full-day total, actual parking date/time rules and garage closure/return-transit feasibility. Compare leaving car parked vs moving it; avoid double-counting shared parking. No guaranteed space or universal-cheapest claims. Implement one bounded sourced day comparison first. TRAVEL_PLAN.md provides required edge cases.
 
-Proposed initial targets, to confirm before AI implementation: cached interactions under 2 seconds; bounded research completes within 60 seconds or returns an explicit partial/failure state; maximum 5 external research requests per refresh, maximum 8 agent steps, no automatic retries that exceed the cap. Record observed latency, tokens and provider cost; stop when confirmed credit budget is exhausted. These are design targets, not measured performance.
+## Architecture and storage
 
-Hard gates: zero cross-profile leaks, duplicate rewards, unsupported confirmed attendance/parking/hiring claims or hard-constraint violations in fixtures. Monetary calculations and route/schedule arithmetic are deterministic. Model outputs are schema-validated. Unknown remains unknown. No automated messages, applications, bookings or purchases.
+React/TypeScript → Node/TypeScript API → TrueForge SDK/OpenAI + scoped tools → Bright Data research and FalkorDB. Application code owns money, dates, constraints, profile identity/scope, authorization and rewards. Model interprets/extracts/explains; schema-validate outputs. Use parameterized bounded graph templates, not arbitrary generated Cypher. Preserve source URL, retrieved_at, valid_for and evidence status; normalize relative links against the fetched URL, not localhost.
 
-## Business and launch
+Cloud graph is available; local persistent graph is fallback. TrueForge conversation SQLite is not domain memory. Private entities must be profile scoped; no arbitrary profile ID from the model. Public cached demo state may live in browser-local storage with fictional fixtures; do not imply cross-device persistence. No public unauthenticated access to local TrueForge or graph. Avoid additional orchestration/memory frameworks for first build.
 
-Initial audience: budget-conscious attendees who need relevant conversations and follow-through. Validate with a short task: choose an affordable outing, identify a person to meet and retrieve the next action after a meeting. Distribution starts with conference communities and side-event hosts. Monetization and commercial launch are deferred until repeat value is demonstrated; do not turn this demo into a paid service.
+Proposed tools: research_source, find_opportunities, explain_path, compare_travel, plan_schedule, record_meeting, draft_followup. Narrow read/write separation; explicit confirmation for consequential external actions. MVP drafts only, no messages, applications, bookings or purchases. User-supplied URLs require SSRF defenses and private-network rejection.
 
-## Decisions or owner actions still required
+## Sponsor setup and build order
 
-- Confirmed by user: free/sponsor credits only; no personal charges. Verify product coverage and stop before exceeding credits.
-- Proposed: one sourced raffle card demonstrates research and graph use; defer photo extraction and routing until core works. User asked about sponsor value; final inclusion priority is still pending.
-- Redeem/check Bright Data credits privately; confirm OpenAI sponsor credit access privately. Do not paste credentials into chat or Git.
-- WAD event app is https://app.wearedevelopers.com/events/18/map ; authenticated access verified. See DATA_SOURCES.md for concrete raffle source and routing limitations.
-- User confirmed all four tracks can be entered. Whether one project can win multiple prizes remains distinct; pre-event-code rules and exact submission mechanics still require organizer confirmation.
+1. **Qodo first and throughout.** GitHub app installed for ezcon only (installation 174723440). Summary posting works, but every attempted /agentic_review has failed provider-side, including latest code PR retry. Portal sign-in now works, but onboarding still requests Git connection. GitHub configuration requires owner reauthentication in browser. Finish that without expanding repo access or buying plans. Inspect license/review preset/configuration; run a meaningful review and preserve finding → fix → regression test evidence. If still failing, report concrete blocker and ask sponsor support; do not invent review success or manufacture bugs. Do not let repeated retries consume the build.
+2. **FalkorDB.** Run npm ci and npm run check:graph. FALKORDB_URL exists only in local ignored .env, mode 0600; never display it. Official Node client 6.9.2 verified with full falkors:// TLS URL, timeout/no reconnect loop. Cloud graph conference has five fixture nodes/five edges, real returned path and synthetic MET surviving reconnect. Repeated seed is idempotent. Cloud lab expires 48 hours after provisioning: export before expiry if retaining new work. Local ezcon-falkordb has named volume ezcon-falkordb-data and loopback ports 6379/3000; snapshot survived restart. Do not delete either database. Fixture is public session + derived topic + fictional attendee/meeting, not a real meeting or production recommendation.
+3. **Bright Data.** Account/connector configured; 5,000 free credits were visible at earlier checkpoint. $50 patch50 promo redemption unverified. Current free tier covers shared research requests; Browser API is metered at 5 credits/MB. Recheck balance before calls. WAD page via Web Unlocker returned matching fields. Universe Web Unlocker returned shell only. Rendered-browser navigation and text retrieval now work, but generic flattened extraction misassociated neighboring times. Use per-session DOM container/detail parsing and golden records, not blanket LLM extraction. See DATA_SOURCES.md for current evidence.
+4. **OpenAI + TrueForge.** TrueForge 0.180.0 local localhost:8790; saved OpenAI provider and Bright Data connector configured privately. API grant $50 received Oct23, expires Nov22; observed Oct24 before calls. Only confirmed free/sponsor credits, no personal spending. gpt-5-4-nano produced a response and live WAD tool retrieval with correct fields (~32 seconds, one page fetch, multiple discovery steps). This is UI workflow verification, not SDK integration proof. Server can stop between turns: restart cached official CLI if needed. Wire SDK to API, enable only necessary tools, bound iterations and external requests. Universe browser navigation succeeded; a transient model connection error interrupted follow-up and read was recovered without renavigation.
+5. **One vertical slice.** Fresh source → validated facts → graph write/query returning path → recommendation UI → schedule/prep → confirmed meeting → reload/new session → changed recommendation and follow-up. Then add QR, stamp/accessory and one sourced raffle. Test-first behavior changes; do not build broad catalogs before core works.
+6. **Public link/video.** Approved deployment: Vercel cached fictional demo; video shows live local integrations. Vercel import page is open but app is not deployed. Frontend contains no secrets (including no VITE_* keys/graph URLs). Label cached data and snapshot date. Interactive planning/meeting demo can be browser-local with Reset demo. No false live integrations. Record 3–5 minutes, ~30s problem, target4:30. Upload unlisted YouTube or link-viewable Drive and verify signed-out access. Do not change sharing or upload private notes/credentials without appropriate authorization.
 
-This document is a handoff for work in the existing repository, not authorization to create another Codex task.
+## Sources and demo proof
 
-## Organizer timing verified October 24
+- WAD North America2026, Sept23–25, San José. Public archive has315 sessions; main site has rolled to2027, so preserve edition.
+- https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1917-making-works-on-all : Michael Irwin, Docker, Sept23 10–10:30, Stage1. Retrieved/checked through Bright Data.
+- Authenticated WAD app event18: https://app.wearedevelopers.com/events/18/map ; Floor2 map rendered. Walkable edges/scale/accessibility unverified. Do not transmit cookies to Bright Data or assume permission to publish authenticated data/media.
+- TuxCare raffle https://app.wearedevelopers.com/events/18/activity/179 : Sept24 4PM booth631, AirPods Pro3. Entry/presence requirement unknown. TextControl PS5 booth624 needs scan; drawtime unknown.
+- Universe2026 public catalog https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog :157 entries observed. Rendered retrieval works; field grouping needs validation. No attendee list or guaranteed speaker availability implied.
 
-[Official schedule](https://www.wemakedevs.org/hackathons/ptc/schedule): build/submit block ends at 5:30 PM Pacific; presentations 5:30–6:30 PM, winners 6:30 PM, wrap 7 PM. Exact submission mechanics/cutoff still need organizer confirmation. [Overview](https://www.wemakedevs.org/hackathons/ptc) says OpenAI credits are claimed at the venue; Bright Data promo is patch50. It does not establish multiple-track winning eligibility or pre-event-code permission.
+Video must show actual returned graph path, cross-session memory changing output, live tool trace/source freshness, deterministic budget/schedule checks and real Qodo review/fix evidence. Founder, advanced routes, ticket OCR, extra accessories and exhaustive data collection are cuts. Distinguish live/cached/synthetic/replay throughout. Historical replay sends no real reminders.
 
-## Additional verification October 24
+## Evaluation and completion gates
 
-Separate synthetic graph ezcon_handoff_check: an unmet-speaker query initially returned synthetic-person; after MERGE of a profile-scoped MET relationship it returned no unmet person. This verifies database query behavior, not app-level authorization or recommendation quality. FalkorDB rejected traversal-pattern EXISTS syntax; use OPTIONAL MATCH plus m IS NULL for this tested query. SAVE succeeded. Keep this fixture separate from public conference facts.
+Baseline: deterministic filtering and source lookup. Use same golden cases after model integration. Test source/edition/timezone matching, session boundary parsing, missing venue/rates, parking enforcement changes, garage closure, unavailable return transit, conflicts, unsuitable/expired role, duplicate identity/meeting/award, undo, profile leaks, unsafe URLs, failed retrieval and cached status. Zero confirmed unsupported facts, profile leaks, duplicate rewards or hard-constraint violations in the fixtures.
 
-Bright Data current free-tier documentation confirms Web Unlocker, SERP, Scraper and Browser APIs share the allowance; Browser API uses 5 credits per MB. See https://docs.brightdata.com/general/account/billing-and-pricing/free-tier . Free allowance is not 5,000 equivalent browser requests.
+Targets, not measurements: cached interaction <2s; bounded research <60s or explicit partial/failure; max5 external requests/refresh, max8 agent steps initially; no unlimited retry. Record observed latency/cost/tokens; stop before credit exhaustion. Do not use project budget alerts as assumed hard spending enforcement.
 
-## Bright Data playground smoke tests
+Inspect running responsive UI, keyboard flow, phone QR scanning, reload persistence and actual displayed totals. Final handoff back to owner must list implemented vs simulated vs unverified, tests run, sponsor evidence links, live URL, video link and remaining blockers. Never claim deployment, review, model output or integration success without evidence. Ask only for genuinely blocking secrets/owner actions or material product decisions; approved choices do not need reapproval.
 
-October 24, two manually triggered Web Unlocker requests using the existing authenticated playground and confirmed free-credit allowance:
+## Last pre-handoff checks
 
-1. WAD Docker session page: HTTP 200; returned title, Michael Irwin, Docker, September 23 10:00–10:30, Stage 1, matching previously inspected public browser fields. Retrieval works in provider playground; no ezcon API/SDK wiring yet.
-2. Universe session catalog: HTTP 200, but preview only exposed page header/footer and no sessions. Treat as incomplete content, not successful catalog extraction. Next: test Browser API/rendered retrieval or an official data endpoint. No repeated requests made.
-
-OpenAI billing page remained on browser verification; user handoff required before balance verification. No OpenAI model requests made and no personal funds authorized. Qodo remains blocked by previously observed provider review errors; do not repeatedly retry documentation reviews.
-
-## OpenAI credit and connectivity verification
-
-October 24: billing UI showed $50 available API credit in Personal organization. Credit Grants showed received October 23, 2026, state Available, balance $50/$50, expires November 22, 2026. No payment method was added.
-
-TrueForge local UI: selected gpt-5-4-nano and sent a synthetic connectivity-only prompt with no tools. Response was EZCON_OK, displayed about two seconds after submission. This verifies one model response through the saved provider, not a sponsor workflow, tool call, model evaluation or measured billing cost. Trace/session remains local. Next step is a bounded real tool call through the application integration. No secrets or personal profile data were transmitted in this test.
-
-## TrueForge + OpenAI + Bright Data verified together
-
-October 24, 12:35:37–12:36:09 Pacific: user connected Bright Data using private key entry; settings showed Connected. New TrueForge chat selected gpt-5-4-nano with Bright Data attached. Agent trace showed tool listing, three tool-schema lookups and one scrape_as_markdown call. Retrieved source response and final output matched all requested session fields: title, Michael Irwin, Docker, September 23 10:00–10:30, Stage 1 and source URL. One external page retrieval observed; no research retries. Approximately 32 seconds end-to-end from displayed timestamps, not a performance benchmark; exact tokens/provider cost not measured.
-
-This verifies live model-driven research in TrueForge UI. It does not verify the ezcon SDK/API, structured-output enforcement, graph ingestion or complete application. Discovery overhead should be reduced with a small enabled tool list and an explicit extraction schema. The markdown preview resolves relative links against localhost in the harness UI; normalize source links against the fetched page URL in application code. Do not copy harness-rendered localhost links into source records.
-
-## FalkorDB lab and track evidence
-
-October 24: lab page https://labs.falkordb.cloud/labs/ptc shows Ready and TLS enabled, with a 48-hour lifetime. Cloud credentials were not copied or stored and no cloud connection was attempted. Local ezcon-falkordb remains running with named persistent volume; a fresh synthetic MATCH p=(Profile)-[:MET]->(Person)-[:SPEAKS_AT]->(Event) RETURN p returned a nonempty two-hop path. This is infrastructure/query verification only; the application must still implement and display a relevant sourced domain path. Use local persistence as default; cloud is optional, ephemeral and requires export before expiry if used. DEMO.md now explicitly maps every FalkorDB judging criterion to a required visible action.
-
-## Cloud lab connected and checked
-
-October 24: official falkordb Node client installed at pinned version in package.json. Lab TLS URL is stored locally as FALKORDB_URL in .env (mode 0600); .env is ignored and must not be committed, displayed or copied into handoff text. Run npm ci, then npm run check:graph. The script requires a TLS URL, uses a connection timeout/no reconnect loop, and logs only nonsecret checks. It MERGEs a bounded setup fixture into conference, preserving other nodes.
-
-PASS TLS query; PASS 5 fixture nodes; PASS 5 edges after synthetic meeting; PASS real three-hop returned path; PASS one synthetic MET relationship after closing/reopening connection. Repeated run kept counts at 5/5. Browser login and conference graph visualization independently verified. Missing FALKORDB_URL fails clearly. Installed package audit reported zero vulnerabilities at installation, not a comprehensive security audit.
-
-Fixture: real public session/speaker/stage with source URL, derived Topic, fictional Attendee and fictional MET. A fixture is not a user recommendation or real attendance record. Cloud persistence was checked across client reconnect, not server restart. Cloud lab lifetime remains 48 hours. Before expiry export its RDB through the lab's Export RDB snapshot control if retaining new data; preserve local database as fallback. Cloud URL is local only and must be privately re-entered in any different workspace.
-
-The first implementation should reuse this connection and replace fixture-only paths with validated domain queries. No app UI, TrueForge-to-graph tool, routing or source ingestion pipeline is implemented yet. Qodo now has a substantive connection-check script to review; completed review still needs verification.
-
-## Latest approved product decisions (supersede earlier proposals)
-
-Read SCREEN_PLAN.md for screen contracts. MVP core plus networking QR, one sticker and one sourced raffle card approved. Public deployment: Vercel cached fictional demo; video shows live local integrations. Visual: warm companion dashboard plus Adventure passport; Today remains primary with goal chips, Next Up, recommendations, optional side quests and small passport strip. Separate Passport screen. Four soft 3D companions approved: robot, duck, pixel cat, fox. Default character still proposed. Entry: Try the demo opens Today; Make it yours opens setup. Goals: Find my next opportunity / Learn & build / Meet people / Explore & have fun. No required questionnaire. All features described here remain planned until implemented and tested.
-
-## Final interaction decisions
-
-BUILD_BRIEF.md and SCREEN_PLAN.md now contain the approved fictional demo persona, $20 transport-only cap with free/pass-covered entry, lowest-cost preference, up to three qualifying comparisons, explicit conflict replacement, one preparation action, four check-in choices and stamp-based accessory unlock. No separate XP economy. Use these latest rules over older shorthand. Problem framing is before/during/after conference value, not a general event directory or game.
-
-Travel/parking is now a required planning output; read TRAVEL_PLAN.md. The implementation must compare the best verified options found for actual event times, compute full-day totals without double counting, and preserve unknowns. Start with one bounded comparison, not a claim of worldwide live parking coverage.
-
-Latest user navigation: Today / My Day / People / Quests / Side Quests / Passport. Passport shows companion; People includes Want to meet and Met, with one bounded sourced online enrichment flow; My Day shows complete day including transport and return. SCREEN_PLAN.md contains details and privacy/identity rules. Quests and Side Quests share event IDs, scheduling checks and reward rules. The conversation preview is illustrative, not production behavior.
-
-Navigation supersedes the earlier six-tab proposal: Today / Discover / Schedule / People. Discover holds Quests and Side Quests; Passport is secondary through companion menu/progress strip. My QR includes GitHub, LinkedIn and optional Personal / Portfolio, with validated per-profile URLs and matching generated/open/copied destinations.
+Universe structured browser snapshot extraction matched one session's actual DOM-contained title, speaker, time and venue; see DATA_SOURCES.md for golden record and neighboring regression candidates. This resolves source-access uncertainty, not full-catalog extraction quality. Qodo portal sign-in now reaches onboarding, but existing installation configuration prompts GitHub Confirm access. User must reauthenticate privately before configuration can continue; no permissions expanded, no plan purchased. Latest review failure: https://github.com/heykatie/ezcon/pull/1#issuecomment-6389331252 .

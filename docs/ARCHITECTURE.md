@@ -28,10 +28,10 @@ Recommendation paths link profile goals/skills to roles, companies, representati
 - Actions: draft and preview only for MVP. External execution requires separate explicit approval.
 - Rewards: deterministic achievement IDs; one award per accomplishment; reversible corrections.
 
-## Verification before feature implementation
+## Integration gates (current status in BUILD_HANDOFF.md)
 
 1. Confirm real Qodo review on a meaningful PR; documentation review alone does not verify code review.
-2. Retrieve one Universe catalog page through Bright Data; compare fields with public browser evidence.
+2. Universe rendered retrieval works; implement container-scoped session parsing and verify date/time/speaker fields against golden records.
 3. Execute an OpenAI-powered TrueForge tool call only after API credits and request budget are confirmed.
 4. Integrate graph queries and demonstrate a remembered interaction changing a recommendation.
 5. Test a complete flow with isolated fictional fixtures, then record a live demo.

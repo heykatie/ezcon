@@ -17,15 +17,15 @@ Try the demo → Today with a clearly labeled fictional profile and cached data 
 
 ## Opportunity and comparison
 
-Open from a card into a mobile sheet or desktop detail panel. Show goal match, company/person relationship, time/location, source and retrieval date, evidence status, cost/travel range, eligibility and a single Add to My Day action. Why this fits expands an actual graph path with source-backed edges. No job match unless a represented company and real suitable opening are verified. A session does not guarantee access to its speaker.
+Open from a card into a mobile sheet or desktop detail panel. Show goal match, company/person relationship, time/location, source and retrieval date, evidence status, cost/travel range, eligibility and a single Add to Schedule action. Why this fits expands an actual graph path with source-backed edges. No job match unless a represented company and real suitable opening are verified. A session does not guarantee access to its speaker.
 
 If options clash, compare them directly: goal relevance, full cost, travel, fixed commitments and unique value. User chooses; no silent removal. Unknown costs produce an unconfirmed estimate, not a within-budget guarantee.
 
 ## Getting there
 
-Event details and My Day offer Cheapest overall / Closest practical parking / Best transit option, with no duplicate filler. Include all daily legs, known cost ranges, walking, waits, date/time restrictions and return feasibility. Show unconfirmed status when inputs or evidence are missing. Follow TRAVEL_PLAN.md.
+Event details and Schedule offer Cheapest overall / Closest practical parking / Best transit option, with no duplicate filler. Include all daily legs, known cost ranges, walking, waits, date/time restrictions and return feasibility. Show unconfirmed status when inputs or evidence are missing. Follow TRAVEL_PLAN.md.
 
-## My Day and preparation
+## Schedule and preparation
 
 Chronological fixed commitments with realistic buffers; flexible booth stops distinct. Add/remove/undo with explicit conflict response. One prep card: prerequisite/tool, question to ask, role research or introduction. Optional route preview only after verified walking edges. Public cached demo can simulate planning locally but cannot claim fresh research or real background reminders.
 
@@ -75,8 +75,8 @@ The linked in-conversation wireframe is an interaction preview. Its state and il
 - Passport prominently shows the chosen companion, name, equipped/unlocked accessory, stamps and Customize action.
 - People has Want to meet and Met lists; detail includes public professional bio, role/company, topics/projects, relevant conference presence, professional links, why relevant, sources and retrieval times. Private meeting notes, where/when met and next action are separate from scraped public facts. A confirmed meeting moves the person into Met and remains editable/undoable.
 - Enrichment uses Bright Data on supported public sources such as official bios, company pages, personal websites and publicly accessible LinkedIn information where permitted. No guarantee every LinkedIn page is accessible. No authentication bypass, private data harvesting, guessed identity merge or fabricated fields. Resolve duplicate identities conservatively. LinkedIn profile existence alone never proves attendance, booth staffing or availability. Missing fields stay missing. User can correct or add information privately. Public demo uses selected public professional fields and fictional meeting context.
-- My Day shows the full day at a glance: outbound journey and arrival, fixed commitments, flexible booth/networking stops, breaks/open time, between-event travel and return home. Mark estimated/unconfirmed segments and show full-day cost. Date selector prevents mixing historical days. Prep/details expand without replacing the overview.
-- Quests is the relevant-opportunities catalog: sessions, workshops, hackathons and career/networking opportunities. Filters use selected goals and constraints; compare and add to My Day.
+- Schedule shows the full day at a glance: outbound journey and arrival, fixed commitments, flexible booth/networking stops, breaks/open time, between-event travel and return home. Mark estimated/unconfirmed segments and show full-day cost. Date selector prevents mixing historical days. Prep/details expand without replacing the overview.
+- Quests is the relevant-opportunities catalog: sessions, workshops, hackathons and career/networking opportunities. Filters use selected goals and constraints; compare and add to Schedule.
 - Side Quests is a separate optional fun catalog: social events, parties, happy hours, raffles, booth goodies and games. Apply the same eligibility, date/time, budget, travel and conflict validation; never let the label bypass constraints. Use one canonical event ID if an item qualifies for both catalogs. No duplicate scheduled entries or reward farming.
 - Today keeps compact summaries and links to these catalogs; do not cram every opportunity into the home screen.
 
@@ -84,6 +84,6 @@ First build: one public-profile enrichment example with honest missing fields, W
 
 ## Navigation and networking card update
 
-Approved bottom navigation is Today / Discover / Schedule / People. Schedule replaces the label My Day everywhere in product copy. Quests means goal-directed learning, career and networking opportunities; Side Quests means optional social/fun discoveries. Both live inside Discover; overlapping items share one record with both labels. Passport is secondary through companion menu and Today strip.
+Approved bottom navigation is Today / Discover / Schedule / People. Schedule replaces the label Schedule everywhere in product copy. Quests means goal-directed learning, career and networking opportunities; Side Quests means optional social/fun discoveries. Both live inside Discover; overlapping items share one record with both labels. Passport is secondary through companion menu and Today strip.
 
 My QR supports three equally accessible destinations: GitHub, LinkedIn, Personal / Portfolio. The third accepts an editable personal-site or portfolio HTTPS URL; it does not require an account connection. QR generation, displayed destination, Open link and Copy link must agree with the selected option. Validate URLs and preserve per-profile isolation; do not expose private contact details. Network requests are not needed to generate the QR. A user can leave any link blank. Offline availability remains a verification requirement.

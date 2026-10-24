@@ -28,3 +28,17 @@ Event ID 18 is World Congress 2026 North America.
 These pages were inspected using the user's authenticated browser. Do not pass browser cookies or credentials to Bright Data, or label these as verified public/API-accessible sources. Keep authenticated-source captures local unless publication is separately authorized. Test public retrieval separately. A source-backed raffle card is now supported; a small route preview is feasible after manually validating walkable edges and labeling travel estimates. Do not claim optimized or accessible routes until tested.
 
 Bright Data smoke checks: WAD sampled session returned matching title/speaker/company/time/stage through Web Unlocker (HTTP 200). Universe catalog Web Unlocker preview returned only shell content despite HTTP 200; rendered retrieval remains necessary. These checks did not use the authenticated WAD event-app cookies.
+
+## Universe rendered retrieval and extraction check
+
+October 24: direct public catalog rendered 157 entries. Bright Data scraping_browser_navigate succeeded; a transient model connection error interrupted the following step. A subsequent scraping_browser_get_text read retrieved actual session content. Generic flattened-text extraction produced shifted neighboring times; do not use those outputs as data. A structured scraping_browser_snapshot extraction then correctly matched the same DOM session container:
+
+| Field | Browser-verified value |
+| --- | --- |
+| Title | Beyond correct: Making code quality worth acting on |
+| Speaker | Caro Galvin, Senior Product Manager, GitHub |
+| Date/time | Wednesday October 28, 2026, 12:10–12:25 PM PDT |
+| Venue | Demos & Donuts @ Gateway Pavilion, Level 2 |
+| DOM record ID | session-1777658642130001QLdM-1785203706362001xLy6 |
+
+Also independently verified in the direct DOM: Session After Party: Humans set direction. Agents close the loop. — Mario Rodriguez/Evan Boyle, October28 noon–12:30PM PDT, The Speakeasy @ GitHub Central, Festival Pavilion; The Low Orbit Agentic Cannon: Scaling Copilot through internal tooling — Callum Cieciala, October28 12:20–12:35PM PDT, Ship & Tell @ Firehouse. These three neighboring records are regression candidates to catch time shifts. One corrected agent record is not a validated full-catalog pipeline. Extract by each li.catalog-result.session-result container or bounded detail page; preserve source record IDs and timezones.
