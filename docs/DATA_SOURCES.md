@@ -1,6 +1,6 @@
 # Conference source inventory
 
-Checked October 24, 2026. Public availability is not a license to redistribute media or an assurance of complete coverage. Sources have been inspected manually; one Bright Data playground retrieval has been verified; no ezcon ingestion pipeline exists.
+Checked October 24, 2026. The app includes bounded source-specific retrieval/parsing through TrueForge and Bright Data, plus cached conference snapshots. It does not provide exhaustive catalog coverage. Public availability is not a license to redistribute media or an assurance of complete coverage.
 
 | Source | Established facts | Limits and use |
 | --- | --- | --- |
@@ -24,8 +24,13 @@ Event ID 18 is World Congress 2026 North America.
 - [Text Control PS5 entry](https://app.wearedevelopers.com/events/18/goodie/265): scan QR at booth 624 to enter; no draw time established in the inspected detail.
 - [Booth activities](https://app.wearedevelopers.com/events/18/booth-activities) includes raffles, product demos, hands-on labs and other activities.
 - [TuxCare AirPods Pro 3](https://app.wearedevelopers.com/events/18/activity/179): winner announced September 24 at 4 PM at booth 631. This historical listing supports a scheduled raffle replay; entry conditions and mandatory presence are not stated in the inspected detail. Preserve source wording; confirm venue timezone when normalizing.
+- The owner explicitly authorized public display of historical event-app listings on October 24, 2026. This does not authorize publishing attendee identities, private profile details, ticket photos/barcodes, or claiming the owner entered or won.
 
-These pages were inspected using the user's authenticated browser. Do not pass browser cookies or credentials to Bright Data, or label these as verified public/API-accessible sources. Keep authenticated-source captures local unless publication is separately authorized. Test public retrieval separately. A source-backed raffle card is now supported; a small route preview is feasible after manually validating walkable edges and labeling travel estimates. Do not claim optimized or accessible routes until tested.
+The WAD replay uses a clearly fictional sample ticket ID (`DEMO-0427`) only to illustrate the interface. It is not a real entry, photo, reminder or reward. The historical raffle UI is read-only and sends no reminders.
+
+The Goodies catalog visibly listed these items; the catalog does not guarantee remaining stock or state each item's entry conditions: Owl Plushie and Owl Builder Set (Twilio); Get Inked!, Unique Smart Tag, Beats Solo 4 Headset, Lego Pacman Arcade, Desk Cable Organizer, Quack! Quack! and Webcam cover (SAP); Laptop Stickers, Entire Tees and Tote bag (Entire); Free yo-yos! and California Calling: Grab a Frisbee! (Text Control); LavinMQ book, Stickers, Wooden cup, Pen and RabbitMQ book (LavinMQ).
+
+These pages were inspected using the user's authenticated browser. Do not pass browser cookies or credentials to Bright Data, or label these as verified public/API-accessible sources. The owner separately authorized displaying the listed historical event content, but no attendee records or personal ticket data are included. A source-backed raffle and goodies replay is implemented; route optimization still requires manually validated walkable edges and estimated travel labels. Do not claim optimized or accessible routes until tested.
 
 Bright Data smoke checks: WAD sampled session returned matching title/speaker/company/time/stage through Web Unlocker (HTTP 200). Universe catalog Web Unlocker preview returned only shell content despite HTTP 200; rendered retrieval remains necessary. These checks did not use the authenticated WAD event-app cookies.
 

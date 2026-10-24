@@ -206,13 +206,32 @@ describe('ezcon core flow', () => {
 
   it('saves a raffle ticket number with a confirmed entry', async () => {
     const user = await startDemo();
-    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Goodies' }));
-    expect(screen.getByRole('heading', { name: 'Goodies & side quests' })).toBeTruthy();
+    await openExplore(user);
+    await user.click(screen.getByRole('tab', { name: 'Side quests' }));
+    expect(screen.getByRole('heading', { name: 'Side quests' })).toBeTruthy();
     const raffle = screen.getByRole('heading', { name: 'Tailscale keyboard raffle' }).closest('article')!;
     await user.type(within(raffle).getByRole('textbox', { name: /Ticket number/ }), '0427');
     await user.click(within(raffle).getByRole('button', { name: 'Save ticket' }));
     expect(within(raffle).getByText('Ticket #0427')).toBeTruthy();
     expect(stored().raffleTickets).toEqual([expect.objectContaining({ number: '0427' })]);
+  });
+
+  it('shows sourced historical WAD giveaways and clearly fictional raffle-ticket history', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Explore/ }));
+    await user.click(screen.getByRole('tab', { name: 'Side quests' }));
+
+    expect(screen.getByRole('heading', { name: 'Past giveaways' })).toBeTruthy();
+    expect(screen.getByText('Owl Plushie')).toBeTruthy();
+    expect(screen.getByText('Beats Solo 4 Headset')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Day 1 Raffle to win Apple AirPods Pro 3' })).toBeTruthy();
+    expect(screen.getByText(/Winner announced September 24, 2026 at 4:00 PM PDT/)).toBeTruthy();
+    expect(screen.getByText(/Scan the QR code at booth 624/i)).toBeTruthy();
+    expect(screen.getByText(/Fictional sample ticket · DEMO-0427/)).toBeTruthy();
+    expect(screen.getByText(/No real entry, reminder or reward is recorded/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Snap ticket photo/ })).toBeNull();
+    expect(stored().raffleTickets).toBeUndefined();
   });
 
   it('searches upcoming events from the header dropdown', async () => {
@@ -229,10 +248,25 @@ describe('ezcon core flow', () => {
 
   it('labels future features as previews, not working features', async () => {
     const user = await startDemo();
-    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'Goodies' }));
+    await openExplore(user);
+    await user.click(screen.getByRole('tab', { name: 'Side quests' }));
     const preview = screen.getByRole('heading', { name: 'Coming next', level: 3 }).closest('section')!;
     expect(within(preview).getByText('Concept preview — not working yet')).toBeTruthy();
-    for (const f of ['Booth routing', 'Raffle ticket reading', 'Side quests']) expect(within(preview).getByText(f)).toBeTruthy();
+    for (const f of ['Booth route optimization', 'Ticket photo auto-reading', 'Attendee list sync']) expect(within(preview).getByText(f)).toBeTruthy();
     expect(within(preview).queryByRole('button')).toBeNull();
+  });
+
+  it('keeps the bottom navigation focused and separates quests from optional side quests in Explore', async () => {
+    const user = await startDemo();
+    const nav = within(screen.getByRole('navigation', { name: 'Main' }));
+    expect(nav.getAllByRole('button').map((button) => button.textContent?.trim())).toEqual(['Today', 'Explore', 'Schedule', 'People']);
+    await openExplore(user);
+    expect(screen.getByRole('tablist', { name: 'Explore sections' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Quests', selected: true })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Quests' })).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Side quests' }));
+    expect(screen.getByRole('tab', { name: 'Side quests', selected: true })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Raffles' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
   });
 });

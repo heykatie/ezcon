@@ -9,7 +9,7 @@ import type { ScheduleItem, Conflict } from '../domain/schedule';
 import { STAMP_TEXT, ACCESSORY, unlockedAccessories, type RewardState, type Stamp } from '../domain/rewards';
 import { validateProfileLink, type LinkKind } from '../domain/urls';
 import { personId } from '../domain/ids';
-import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_RUN, type CompanionKind, type DemoProfile } from '../data/demo';
+import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_GOODIES, WAD_RUN, type CompanionKind, type DemoProfile, type SideQuest } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
 import PEOPLE_LINKS from '../data/people-links.json';
@@ -207,9 +207,9 @@ export function Today(ctx: Ctx) {
 
 export function ComingNext() {
   const items: Array<[IconName, string, string]> = [
-    ['map', 'Booth routing', 'Walk between booths and talks on a verified venue map.'],
-    ['ticket', 'Raffle ticket reading', 'Read the ticket number from your photo automatically.'],
-    ['flag', 'Side quests', 'Optional parties, meetups and goodies, same budget checks.'],
+    ['map', 'Booth route optimization', 'Compare verified walking routes between booths, talks and events.'],
+    ['ticket', 'Ticket photo auto-reading', 'Read a ticket number for your confirmation before saving.'],
+    ['people', 'Attendee list sync', 'Show verified attendee records when an event makes them available.'],
   ];
   return (
     <section className="stack" aria-labelledby="next-concepts-h">
@@ -397,42 +397,58 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
 export function Explore(ctx: Ctx) {
   const conf = CONFERENCES[ctx.conference];
   const upcoming = conf.mode === 'upcoming';
+  const [section, setSection] = useState<'quests' | 'side-quests'>('quests');
   const hiringIds = new Set(ctx.hiring.map((h) => h.session.id));
   const recIds = new Set(ctx.recs.map((r) => r.session.id));
   const rest = ctx.sessions
     .filter((s) => s.catalogs.includes('quest') && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
-  if (!upcoming) return <PastExplore {...ctx} />;
   return (
     <div className="stack">
       <header className="page-head">
         <h1>Explore</h1>
-        <p className="muted">What could I do?</p>
+        <p className="muted">{upcoming ? 'What could I do?' : 'What can I still do from this event?'}</p>
       </header>
-      <div className="row" role="group" aria-label="Goals (optional, choose any)">
-        {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
-          <button key={g} className="chip" aria-pressed={ctx.ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
-            {GOAL_LABELS[g]}
-          </button>
-        ))}
+      <div className="segmented explore-sections" role="tablist" aria-label="Explore sections">
+        <button role="tab" aria-selected={section === 'quests'} onClick={() => setSection('quests')}>Quests</button>
+        <button role="tab" aria-selected={section === 'side-quests'} onClick={() => setSection('side-quests')}>Side quests</button>
       </div>
-      {!upcoming && <p className="notice">Past event · replay. Sessions are for recall and research; nothing sends reminders.</p>}
-      {upcoming && ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
-
-      <section className="stack" aria-labelledby="quests-h">
-        <div className="section-title">
-          <h2 id="quests-h">Quests</h2>
-          <span className="tiny muted">Learning & networking for your goals</span>
+      {section === 'quests' ? (
+        upcoming ? (
+          <div className="stack" role="tabpanel" aria-label="Quests">
+            <div className="row" role="group" aria-label="Goals (optional, choose any)">
+              {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
+                <button key={g} className="chip" aria-pressed={ctx.ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
+                  {GOAL_LABELS[g]}
+                </button>
+              ))}
+            </div>
+            {ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
+            <section className="stack" aria-labelledby="quests-h">
+              <div className="section-title">
+                <h2 id="quests-h">Quests</h2>
+                <span className="tiny muted">Learning &amp; networking for your goals</span>
+              </div>
+              {ctx.recs.map((r) => (
+                <SessionCard key={r.session.id} ctx={ctx} session={r.session} reasons={r.reasons} paths={r.paths} />
+              ))}
+              {rest.map((s) => (
+                <SessionCard key={s.id} ctx={ctx} session={s} paths={pathsFor(ctx, s.id)} />
+              ))}
+            </section>
+            <ResearchPanel ctx={ctx} />
+          </div>
+        ) : (
+          <div role="tabpanel" aria-label="Quests"><PastExplore {...ctx} /></div>
+        )
+      ) : (
+        <div className="stack" role="tabpanel" aria-label="Side quests">
+          <h2>Side quests</h2>
+          <p className="muted">Optional fun, giveaways and raffles. Add them only if they fit your time and budget.</p>
+          <RaffleSection {...ctx} />
+          <div className="card"><ComingNext /></div>
         </div>
-        {ctx.recs.map((r) => (
-          <SessionCard key={r.session.id} ctx={ctx} session={r.session} reasons={r.reasons} paths={r.paths} />
-        ))}
-        {rest.map((s) => (
-          <SessionCard key={s.id} ctx={ctx} session={s} paths={pathsFor(ctx, s.id)} />
-        ))}
-      </section>
-
-      <ResearchPanel ctx={ctx} />
+      )}
     </div>
   );
 }
@@ -1161,10 +1177,6 @@ function PastExplore(ctx: Ctx) {
   const applied = (ctx.ps.applications ?? []).filter((a) => ctx.sessions.some((s) => s.id === a.eventId));
   return (
     <div className="stack">
-      <header className="page-head">
-        <h1>Explore</h1>
-        <p className="muted">What can I still do from this event?</p>
-      </header>
       <p className="notice">Past event · replay. Its sessions are over; they stay on Schedule as history.</p>
       <section className="stack" aria-labelledby="past-roles-h">
         <h2 id="past-roles-h">Open roles at companies from this event</h2>
@@ -1266,79 +1278,92 @@ async function shrinkPhoto(file: File, max = 480): Promise<string> {
 }
 
 export function RaffleSection(ctx: Ctx) {
-  const [photo, setPhoto] = useState<string>();
-  const [number, setNumber] = useState('');
-  const [error, setError] = useState<string>();
-  const q = SIDE_QUESTS.find((x) => x.conference === ctx.conference);
-  if (!q) return <p className="card soft small">No sourced raffles for this conference.</p>;
-  const saved = (ctx.ps.raffleTickets ?? []).find((t) => t.questId === q.id);
+  const quests = SIDE_QUESTS.filter((x) => x.conference === ctx.conference);
+  if (!quests.length) return <p className="card soft small">No sourced raffles for this conference.</p>;
   return (
     <section className="stack" aria-labelledby="raffle-h">
       <div className="section-title">
         <h2 id="raffle-h">Raffles</h2>
         <span className="tiny muted">Optional · prizes never count toward your budget</span>
       </div>
-      <article className="card stack">
-        <h3>{q.title}</h3>
-        <p className="small muted">
-          {q.prize} · {q.where}
-        </p>
-        <p className="small">How to enter: {q.entry}</p>
-        <p className="tiny muted">Unknown: {q.unknowns.join('; ')}.</p>
-        {saved ? (
-          <div className="row" style={{ alignItems: 'center' }}>
-            {saved.photo && <img src={saved.photo} alt="Your raffle ticket" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12 }} />}
-            <span className="small">
-              <b>Ticket #{saved.number}</b> saved {fmtStamp(saved.savedAt)}
-            </span>
-            <button className="btn ghost small" onClick={() => ctx.update((p) => ({ ...p, raffleTickets: (p.raffleTickets ?? []).filter((t) => t.questId !== q.id) }))}>
-              Remove
-            </button>
+      {quests.map((q) => <RaffleCard key={q.id} q={q} ctx={ctx} />)}
+      {ctx.conference === 'wad26na' && (
+        <section className="stack" aria-labelledby="past-goodies-h">
+          <div className="section-title">
+            <h2 id="past-goodies-h">Past giveaways</h2>
+            <span className="tiny muted">Listed in the event app</span>
           </div>
-        ) : (
-          <div className="stack" style={{ gap: 8 }}>
-            <label className="btn small" style={{ width: 'fit-content' }}>
-              {photo ? 'Retake photo' : 'Snap ticket photo'}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="sr-only"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  if (!f) return;
-                  try {
-                    setPhoto(await shrinkPhoto(f));
-                    setError(undefined);
-                  } catch {
-                    setError('Couldn’t read that photo. Try another one.');
-                  }
-                }}
-              />
-            </label>
-            {photo && <img src={photo} alt="Ticket photo preview" style={{ width: 120, borderRadius: 12 }} />}
-            <label className="field">
-              <span className="small">Ticket number (check it against the photo)</span>
-              <input inputMode="numeric" value={number} maxLength={20} onChange={(e) => setNumber(e.target.value.replace(/[^0-9A-Za-z-]/g, ''))} />
-            </label>
-            {error && <p className="error">{error}</p>}
-            <button
-              className="btn primary small"
-              style={{ width: 'fit-content' }}
-              disabled={!number}
-              onClick={() => {
-                ctx.update((p) => ({ ...p, raffleTickets: [...(p.raffleTickets ?? []).filter((t) => t.questId !== q.id), { questId: q.id, number, photo, savedAt: new Date().toISOString() }] }));
-                setPhoto(undefined);
-                setNumber('');
-              }}
-            >
-              Save ticket
-            </button>
-            <p className="tiny muted">The photo stays on this device and never goes into public data. Keep it out of recordings — tickets can carry barcodes.</p>
-          </div>
-        )}
-        <SourceLine source={q.source} />
-      </article>
+          <p className="tiny muted">Historical listings only; availability and giveaway conditions were not shown in the catalog.</p>
+          <ul className="goodies-list">
+            {WAD_GOODIES.map((item) => <li key={`${item.host}:${item.name}`}><b>{item.name}</b><span>{item.host}</span></li>)}
+          </ul>
+          <SourceLine source={quests[0]!.source} label="Event app catalog" />
+        </section>
+      )}
     </section>
+  );
+}
+
+function RaffleCard({ q, ctx }: { q: SideQuest; ctx: Ctx }) {
+  const [photo, setPhoto] = useState<string>();
+  const [number, setNumber] = useState('');
+  const [error, setError] = useState<string>();
+  const saved = (ctx.ps.raffleTickets ?? []).find((t) => t.questId === q.id);
+  return (
+    <article className="card stack">
+      <div className="between">
+        <h3>{q.title}</h3>
+        {q.historical && <span className="badge">Past event · replay</span>}
+      </div>
+      <p className="small muted">{q.prize} · {q.host} · {q.where}</p>
+      {q.draw && <p className="small"><b>Draw:</b> {q.draw}.</p>}
+      <p className="small">How to enter: {q.entry}</p>
+      <p className="tiny muted">Still unknown: {q.unknowns.join('; ')}.</p>
+      {q.sampleTicket && (
+        <div className="sample-ticket" aria-label="Fictional sample ticket">
+          <span aria-hidden="true">🎟️</span>
+          <span><b>Fictional sample ticket · {q.sampleTicket}</b><br /><small>No real entry, reminder or reward is recorded.</small></span>
+        </div>
+      )}
+      {q.historical ? null : saved ? (
+        <div className="row" style={{ alignItems: 'center' }}>
+          {saved.photo && <img src={saved.photo} alt="Your raffle ticket" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12 }} />}
+          <span className="small"><b>Ticket #{saved.number}</b> saved {fmtStamp(saved.savedAt)}</span>
+          <button className="btn ghost small" onClick={() => ctx.update((p) => ({ ...p, raffleTickets: (p.raffleTickets ?? []).filter((t) => t.questId !== q.id) }))}>Remove</button>
+        </div>
+      ) : (
+        <RaffleTicketForm q={q} ctx={ctx} photo={photo} number={number} error={error} setPhoto={setPhoto} setNumber={setNumber} setError={setError} />
+      )}
+      <SourceLine source={q.source} />
+    </article>
+  );
+}
+
+function RaffleTicketForm({ q, ctx, photo, number, error, setPhoto, setNumber, setError }: {
+  q: SideQuest; ctx: Ctx; photo?: string; number: string; error?: string;
+  setPhoto: (value?: string) => void; setNumber: (value: string) => void; setError: (value?: string) => void;
+}) {
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <label className="btn small" style={{ width: 'fit-content' }}>
+        {photo ? 'Retake photo' : 'Snap ticket photo'}
+        <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={async (e) => {
+          const f = e.target.files?.[0];
+          if (!f) return;
+          try { setPhoto(await shrinkPhoto(f)); setError(undefined); }
+          catch { setError('Couldn’t read that photo. Try another one.'); }
+        }} />
+      </label>
+      {photo && <img src={photo} alt="Ticket photo preview" style={{ width: 120, borderRadius: 12 }} />}
+      <label className="field"><span className="small">Ticket number (check it against the photo)</span>
+        <input inputMode="numeric" value={number} maxLength={20} onChange={(e) => setNumber(e.target.value.replace(/[^0-9A-Za-z-]/g, ''))} />
+      </label>
+      {error && <p className="error">{error}</p>}
+      <button className="btn primary small" style={{ width: 'fit-content' }} disabled={!number} onClick={() => {
+        ctx.update((p) => ({ ...p, raffleTickets: [...(p.raffleTickets ?? []).filter((t) => t.questId !== q.id), { questId: q.id, number, photo, savedAt: new Date().toISOString() }] }));
+        setPhoto(undefined); setNumber('');
+      }}>Save ticket</button>
+      <p className="tiny muted">The photo stays on this device and never goes into public data. Keep it out of recordings — tickets can carry barcodes.</p>
+    </div>
   );
 }
