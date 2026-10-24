@@ -97,3 +97,7 @@ Progress uses stamps, not a separate XP economy: Explorer (confirmed event/booth
 ## Getting there is core
 
 Every scheduled event and day must provide best verified parking/commute options found, with date/time-specific rules, door-to-door time, return travel and full daily cost. See TRAVEL_PLAN.md for acceptance cases and scope. Parking research is a primary attendee pain, not a generic map link. First build supports one bounded sourced comparison; arbitrary-city coverage and live availability are not promised.
+
+## People, quests and day overview
+
+Approved: companion visible on Passport; People split Want to meet / Met with sourced public professional profile enrichment and private meeting context. Separate Quests and Side Quests catalogs, both supporting schedule adds under the same constraints. My Day is a full-day at-a-glance schedule including travel, open time, preparation and return. See SCREEN_PLAN.md for boundaries and first-build coverage. No universal LinkedIn access or actual attendance inference.

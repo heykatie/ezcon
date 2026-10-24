@@ -4,7 +4,7 @@ Status: layout direction approved; detailed wireframes and demo dataset remain r
 
 ## Entry and navigation
 
-Try the demo → Today with a clearly labeled fictional profile and cached data notice on the public site. Make it yours → companion/profile setup, no registration. Main navigation: Today, My Day, People, Passport. Companion portrait opens profile/customization; My QR remains in the header. Chat is optional; every core task has a visible button. Desktop expands the same hierarchy into Today content plus day timeline; mobile keeps one main column.
+Try the demo → Today with a clearly labeled fictional profile and cached data notice on the public site. Make it yours → companion/profile setup, no registration. Main navigation: Today, My Day, People, Quests, Side Quests, Passport. Keep all six visible with labels; mobile layout must wrap or otherwise avoid cramped tap targets. Companion portrait opens profile/customization; My QR remains in the header. Chat is optional; every core task has a visible button. Desktop expands the same hierarchy into Today content plus day timeline; mobile keeps one main column.
 
 ## Today
 
@@ -69,3 +69,15 @@ Protect source retrieval, returned graph path, schedule constraints, persistent 
 - Passport: Explorer, Connection, Follow-through; first Connection unlocks one accessory, no XP economy.
 
 The linked in-conversation wireframe is an interaction preview. Its state and illustrative comparison records are not a real itinerary, database integration or evidence of current availability. Final source subset still requires verification.
+
+## Approved navigation expansion
+
+- Passport prominently shows the chosen companion, name, equipped/unlocked accessory, stamps and Customize action.
+- People has Want to meet and Met lists; detail includes public professional bio, role/company, topics/projects, relevant conference presence, professional links, why relevant, sources and retrieval times. Private meeting notes, where/when met and next action are separate from scraped public facts. A confirmed meeting moves the person into Met and remains editable/undoable.
+- Enrichment uses Bright Data on supported public sources such as official bios, company pages, personal websites and publicly accessible LinkedIn information where permitted. No guarantee every LinkedIn page is accessible. No authentication bypass, private data harvesting, guessed identity merge or fabricated fields. Resolve duplicate identities conservatively. LinkedIn profile existence alone never proves attendance, booth staffing or availability. Missing fields stay missing. User can correct or add information privately. Public demo uses selected public professional fields and fictional meeting context.
+- My Day shows the full day at a glance: outbound journey and arrival, fixed commitments, flexible booth/networking stops, breaks/open time, between-event travel and return home. Mark estimated/unconfirmed segments and show full-day cost. Date selector prevents mixing historical days. Prep/details expand without replacing the overview.
+- Quests is the relevant-opportunities catalog: sessions, workshops, hackathons and career/networking opportunities. Filters use selected goals and constraints; compare and add to My Day.
+- Side Quests is a separate optional fun catalog: social events, parties, happy hours, raffles, booth goodies and games. Apply the same eligibility, date/time, budget, travel and conflict validation; never let the label bypass constraints. Use one canonical event ID if an item qualifies for both catalogs. No duplicate scheduled entries or reward farming.
+- Today keeps compact summaries and links to these catalogs; do not cram every opportunity into the home screen.
+
+First build: one public-profile enrichment example with honest missing fields, Want to meet/Met views, one sourced main quest, one sourced raffle side quest and full-day overview. Extensive people enrichment and arbitrary event discovery are later coverage, not assumed complete.
