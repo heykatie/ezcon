@@ -97,3 +97,7 @@ My QR supports three equally accessible destinations: GitHub, LinkedIn, Personal
 ### Sponsor activity feedback
 
 Live service calls show a small, non-blocking notice in the upper-right corner for four seconds: FalkorDB graph requests and TrueForge + OpenAI research. Completion and request failure update the notice. Bright Data receives a completed-fetch notice only when the returned research trace contains a supported scrape tool with response content; the current API does not stream tool-level progress. Cached operations never claim a live sponsor call. Qodo operates in the repository review workflow, not in the app runtime. Notices use a polite status region and respect reduced motion.
+
+### Preparation and badge terminology
+
+Preparation controls say “Mark prep complete” before completion and “✓ Prep complete” afterward. They are reversible toggles and only describe preparation, never event attendance. The collection is labeled “Badge collection”; rewards are badges. Existing internal reward keys remain unchanged to preserve saved progress.

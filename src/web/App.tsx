@@ -256,7 +256,7 @@ export function App() {
     });
     setVersion((v) => v + 1);
     setSheet(null);
-    setToast({ message: `Meeting with ${m.personName} removed; its stamps were reversed.` });
+    setToast({ message: `Meeting with ${m.personName} removed; its badges were reversed.` });
   };
 
   const startFresh = async () => {

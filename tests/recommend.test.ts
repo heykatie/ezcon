@@ -1,4 +1,4 @@
-import { rankRecommendations } from '../src/domain/recommend';
+import { matchesGoals, rankRecommendations } from '../src/domain/recommend';
 import { MemoryGraph } from '../src/domain/memory-graph';
 import { fixtureRecords } from './graph-contract';
 import { personId } from '../src/domain/ids';
@@ -63,5 +63,18 @@ describe('recommendations', () => {
     const g = await setup();
     const recs = rankRecommendations(await g.candidates(P, 'universe26'), fixtureRecords, { goals: ['fun'], schedule: [], now: '2026-10-27T08:00:00-07:00' });
     expect(recs.every((r) => r.session.catalogs.includes('quest'))).toBe(true);
+  });
+});
+
+ describe('goal filtering', () => {
+  const session = { ...fixtureRecords[0]!, sessionType: 'Workshop', speakers: [], catalogs: ['quest' as const] };
+  it('matches any selected goal and shows all when none are selected', () => {
+    expect(matchesGoals(session, [])).toBe(true);
+    expect(matchesGoals(session, ['learn', 'meet'])).toBe(true);
+    expect(matchesGoals(session, ['meet'])).toBe(false);
+    expect(matchesGoals(session, ['career'])).toBe(false);
+    expect(matchesGoals(session, ['career'], new Set([session.id]))).toBe(true);
+    expect(matchesGoals(session, ['fun'])).toBe(false);
+    expect(matchesGoals({ ...session, catalogs: ['side-quest'] }, ['fun'])).toBe(true);
   });
 });

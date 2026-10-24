@@ -20,6 +20,17 @@ export interface RankOptions {
 
 const LEARNING_TYPES = new Set(['workshop', 'breakout session', 'product demo']);
 
+/** Multiple goals use OR; a career match requires an evidenced hiring connection. */
+export function matchesGoals(session: SessionRecord, goals: Goal[], hiringIds: ReadonlySet<string> = new Set()): boolean {
+  if (!goals.length) return true;
+  return goals.some((goal) => {
+    if (goal === 'career') return hiringIds.has(session.id);
+    if (goal === 'meet') return session.speakers.length > 0;
+    if (goal === 'fun') return session.catalogs.includes('side-quest');
+    return LEARNING_TYPES.has((session.sessionType ?? '').toLowerCase());
+  });
+}
+
 export const toScheduleItem = (s: SessionRecord): ScheduleItem => ({
   eventId: s.id,
   title: s.title,
