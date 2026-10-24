@@ -152,7 +152,8 @@ export function App() {
           <h1 className="brand" style={{ fontSize: '2rem' }}>
             ez<span>con</span>
           </h1>
-          <p>Turn conference goals into a sourced plan you can afford — and remember who you met.</p>
+          <p style={{ fontWeight: 800, fontSize: '1.15rem' }}>Turn a conference into a practical career opportunity plan.</p>
+          <p className="small muted">A verified open role, the talk that connects you to that company, how to prepare, and an affordable way to get there.</p>
           <button className="btn primary" style={{ width: '100%' }} onClick={() => (save('active', DEMO_PROFILE.id), setActiveId(DEMO_PROFILE.id))}>
             Try the demo
           </button>

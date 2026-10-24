@@ -120,8 +120,8 @@ export function Today(ctx: Ctx) {
 
       <section className="stack" aria-labelledby="recs-h">
         <div className="section-title">
-          <h2 id="recs-h">For your goals</h2>
-          <span className="tiny muted">Up to 3 that fit your schedule</span>
+          <h2 id="recs-h">{career ? 'Also worth your time' : 'For your goals'}</h2>
+          <span className="tiny muted">{career ? 'Learning and networking picks · secondary' : 'Up to 3 that fit your schedule'}</span>
         </div>
         {ctx.recs.length === 0 && <p className="card soft">Nothing else qualifies right now without a schedule conflict. Try another goal or check Discover.</p>}
         {ctx.recs.map((r) => (
@@ -165,8 +165,9 @@ function HiringSection(ctx: Ctx) {
     <section className="stack" aria-labelledby="hiring-h">
       <div className="section-title">
         <h2 id="hiring-h">Hiring connections</h2>
-        <span className="tiny muted">Open role + related conference touchpoint</span>
+        <span className="tiny muted">Your career opportunity plan</span>
       </div>
+      <p className="small muted">Each card pairs a currently open role with a talk at the conference by someone listed with that company, then helps you schedule it, prepare and get there.</p>
       {ctx.hiring.length === 0 ? (
         <p className="card soft small">No verified open role is connected to an upcoming event right now. Sessions still appear below as learning or networking matches.</p>
       ) : (
@@ -191,6 +192,9 @@ export function HiringCard({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
           {h.role.source.note ? ` · ${h.role.source.note}` : ''}
         </p>
         {h.role.requirementSummary && <p className="tiny muted">Requires: {h.role.requirementSummary}</p>}
+        <p className="tiny">
+          <b>Honest fit check:</b> {h.role.minYearsExperience === 0 ? 'no minimum years of experience are listed, so an early-career application is reasonable' : `the listing asks for ${h.role.minYearsExperience}+ years`}; read the full listing for location, work arrangement and team before applying.
+        </p>
       </div>
       <div className="card soft" style={{ padding: 10 }}>
         <p className="small">

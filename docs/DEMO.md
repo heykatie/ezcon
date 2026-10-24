@@ -46,11 +46,15 @@ Target 4:30. Record the **local live** app (`http://localhost:5173`, badge “Li
 - [ ] Close `.env`, terminals with secrets, the TrueForge settings page and personal tabs. No real names beyond public speaker listings.
 - [ ] Tabs ready: ezcon local; TrueForge UI; FalkorDB Cloud graph browser (graph `ezcon`); PR #1 review and triage comment; terminal with `npm test` / `npm run test:graph` output.
 
+### Positioning
+
+Lead with the career opportunity plan, not generic session recommendations. The distinctive chain on screen: verified open role → company connected to the conference (speaker/session) → direct employer application link with an honest fit caveat → that touchpoint added to the schedule → one concise prep step → cost- and time-aware commute comparison. Why it is more actionable than a generic recommender: it ends in concrete next steps (apply, attend this talk, read this listing, leave at this time for $14.70), each backed by a source, instead of a list of interesting talks. Learning/networking picks appear as “Also worth your time” and stay secondary.
+
 ### Beats
 
 | Time | Show | Say (short) | Live or cached |
 | --- | --- | --- | --- |
-| 0:00–0:30 | Title card, then Today | “Conferences scatter what matters across agendas, speaker pages and job boards. On a $20 travel budget I can’t research every company, plan every commute and remember every conversation.” | — |
+| 0:00–0:30 | Title card “Turn a conference into a practical career opportunity plan”, then Today | “I go to conferences hoping for my next role, but the pieces are scattered: job boards don’t know who’s speaking, agendas don’t know who’s hiring, and I’m on a $20 travel budget. Plenty of apps recommend sessions. ezcon answers a sharper question: which open job here connects to a person I can actually go see, and how do I get there prepared and on budget?” | — |
 | 0:30–1:05 | Today with *Find my next opportunity* on → Hiring connections card | Open Microsoft role, checked time, the talk by a speaker listed with Microsoft, “not a referral”, *View role & apply* (employer page) kept separate from *Add event to Schedule*. | Roles: live check via Microsoft’s official careers API (`npm run check:roles`), **not** Bright Data. Sessions: browser-verified Universe capture. |
 | 1:05–1:35 | *Why this fits* sheet → FalkorDB browser running `MATCH p=(s:Session)<-[:SPEAKS_AT]-(:Person)-[:WORKS_AT]->(:Company)-[:OFFERS_ROLE]->(:Role) RETURN p LIMIT 5` | **FalkorDB’s job:** holds sessions, speakers, companies, roles and my private meetings as one graph; the app renders the exact path the parameterized query returned. | Live (FalkorDB Cloud). |
 | 1:35–2:20 | *Getting there* on the event → up to three choices; *Add event to Schedule* → Undo toast; add an overlapping session → Keep existing / Replace / Cancel; Schedule tab → day timeline, Get ready, More tips, day travel cards | Deterministic code owns money and time: BART + Muni $14.70, drive + park $19.90 with the high-attendance warning; conflicts are never rearranged silently. | Fares/rules recorded Oct 24 from official sources; times are estimates. |
