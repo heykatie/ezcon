@@ -12,6 +12,8 @@ import { personId } from '../domain/ids';
 import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, WAD_RUN, type CompanionKind, type DemoProfile } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
+import { searchEvents } from '../domain/events';
+import { UPCOMING_EVENTS } from '../data/events';
 import { compareTravel, TravelOptions } from './TravelOptions';
 import { fmtDay, fmtRange, fmtStamp, fmtTime, localOf, money, PathView, Sheet, SourceLine } from './ui';
 
@@ -267,6 +269,7 @@ export function Discover(ctx: Ctx) {
   return (
     <div className="stack">
       <h1>Discover</h1>
+      <EventSearch now={ctx.now} />
       <ResearchPanel ctx={ctx} />
       {conf.mode === 'past' && <p className="notice">Past event · replay. Historical sessions are shown for recall and research; nothing here sends reminders.</p>}
       {ctx.ps.profile.goals.includes('career') && conf.mode === 'upcoming' && <HiringSection {...ctx} />}
@@ -275,6 +278,38 @@ export function Discover(ctx: Ctx) {
         <SessionCard key={s.id} ctx={ctx} session={s} paths={pathsFor(ctx, s.id)} />
       ))}
     </div>
+  );
+}
+
+function EventSearch({ now }: { now: string }) {
+  const [q, setQ] = useState('');
+  const results = searchEvents(UPCOMING_EVENTS, q, now);
+  const day = (d: string) => fmtDay(`${d}T12:00:00-08:00`);
+  return (
+    <section className="card stack" aria-labelledby="search-h">
+      <h2 id="search-h">Search conferences &amp; events</h2>
+      <label className="field">
+        <span className="small">Name or city</span>
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. San Francisco, KubeCon" />
+      </label>
+      <p className="tiny muted" role="status" aria-live="polite">
+        {results.length} verified upcoming {results.length === 1 ? 'event' : 'events'}
+      </p>
+      <ul className="stack" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {results.map((e) => (
+          <li key={e.id} className="card soft stack" style={{ gap: 4 }}>
+            <div className="between">
+              <b>{e.name}</b>
+              <span className={`badge ${e.supported ? 'good' : ''}`}>{e.supported ? 'Planning available' : 'Listing only'}</span>
+            </div>
+            <span className="small muted">
+              {day(e.startDate)}–{day(e.endDate)} · {e.location}
+            </span>
+            <SourceLine source={e.source} />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

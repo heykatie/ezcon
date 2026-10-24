@@ -3,7 +3,7 @@
 /** How a fact is supported. Only `verified` facts may be presented as confirmed. */
 export type EvidenceStatus = 'verified' | 'derived' | 'estimated' | 'unconfirmed' | 'fictional';
 
-export type RetrievalChannel = 'bright-data' | 'official-api' | 'manual-browser' | 'fixture';
+export type RetrievalChannel = 'bright-data' | 'official-api' | 'official-page' | 'manual-browser' | 'fixture';
 
 export interface SourceRef {
   url: string;

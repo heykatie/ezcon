@@ -58,7 +58,7 @@ export function Sheet({ title, onClose, children, labelledBy }: { title: string;
 }
 
 export function SourceLine({ source, label = 'Source' }: { source: SourceRef; label?: string }) {
-  const via = { 'bright-data': 'Bright Data', 'official-api': 'official API', 'manual-browser': 'browser-verified capture', fixture: 'test fixture' }[source.via];
+  const via = { 'bright-data': 'Bright Data', 'official-api': 'official API', 'official-page': 'official page', 'manual-browser': 'browser-verified capture', fixture: 'test fixture' }[source.via];
   let host = source.url;
   try {
     host = new URL(source.url).hostname;
