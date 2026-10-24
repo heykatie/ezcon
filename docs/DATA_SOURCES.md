@@ -11,6 +11,18 @@ Checked October 24, 2026. Public availability is not a license to redistribute m
 | [Universe catalog](https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog) | Previously inspected public dynamic catalog | Recheck through Bright Data and compare fields before ingestion |
 | [Tailscale Universe page](https://tailscale.com/universe-26) | Gateway Pavilion level 2, demo plushies, keyboard raffle, map link | Precise booth position, draw time and accessible walking edges unverified |
 
-WAD platform login confirmed through signed-in profile UI. This does not prove access to a separate 2026 event app, exhibitor directory, participant roster, map or recordings. User may need the original ticket-linked event-app invitation. No participant should be labeled attended without check-in evidence; meetings require user confirmation.
+WAD platform login and separate 2026 event-app access are confirmed. The app menu includes Partners, Speakers, Attendees, Goodies and Booth Activities. An Attendees menu does not establish actual attendance or permission to republish participant details. Recording playback and participant contents are not verified. User may need the original ticket-linked event-app invitation. No participant should be labeled attended without check-in evidence; meetings require user confirmation.
 
 For a bounded first dataset, select a small set of complete sessions and represented companies, then verify each linked role on its company careers site. Do not invent a role just to complete the demo story. If no suitable real role is found, show that result and recommend a learning or networking opportunity. Historical replay must display Past event and Replay labels.
+
+## Authenticated event app verified October 24
+
+Event ID 18 is World Congress 2026 North America.
+
+- [Map](https://app.wearedevelopers.com/events/18/map) embeds https://wwc26usa.expofp.com/ with matching September 23–25, 2026 title, Floor 1/Floor 2 selectors, search and directory controls. The standalone Floor 2 plan subsequently rendered and was visually inspected: expo booths, stages, meeting areas, restrooms, food seating and circulation areas are visible. Floor 1 is selectable but not inspected. Routing edges, scale, floor transitions and accessibility still need validation; no live positioning verified.
+- [Goodies](https://app.wearedevelopers.com/events/18/goodies) lists Twilio owl plushies/builder sets, SAP items, Entire items, Text Control giveaways, Google Cloud bags/tags/power banks and others. Item listing does not guarantee unconditional availability.
+- [Text Control PS5 entry](https://app.wearedevelopers.com/events/18/goodie/265): scan QR at booth 624 to enter; no draw time established in the inspected detail.
+- [Booth activities](https://app.wearedevelopers.com/events/18/booth-activities) includes raffles, product demos, hands-on labs and other activities.
+- [TuxCare AirPods Pro 3](https://app.wearedevelopers.com/events/18/activity/179): winner announced September 24 at 4 PM at booth 631. This historical listing supports a scheduled raffle replay; entry conditions and mandatory presence are not stated in the inspected detail. Preserve source wording; confirm venue timezone when normalizing.
+
+These pages were inspected using the user's authenticated browser. Do not pass browser cookies or credentials to Bright Data, or label these as verified public/API-accessible sources. Keep authenticated-source captures local unless publication is separately authorized. Test public retrieval separately. A source-backed raffle card is now supported; a small route preview is feasible after manually validating walkable edges and labeling travel estimates. Do not claim optimized or accessible routes until tested.

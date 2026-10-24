@@ -31,7 +31,7 @@ Use large tap targets, visible focus, labeled controls, short text and no hover-
 
 ## Checkpoint evidence
 
-- October 24: WeAreDevelopers sign-in confirmed in browser; no separate event-app access verified.
+- October 24: WeAreDevelopers sign-in confirmed in browser; separate event app ID 18 now verified with goodies and booth activity details; Floor 2 map rendered and visually inspected; walking graph, scale and accessibility remain unverified.
 - October 24: Docker restarted; ezcon-falkordb running, restart unless-stopped, volume ezcon-falkordb-data mounted at /var/lib/falkordb/data, ports bound to 127.0.0.1. Read-only query returned 3 synthetic setup nodes after restart. This is not application integration proof.
 - TrueForge 0.180.0 is present in local npm cache. Saved OpenAI key previously entered by user; credits and successful model execution remain unverified. Restarted and browser verified at localhost:8790/settings; UI shows OpenAI Connected. No model request made.
 - Qodo generated a PR summary, but its code review reported a server-side failure: https://github.com/heykatie/ezcon/pull/1#issuecomment-6388415240 . A manual retry also failed on the provider side. Do not count the summary as completed code review; try a meaningful code PR, then provider support or Toolbox if it still fails.
@@ -54,7 +54,7 @@ Initial audience: budget-conscious attendees who need relevant conversations and
 - Confirmed by user: free/sponsor credits only; no personal charges. Verify product coverage and stop before exceeding credits.
 - Proposed: one sourced raffle card demonstrates research and graph use; defer photo extraction and routing until core works. User asked about sponsor value; final inclusion priority is still pending.
 - Redeem/check Bright Data credits privately; confirm OpenAI sponsor credit access privately. Do not paste credentials into chat or Git.
-- If needed, open the original WAD 2026 event-app invitation; platform login alone does not reveal the old app URL.
+- WAD event app is https://app.wearedevelopers.com/events/18/map ; authenticated access verified. See DATA_SOURCES.md for concrete raffle source and routing limitations.
 - Verify multiple-track eligibility, pre-event code rules and exact submission deadline with organizers; planning assumptions are not official rules.
 
 This document is a handoff for work in the existing repository, not authorization to create another Codex task.
