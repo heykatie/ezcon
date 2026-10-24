@@ -1,0 +1,60 @@
+{
+  "records": [
+    {
+      "id": "wad26na:1917",
+      "conference": "wad26na",
+      "sourceRecordId": "wad-session-1917",
+      "title": "Making “Works on All Machines” Work for Agent Environments",
+      "start": "2026-09-23T10:00:00-07:00",
+      "end": "2026-09-23T10:30:00-07:00",
+      "timezone": "America/Los_Angeles",
+      "location": "Stage 1",
+      "speakers": [
+        {
+          "name": "Michael Irwin",
+          "title": "Principal Engineer, Developer Success",
+          "company": "Docker"
+        }
+      ],
+      "topics": [],
+      "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1917-making-works-on-all",
+      "catalogs": [
+        "quest"
+      ],
+      "source": {
+        "url": "https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions/1917-making-works-on-all",
+        "retrievedAt": "2026-10-24T21:30:41.787Z",
+        "via": "bright-data",
+        "status": "verified"
+      }
+    }
+  ],
+  "run": {
+    "model": "openai/gpt-5-4-nano",
+    "durationMs": 45291,
+    "usage": {
+      "inputTokens": 33132,
+      "outputTokens": 166
+    },
+    "trace": [
+      {
+        "tool": "unknown",
+        "args": null,
+        "responseChars": 29,
+        "at": "2026-10-24T21:30:49.614Z"
+      },
+      {
+        "tool": "unknown",
+        "args": null,
+        "responseChars": 330,
+        "at": "2026-10-24T21:30:51.097Z"
+      },
+      {
+        "tool": "unknown",
+        "args": null,
+        "responseChars": 81827,
+        "at": "2026-10-24T21:31:25.373Z"
+      }
+    ]
+  }
+}

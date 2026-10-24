@@ -50,13 +50,15 @@ export function hiringConnections(
   paths: GraphPath[],
   roles: RoleRecord[],
   sessions: SessionRecord[],
-  opts: { now: string; profile: { maxYearsExperience: number }; limit?: number },
+  /** `now` decides which touchpoints are upcoming; `verifyAt` is when the role data reflects (defaults to now). */
+  opts: { now: string; verifyAt?: string; profile: { maxYearsExperience: number }; limit?: number },
 ): HiringConnection[] {
   const byId = new Map(sessions.map((s) => [s.id, s]));
   const out: HiringConnection[] = [];
+  const usedSessions = new Set<string>();
 
   for (const role of roles) {
-    if (!verifyRole(role, opts.now).ok) continue;
+    if (!verifyRole(role, opts.verifyAt ?? opts.now).ok) continue;
     if (role.minYearsExperience === null || role.minYearsExperience > opts.profile.maxYearsExperience) continue;
 
     const touchpoints: Touchpoint[] = paths
@@ -69,8 +71,10 @@ export function hiringConnections(
       .filter((t): t is Touchpoint => !!t && Date.parse(t.session.start) > Date.parse(opts.now))
       .sort((a, b) => Date.parse(a.session.start) - Date.parse(b.session.start) || a.person.name.localeCompare(b.person.name));
 
-    const primary = touchpoints[0];
+    // Prefer a touchpoint no earlier card uses, so several roles at one company don't repeat a session.
+    const primary = touchpoints.find((t) => !usedSessions.has(t.session.id)) ?? touchpoints[0];
     if (!primary) continue;
+    usedSessions.add(primary.session.id);
     const seen = new Set([primary.session.id]);
     const others = touchpoints.filter((t) => !seen.has(t.session.id) && seen.add(t.session.id));
     const title = primary.person.title ? ` (${primary.person.title})` : '';

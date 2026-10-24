@@ -1,0 +1,42 @@
+[
+  {
+    "id": "role:microsoft:1970393557004814",
+    "company": "Microsoft",
+    "listingUrl": "https://apply.careers.microsoft.com/careers/job/1970393557004814",
+    "applyUrl": "https://apply.careers.microsoft.com/careers/job/1970393557004814",
+    "checkedAt": "2026-10-24T21:39:43.416Z",
+    "title": "Software Engineer - Forward Deployed Engineer",
+    "location": "United States, Washington, Redmond (onsite)",
+    "minYearsExperience": 0,
+    "requirementSummary": "Bachelor's Degree in Computer Science, or related technical discipline with proven experience coding in languages including, but not limited to, C, C++, C#, Java, JavaScript, or Python OR equivalent experience.",
+    "status": "open",
+    "postedAt": "2026-10-20T07:00:00.000Z",
+    "source": {
+      "url": "https://apply.careers.microsoft.com/careers/job/1970393557004814",
+      "retrievedAt": "2026-10-24T21:39:43.416Z",
+      "via": "official-api",
+      "status": "verified",
+      "note": "Microsoft job 200057324"
+    }
+  },
+  {
+    "id": "role:microsoft:1970393557027406",
+    "company": "Microsoft",
+    "listingUrl": "https://apply.careers.microsoft.com/careers/job/1970393557027406",
+    "applyUrl": "https://apply.careers.microsoft.com/careers/job/1970393557027406",
+    "checkedAt": "2026-10-24T21:39:46.238Z",
+    "title": "Software Engineer - Forward Deployed Engineer",
+    "location": "United States, Washington, Redmond (onsite)",
+    "minYearsExperience": 0,
+    "requirementSummary": "Bachelor's Degree in Computer Science, or related technical discipline with proven experience coding in languages including, but not limited to, C, C++, C#, Java, JavaScript, or Python OR equivalent experience.",
+    "status": "open",
+    "postedAt": "2026-10-16T22:31:53.000Z",
+    "source": {
+      "url": "https://apply.careers.microsoft.com/careers/job/1970393557027406",
+      "retrievedAt": "2026-10-24T21:39:46.238Z",
+      "via": "official-api",
+      "status": "verified",
+      "note": "Microsoft job 200060976"
+    }
+  }
+]

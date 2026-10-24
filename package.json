@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "check:graph": "node --env-file=.env scripts/check-falkordb.mjs",
     "snapshot:data": "node --import tsx scripts/build-snapshot.ts",
-    "research": "node --env-file=.env --import tsx scripts/research.ts"
+    "research": "node --env-file=.env --import tsx scripts/research.ts",
+    "check:roles": "node --import tsx scripts/check-roles.ts"
   },
   "repository": {
     "type": "git",

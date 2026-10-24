@@ -74,6 +74,14 @@ describe('hiring connections', () => {
     expect(cards[0]!.person.name).toBe('Pamela Fox');
   });
 
+  it('judges freshness at the data time, not the simulated demo clock', async () => {
+    const g = await graphWith([role()]);
+    const opts = { now: '2026-10-28T11:00:00-07:00', profile };
+    expect(hiringConnections(await g.hiringPaths('universe26'), [role()], fixtureRecords, opts)).toEqual([]);
+    const cards = hiringConnections(await g.hiringPaths('universe26'), [role()], fixtureRecords, { ...opts, verifyAt: '2026-10-24T15:00:00-07:00' });
+    expect(cards[0]!.person.name).toBe('Pamela Fox');
+  });
+
   it('never claims referral, hiring authority or availability', async () => {
     const g = await graphWith([role()]);
     const [c] = hiringConnections(await g.hiringPaths('universe26'), [role()], fixtureRecords, { now: NOW, profile });
@@ -95,6 +103,13 @@ describe('hiring connections', () => {
     const docker = role({ id: 'role:docker:1', company: 'Docker', applyUrl: 'https://www.docker.com/careers/1', listingUrl: 'https://www.docker.com/careers/1' });
     const g = await graphWith([docker]);
     expect(hiringConnections(await g.hiringPaths('universe26'), [docker], fixtureRecords, { now: NOW, profile })).toEqual([]);
+  });
+
+  it('spreads roles from one company across different touchpoints when it can', async () => {
+    const roles = [role({ id: 'role:microsoft:a' }), role({ id: 'role:microsoft:b' })];
+    const g = await graphWith(roles);
+    const cards = hiringConnections(await g.hiringPaths('universe26'), roles, fixtureRecords, { now: NOW, profile });
+    expect(cards.map((c) => c.session.title)).toEqual(['Agentic Workflows: Automation at scale', 'Building a developer knowledge base for GitHub Copilot']);
   });
 
   it('shows at most three, one card per role', async () => {
