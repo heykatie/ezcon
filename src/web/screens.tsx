@@ -12,6 +12,9 @@ import { personId } from '../domain/ids';
 import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, WAD_RUN, type CompanionKind, type DemoProfile } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
+import PEOPLE_LINKS from '../data/people-links.json';
+import { slug } from '../domain/ids';
+import { ROLES } from '../data/demo';
 import { Icon, type IconName } from './Icon';
 import { searchEvents } from '../domain/events';
 import { UPCOMING_EVENTS } from '../data/events';
@@ -321,6 +324,7 @@ export function Explore(ctx: Ctx) {
   const rest = ctx.sessions
     .filter((s) => s.catalogs.includes('quest') && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  if (!upcoming) return <PastExplore {...ctx} />;
   return (
     <div className="stack">
       <header className="page-head">
@@ -820,7 +824,8 @@ export function PersonSheet({ ctx, id, onClose, onUndoMeeting }: { ctx: Ctx; id:
           {sp?.title ?? 'Title not listed'} · {sp?.company ?? 'Company not listed'}
         </p>
         <p className="small">Conference presence: listed speaker for {sessions.map((s) => `${s.title} (${fmtDay(s.start)} ${fmtTime(s.start)})`).join('; ') || '—'}</p>
-        <p className="tiny muted">Missing: bio, projects and professional links — no public enrichment has been run for this person. Listing does not mean they attended or are available.</p>
+        <LinkedInLine id={id} />
+        <p className="tiny muted">Listing does not mean they attended or are available.</p>
         {sessions[0] && <SourceLine source={sessions[0].source} />}
       </section>
       <section className="card stack">
@@ -1081,5 +1086,68 @@ export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: Sess
         {scheduled ? 'On your schedule' : 'Add event to Schedule'}
       </button>
     </Sheet>
+  );
+}
+
+function LinkedInLine({ id }: { id: string }) {
+  const m = (PEOPLE_LINKS as Record<string, { status: string; url?: string; checkedAt: string }>)[id];
+  if (!m) return <p className="tiny muted">LinkedIn: not looked up yet.</p>;
+  if (m.status !== 'found' || !m.url) return <p className="tiny muted">LinkedIn: no public profile matched both name and company (Bright Data search via TrueForge, {fmtStamp(m.checkedAt)}).</p>;
+  return (
+    <p className="small">
+      <a className="btn small" href={m.url} target="_blank" rel="noopener noreferrer">
+        LinkedIn profile ↗
+      </a>{' '}
+      <span className="tiny muted">Public search match on name + company (Bright Data via TrueForge, {fmtStamp(m.checkedAt)}). Confirm it’s the right person before connecting.</span>
+    </p>
+  );
+}
+
+/** A finished event: only what is still actionable — open roles at its companies and follow-ups. */
+function PastExplore(ctx: Ctx) {
+  const companies = [...new Set(ctx.sessions.flatMap((s) => s.speakers.map((sp) => sp.company).filter((c): c is string => !!c)))].sort();
+  const roles = ROLES.filter((r) => r.status === 'open' && companies.some((c) => slug(c) === slug(r.company)));
+  const met = ctx.meetings.filter((m) => ctx.sessions.some((s) => s.id === m.eventId));
+  return (
+    <div className="stack">
+      <header className="page-head">
+        <h1>Explore</h1>
+        <p className="muted">What can I still do from this event?</p>
+      </header>
+      <p className="notice">Past event · replay. Its sessions are over; they stay on Schedule as history.</p>
+      <section className="stack" aria-labelledby="past-roles-h">
+        <h2 id="past-roles-h">Open roles at companies from this event</h2>
+        {roles.length ? (
+          roles.map((r) => (
+            <article key={r.id} className="card career stack">
+              <span className="badge good">Open role · checked {fmtStamp(r.checkedAt)}</span>
+              <h3>{r.title}</h3>
+              <p className="small muted">{r.company} · {r.location}</p>
+              <a className="btn career small" href={r.applyUrl} target="_blank" rel="noopener noreferrer">View role &amp; apply ↗</a>
+            </article>
+          ))
+        ) : (
+          <p className="card soft small">No verified open roles yet at {companies.join(', ')}. ezcon only shows roles checked on the employer’s own careers site.</p>
+        )}
+      </section>
+      <section className="stack" aria-labelledby="past-follow-h">
+        <h2 id="past-follow-h">Follow up</h2>
+        {met.length ? (
+          met.map((m) => (
+            <button key={m.meetingId} className="card between" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => ctx.openPerson(m.personId)}>
+              <span>
+                <b>{m.personName}</b>
+                <br />
+                <span className="small muted">{ctx.ps.followups[m.meetingId]?.done ? 'Follow-up drafted' : 'Draft a follow-up'}</span>
+              </span>
+              <span className="btn small">Open</span>
+            </button>
+          ))
+        ) : (
+          <p className="card soft small">No meetings recorded at this event.</p>
+        )}
+      </section>
+      <ResearchPanel ctx={ctx} />
+    </div>
   );
 }

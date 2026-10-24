@@ -129,6 +129,17 @@ describe('ezcon core flow', () => {
     expect(screen.queryByRole('button', { name: 'Remove' })).toBeNull();
   });
 
+  it('Explore for a past event shows only what is still actionable', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Explore/ }));
+    expect(screen.getByRole('heading', { name: 'Open roles at companies from this event' })).toBeTruthy();
+    expect(screen.getByText(/No verified open roles yet at Docker/)).toBeTruthy();
+    expect(await screen.findByText('Michael Irwin')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add to Schedule' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
+  });
+
   it('puts conference search at the top of Explore and filters as you type', async () => {
     const user = await startDemo();
     await openExplore(user);
