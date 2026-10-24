@@ -1,0 +1,60 @@
+{
+  "fort-mason-parking": {
+    "url": "https://fortmason.org/visit/directions-parking/",
+    "retrievedAt": "2026-10-24T22:48:26.616Z",
+    "ok": true,
+    "missing": [],
+    "chars": 3532
+  },
+  "muni-fare": {
+    "url": "https://www.sfmta.com/getting-around/muni/fares",
+    "retrievedAt": "2026-10-24T22:48:32.553Z",
+    "ok": true,
+    "missing": [],
+    "chars": 13973
+  },
+  "event-kubecon": {
+    "url": "https://events.linuxfoundation.org/kubecon-cloudnativecon-north-america/",
+    "retrievedAt": "2026-10-24T22:49:16.498Z",
+    "ok": true,
+    "missing": [],
+    "chars": 137642
+  },
+  "event-ignite": {
+    "url": "https://www.microsoft.com/en-us/security/blog/2026/09/30/secure-whats-next-your-guide-to-microsoft-security-at-microsoft-ignite-2026/",
+    "retrievedAt": "2026-10-24T22:49:33.153Z",
+    "ok": true,
+    "missing": [],
+    "chars": 30187
+  },
+  "event-reinvent": {
+    "url": "https://aws.amazon.com/events/reinvent/",
+    "retrievedAt": "2026-10-24T22:49:36.724Z",
+    "ok": true,
+    "missing": [],
+    "chars": 13965
+  },
+  "role-200057324": {
+    "url": "https://apply.careers.microsoft.com/careers/job/1970393557004814",
+    "retrievedAt": "2026-10-24T22:49:46.360Z",
+    "ok": true,
+    "missing": [],
+    "chars": 484859
+  },
+  "role-200060976": {
+    "url": "https://apply.careers.microsoft.com/careers/job/1970393557027406",
+    "retrievedAt": "2026-10-24T22:49:54.728Z",
+    "ok": true,
+    "missing": [],
+    "chars": 484859
+  },
+  "bay-bridge-toll": {
+    "url": "https://www.bayareafastrak.org/en/toll-locations/toll-bridges.shtml",
+    "retrievedAt": "2026-10-24T22:51:45.785Z",
+    "ok": false,
+    "missing": [
+      "8.50"
+    ],
+    "chars": 732
+  }
+}

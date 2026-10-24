@@ -1,0 +1,386 @@
+[
+  {
+    "id": "universe26:1791439808609001QKlO-1791442073294001jytv",
+    "conference": "universe26",
+    "sourceRecordId": "session-1791439808609001QKlO-1791442073294001jytv",
+    "title": "San Francisco Syntax Meetup",
+    "summary": "We're in town for GitHub Universe!",
+    "start": "2026-10-27T17:00:00-07:00",
+    "end": "2026-10-27T19:00:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Barebottle Beer Garden @ 1525 Cortland Ave",
+    "speakers": [],
+    "topics": [],
+    "sessionType": "Social",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1791439808609001QKlO",
+    "catalogs": [
+      "side-quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1792686672160001uV6o-1792686890132001eN51",
+    "conference": "universe26",
+    "sourceRecordId": "session-1792686672160001uV6o-1792686890132001eN51",
+    "title": "Universe Badge Pickup Party!",
+    "summary": "Skip the line, stack the nachos.",
+    "start": "2026-10-27T15:00:00-07:00",
+    "end": "2026-10-27T19:00:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Hotel Zephyr @ 250 Beach St",
+    "speakers": [],
+    "topics": [],
+    "sessionType": "Special Event",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1792686672160001uV6o",
+    "catalogs": [
+      "side-quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1791904349224001xUTs-1791904429650001xpf9",
+    "conference": "universe26",
+    "sourceRecordId": "session-1791904349224001xUTs-1791904429650001xpf9",
+    "title": "Agentic Workflows: Automation at scale",
+    "summary": "Automation is how we buy time for craft, enforce correctness in situations that require judgment, and improve our software at business scale.",
+    "start": "2026-10-28T10:15:00-07:00",
+    "end": "2026-10-28T10:45:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "The Speakeasy @ GitHub Central, Festival Pavilion",
+    "speakers": [
+      {
+        "name": "Landon Cox",
+        "title": "Senior Principle Researcher",
+        "company": "Microsoft"
+      },
+      {
+        "name": "Peli de Halleux",
+        "title": "Agentic Engineer, GitHub Next",
+        "company": "Microsoft"
+      }
+    ],
+    "topics": [],
+    "sessionType": "Breakout Session",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1791904349224001xUTs",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1791381794501001B57W-1791381992842002JJOF",
+    "conference": "universe26",
+    "sourceRecordId": "session-1791381794501001B57W-1791381992842002JJOF",
+    "title": "Session After Party: Humans set direction. Agents close the loop.",
+    "summary": "This is an informal follow-up Q&A to the main stage session \"Humans set direction.",
+    "start": "2026-10-28T12:00:00-07:00",
+    "end": "2026-10-28T12:30:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "The Speakeasy @ GitHub Central, Festival Pavilion",
+    "speakers": [
+      {
+        "name": "Mario Rodriguez",
+        "title": "Chief Product Officer",
+        "company": "GitHub"
+      },
+      {
+        "name": "Evan Boyle",
+        "title": "Partner Director of Engineering",
+        "company": "GitHub"
+      }
+    ],
+    "topics": [
+      "Code quality, review, and completion",
+      "AI: Agents",
+      "AI: Models",
+      "Developer experience (DX)"
+    ],
+    "sessionType": "Session After Party",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1791381794501001B57W",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1777658642130001QLdM-1785203706362001xLy6",
+    "conference": "universe26",
+    "sourceRecordId": "session-1777658642130001QLdM-1785203706362001xLy6",
+    "title": "Beyond correct: Making code quality worth acting on",
+    "summary": "When AI generates more code, static analysis surfaces more findings.",
+    "start": "2026-10-28T12:10:00-07:00",
+    "end": "2026-10-28T12:25:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Demos & Donuts @ Gateway Pavilion, Level 2",
+    "speakers": [
+      {
+        "name": "Caro Galvin",
+        "title": "Senior Product Manager",
+        "company": "GitHub"
+      }
+    ],
+    "topics": [
+      "DevOps and DevSecOps",
+      "Tech debt",
+      "Code quality, review, and completion"
+    ],
+    "sessionType": "Product Demo",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1777658642130001QLdM",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1777564797850001QoD8-1785205501198001xtzB",
+    "conference": "universe26",
+    "sourceRecordId": "session-1777564797850001QoD8-1785205501198001xtzB",
+    "title": "The Low Orbit Agentic Cannon: Scaling Copilot through internal tooling",
+    "summary": "In December 2025, more than 300 autonomous pull requests were opened in a single morning — each written by an AI agent.",
+    "start": "2026-10-28T12:20:00-07:00",
+    "end": "2026-10-28T12:35:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Ship & Tell @ Firehouse",
+    "speakers": [
+      {
+        "name": "Callum Cieciala",
+        "title": "VP, Developer Experience",
+        "company": "Galaxy"
+      }
+    ],
+    "topics": [
+      "Code quality, review, and completion",
+      "Custom integrations and APIs",
+      "Developer experience (DX)"
+    ],
+    "sessionType": "Ship & Tell",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1777564797850001QoD8",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1785179690271001xi4A-1785202988066001BUPQ",
+    "conference": "universe26",
+    "sourceRecordId": "session-1785179690271001xi4A-1785202988066001BUPQ",
+    "title": "Build once, run on any agent: a practical guide to agent skills",
+    "summary": "Most developers use AI the same way: open a chat, type a prompt, move on.",
+    "start": "2026-10-28T12:30:00-07:00",
+    "end": "2026-10-28T13:10:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Cowell Theater @ Gateway Pavilion",
+    "speakers": [
+      {
+        "name": "Andrea Griffiths",
+        "title": "Senior Developer Advocate",
+        "company": "GitHub"
+      },
+      {
+        "name": "Shishir Tewari",
+        "title": "Senior Manager, Data Engineering",
+        "company": "Procore Technologies"
+      }
+    ],
+    "topics": [
+      "AI: Agents",
+      "AI: MCP and other integrations",
+      "AI: Models",
+      "Developer experience (DX)"
+    ],
+    "sessionType": "Breakout Session",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1785179690271001xi4A",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1777700808239001XZyK-1785206549742001EASu",
+    "conference": "universe26",
+    "sourceRecordId": "session-1777700808239001XZyK-1785206549742001EASu",
+    "title": "Building a developer knowledge base for GitHub Copilot",
+    "summary": "Give GitHub Copilot access to the knowledge your team already has, without rewriting any of it.",
+    "start": "2026-10-28T13:00:00-07:00",
+    "end": "2026-10-28T14:30:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Workshops @ Gateway Pavilion, Level 1",
+    "speakers": [
+      {
+        "name": "Pamela Fox",
+        "title": "Principal Cloud Advocate in Python",
+        "company": "Microsoft"
+      },
+      {
+        "name": "Said Nikjou",
+        "title": "Sr. Cloud Solution Architect",
+        "company": "Microsoft"
+      }
+    ],
+    "topics": [
+      "AI: Agents",
+      "AI: MCP and other integrations",
+      "AI: Models",
+      "Developer experience (DX)"
+    ],
+    "sessionType": "Workshop",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1777700808239001XZyK",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1777680901629001pB3n-1785204739648001SA1c",
+    "conference": "universe26",
+    "sourceRecordId": "session-1777680901629001pB3n-1785204739648001SA1c",
+    "title": "Accelerate accessibility with AI and automation",
+    "summary": "Accessibility has become a hard requirement for many organizations, but out-of-the-box AI code suggestions frequently miss the mark.",
+    "start": "2026-10-28T13:30:00-07:00",
+    "end": "2026-10-28T14:10:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "BATS Theatre @ Fort Mason Building B, 3rd Floor",
+    "speakers": [
+      {
+        "name": "Eric Bailey",
+        "title": "Accessibility advocate"
+      },
+      {
+        "name": "Ed Summers",
+        "title": "Head of Accessibility",
+        "company": "GitHub"
+      },
+      {
+        "name": "Maya Shavin",
+        "title": "Staff Software Engineer",
+        "company": "Salesforce"
+      }
+    ],
+    "topics": [
+      "Accessibility"
+    ],
+    "sessionType": "Panel Discussion",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1777680901629001pB3n",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1777557576923001fNOZ-1785203999054001TpQz",
+    "conference": "universe26",
+    "sourceRecordId": "session-1777557576923001fNOZ-1785203999054001TpQz",
+    "title": "How GitHub taught Copilot to remember and when to forget",
+    "summary": "Real developer work is sequential, but today's AI agents treat every task as a fresh start.",
+    "start": "2026-10-28T11:30:00-07:00",
+    "end": "2026-10-28T12:10:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "BATS Theatre @ Fort Mason Building B, 3rd Floor",
+    "speakers": [
+      {
+        "name": "Cooper Nederhood",
+        "title": "Senior Applied Researcher",
+        "company": "GitHub"
+      },
+      {
+        "name": "Alejandro Carderera",
+        "title": "Staff Applied Researcher",
+        "company": "GitHub"
+      }
+    ],
+    "topics": [
+      "AI: Agents",
+      "AI: Models"
+    ],
+    "sessionType": "Breakout Session",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1777557576923001fNOZ",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  },
+  {
+    "id": "universe26:1777688857786001ZKKR-1785202528364001XhDW",
+    "conference": "universe26",
+    "sourceRecordId": "session-1777688857786001ZKKR-1785202528364001XhDW",
+    "title": "Supercharge Copilot code review with custom review instructions",
+    "summary": "GitHub's Dependabot team added custom Copilot code review instructions to their 10-year-old backend repository.",
+    "start": "2026-10-28T11:30:00-07:00",
+    "end": "2026-10-28T11:45:00-07:00",
+    "timezone": "America/Los_Angeles",
+    "location": "Silent Disco Demos @ Festival Pavilion",
+    "speakers": [
+      {
+        "name": "Nish Sinha",
+        "title": "Software Engineer III",
+        "company": "GitHub"
+      }
+    ],
+    "topics": [
+      "Productivity",
+      "Code quality, review, and completion",
+      "Developer experience (DX)"
+    ],
+    "sessionType": "Product Demo",
+    "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog/session/1777688857786001ZKKR",
+    "catalogs": [
+      "quest"
+    ],
+    "source": {
+      "url": "https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog",
+      "retrievedAt": "2026-10-24T21:05:00Z",
+      "via": "manual-browser",
+      "status": "verified"
+    }
+  }
+]
