@@ -1,6 +1,6 @@
 # ezcon screen and interaction plan
 
-Status: layout direction approved; detailed wireframes and demo dataset remain reviewable proposals. This is a screen contract, not implemented UI.
+Status: the first-build screens and core interactions are implemented in `src/web/`; this document records the approved product contract and deferred coverage, not a claim that every listed behavior is complete. Verify against the code and `BUILD_HANDOFF.md` before extending scope.
 
 ## Entry and navigation
 
@@ -93,3 +93,11 @@ First build: one public-profile enrichment example with honest missing fields, W
 Approved bottom navigation is Today / Discover / Schedule / People. Schedule replaces the label Schedule everywhere in product copy. Quests means goal-directed learning, career and networking opportunities; Side Quests means optional social/fun discoveries. Both live inside Discover; overlapping items share one record with both labels. Passport is secondary through companion menu and Today strip.
 
 My QR supports three equally accessible destinations: GitHub, LinkedIn, Personal / Portfolio. The third accepts an editable personal-site or portfolio HTTPS URL; it does not require an account connection. QR generation, displayed destination, Open link and Copy link must agree with the selected option. Validate URLs and preserve per-profile isolation; do not expose private contact details. Network requests are not needed to generate the QR. A user can leave any link blank. Offline availability remains a verification requirement.
+
+### Sponsor activity feedback
+
+Live service calls show a small, non-blocking notice in the upper-right corner for four seconds: FalkorDB graph requests and TrueForge + OpenAI research. Completion and request failure update the notice. Bright Data receives a completed-fetch notice only when the returned research trace contains a supported scrape tool with response content; the current API does not stream tool-level progress. Cached operations never claim a live sponsor call. Qodo operates in the repository review workflow, not in the app runtime. Notices use a polite status region and respect reduced motion.
+
+### Preparation and badge terminology
+
+Preparation controls say “Mark prep complete” before completion and “✓ Prep complete” afterward. They are reversible toggles and only describe preparation, never event attendance. The collection is labeled “Badge collection”; rewards are badges. Existing internal reward keys remain unchanged to preserve saved progress.

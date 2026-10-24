@@ -3,13 +3,13 @@ import QRCode from 'qrcode';
 import type { Candidate, GraphPath, Meeting } from '../domain/graph-types';
 import type { ConferenceId, Goal, SessionRecord } from '../domain/types';
 import { GOAL_LABELS } from '../domain/types';
-import type { Recommendation } from '../domain/recommend';
+import { matchesGoals, type Recommendation } from '../domain/recommend';
 import type { HiringConnection } from '../domain/careers';
 import type { ScheduleItem, Conflict } from '../domain/schedule';
 import { STAMP_TEXT, ACCESSORY, unlockedAccessories, type RewardState, type Stamp } from '../domain/rewards';
 import { validateProfileLink, type LinkKind } from '../domain/urls';
 import { personId } from '../domain/ids';
-import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_GOODIES, WAD_RUN, type CompanionKind, type DemoProfile, type SideQuest } from '../data/demo';
+import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_GOODIES, WAD_GOODIES_SOURCE, WAD_RUN, type CompanionKind, type DemoProfile, type SideQuest } from '../data/demo';
 import type { Backend, ResearchResponse } from './backend';
 import { Companion } from './Companion';
 import PEOPLE_LINKS from '../data/people-links.json';
@@ -73,7 +73,8 @@ const whyNote = (ctx: Ctx) =>
 
 export function Today(ctx: Ctx) {
   const { ps, now } = ctx;
-  const upcoming = ps.schedule.filter((s) => Date.parse(s.end) > Date.parse(now));
+  const past = localOf(now).slice(0, 10) > CONFERENCES[ctx.conference].endDate;
+  const upcoming = ps.schedule.filter((s) => s.eventId.startsWith(`${ctx.conference}:`) && Date.parse(s.end) > Date.parse(now)).sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   const next = upcoming[0];
   const start = !next ? ctx.hiring.find((h) => !isScheduled(ctx, h.session.id)) : undefined;
   const prep = next ? prepFor(next, ctx) : undefined;
@@ -81,12 +82,21 @@ export function Today(ctx: Ctx) {
   const applied = (ps.applications ?? []).length > 0;
   const steps: Array<{ label: string; done: boolean; action: string; go: () => void }> = [
     { label: 'Add an opportunity to Schedule', done: upcoming.length > 0, action: 'Explore', go: () => ctx.goTab('discover') },
-    { label: 'Get ready for it', done: Object.values(ps.prepDone).some(Boolean), action: 'Schedule', go: () => ctx.goTab('schedule') },
+    { label: 'Get ready for it', done: upcoming.some((s) => ps.prepDone[s.eventId]), action: 'Schedule', go: () => ctx.goTab('schedule') },
     { label: 'Choose how you’ll get there', done: !!ps.travelChoice, action: 'Schedule', go: () => ctx.goTab('schedule') },
     { label: 'Apply to the role', done: applied, action: 'Explore', go: () => ctx.goTab('discover') },
   ];
   const doneCount = steps.filter((x) => x.done).length;
   const nextStep = steps.find((x) => !x.done);
+  if (past) return <div className="stack">
+    <header className="page-head"><h1>Event recap</h1><p className="muted">{CONFERENCES[ctx.conference].name} has ended. Keep your connections moving.</p></header>
+    <section className="card stack"><h2>Your next step</h2><p>Review your notes and draft a follow-up to someone you met.</p>
+      <button className="btn primary" onClick={() => ctx.goTab('people')}>See people &amp; follow up</button>
+      <button className="btn" onClick={() => ctx.goTab('schedule')}>Review past schedule</button>
+    </section>
+    <button className="btn" onClick={ctx.openLevelUp}>Badge collection · {ps.rewards.awards.length} badges</button>
+  </div>;
+
   return (
     <div className="stack">
       <header className="page-head">
@@ -148,7 +158,7 @@ export function Today(ctx: Ctx) {
             <b>Get ready:</b> {prep.main}
           </span>
           <button className="btn small" aria-pressed={prepDone} onClick={() => ctx.update((p) => ({ ...p, prepDone: { ...p.prepDone, [next.eventId]: !prepDone } }))}>
-            {prepDone ? '✓ Ready' : 'Done'}
+            {prepDone ? '✓ Prep complete' : 'Mark prep complete'}
           </button>
         </section>
       )}
@@ -180,7 +190,7 @@ export function Today(ctx: Ctx) {
             Your plan · {doneCount} of {steps.length} done
           </h2>
           <button className="btn small" onClick={ctx.openLevelUp}>
-            Passport · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'stamp' : 'stamps'}
+            Badge collection · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'badge' : 'badges'}
           </button>
         </div>
         <ol className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
@@ -396,12 +406,13 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
 
 export function Explore(ctx: Ctx) {
   const conf = CONFERENCES[ctx.conference];
-  const upcoming = conf.mode === 'upcoming';
+  const upcoming = localOf(ctx.now).slice(0, 10) <= conf.endDate;
   const [section, setSection] = useState<'quests' | 'side-quests'>('quests');
   const hiringIds = new Set(ctx.hiring.map((h) => h.session.id));
-  const recIds = new Set(ctx.recs.map((r) => r.session.id));
+  const matchingRecs = ctx.recs.filter((r) => matchesGoals(r.session, ctx.ps.profile.goals, hiringIds));
+  const recIds = new Set(matchingRecs.map((r) => r.session.id));
   const rest = ctx.sessions
-    .filter((s) => s.catalogs.includes('quest') && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
+    .filter((s) => s.catalogs.includes('quest') && matchesGoals(s, ctx.ps.profile.goals, hiringIds) && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   return (
     <div className="stack">
@@ -427,11 +438,12 @@ export function Explore(ctx: Ctx) {
             <section className="stack" aria-labelledby="quests-h">
               <div className="section-title">
                 <h2 id="quests-h">Quests</h2>
-                <span className="tiny muted">Learning &amp; networking for your goals</span>
+                <span className="tiny muted">Matches any selected goal</span>
               </div>
-              {ctx.recs.map((r) => (
+              {matchingRecs.map((r) => (
                 <SessionCard key={r.session.id} ctx={ctx} session={r.session} reasons={r.reasons} paths={r.paths} />
               ))}
+              {!matchingRecs.length && !rest.length && <p className="muted">No sessions match these goals. Try another goal{ctx.ps.profile.goals.includes('fun') ? ' or open Side quests for giveaways and raffles' : ''}.</p>}
               {rest.map((s) => (
                 <SessionCard key={s.id} ctx={ctx} session={s} paths={pathsFor(ctx, s.id)} />
               ))}
@@ -537,7 +549,7 @@ interface Leg {
 export function Schedule(ctx: Ctx) {
   const { ps, now } = ctx;
   const mine = ps.schedule.filter((s) => s.eventId.startsWith(`${ctx.conference}:`));
-  const past = CONFERENCES[ctx.conference].mode === 'past';
+  const past = localOf(ctx.now).slice(0, 10) > CONFERENCES[ctx.conference].endDate;
   const days = [...new Set(mine.map((s) => localOf(s.start).slice(0, 10)))].sort();
   const [day, setDay] = useState<string | undefined>(days[0]);
   const activeDay = day && days.includes(day) ? day : days[0];
@@ -666,7 +678,7 @@ function EventActions({ ctx, item }: { ctx: Ctx; item: ScheduleItem }) {
               <b>Get ready:</b> {prep.main}
             </span>
             <button className="btn small" aria-pressed={done} onClick={() => ctx.update((p) => ({ ...p, prepDone: { ...p.prepDone, [item.eventId]: !done } }))}>
-              {done ? '✓ Ready' : 'Done'}
+              {done ? '✓ Prep complete' : 'Mark prep complete'}
             </button>
           </div>
           <button className="btn ghost small" aria-expanded={more} onClick={() => setMore(!more)}>
@@ -796,7 +808,8 @@ export function CheckInSheet({ ctx, item, onSubmit, onClose }: { ctx: Ctx; item:
 
 export function People(ctx: Ctx) {
   const [tab, setTab] = useState<'want' | 'met'>('want');
-  const metIds = new Set(ctx.meetings.map((m) => m.personId));
+  const meetings = ctx.meetings.filter((m) => m.eventId.startsWith(`${ctx.conference}:`));
+  const metIds = new Set(meetings.map((m) => m.personId));
   const want = new Map<string, { name: string; detail: string; why: string }>();
   const addPerson = (s: SessionRecord, why: string) =>
     s.speakers.forEach((sp) => {
@@ -818,7 +831,7 @@ export function People(ctx: Ctx) {
             Want to meet
           </button>
           <button role="tab" aria-selected={tab === 'met'} onClick={() => setTab('met')}>
-            Met ({ctx.meetings.length})
+            Met ({meetings.length})
           </button>
         </div>
       </div>
@@ -836,8 +849,8 @@ export function People(ctx: Ctx) {
           <p className="card soft">Add sessions or pick goals to see people worth meeting.</p>
         ))}
       {tab === 'met' &&
-        (ctx.meetings.length ? (
-          ctx.meetings.map((m) => (
+        (meetings.length ? (
+          meetings.map((m) => (
             <button key={m.meetingId} className="card stack" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => ctx.openPerson(m.personId)}>
               <div className="between">
                 <b>{m.personName}</b>
@@ -864,7 +877,7 @@ export function PersonSheet({ ctx, id, onClose, onUndoMeeting }: { ctx: Ctx; id:
   const first = (sp?.name ?? meeting?.personName ?? '').split(' ')[0];
   const myLink = ctx.ps.profile.links.github || ctx.ps.profile.links.personal || ctx.ps.profile.links.linkedin;
   const defaultDraft = meeting
-    ? `Hi ${first},\n\nThanks for the conversation after “${ctx.sessions.find((s) => s.id === meeting.eventId)?.title ?? 'your session'}” at GitHub Universe.${meeting.note ? ` I appreciated what you shared about ${meeting.note.replace(/\.$/, '')}.` : ''} I’m an early-career developer working with React and Python and exploring AI tools, and I’d love to stay in touch.${myLink ? `\n\nMy work: ${myLink}` : ''}\n\n— ${ctx.ps.profile.name || 'Me'}`
+    ? `Hi ${first},\n\nThanks for the conversation after “${ctx.sessions.find((s) => s.id === meeting.eventId)?.title ?? 'your session'}” at ${CONFERENCES[ctx.conference].name}.${meeting.note ? ` I appreciated what you shared about ${meeting.note.replace(/\.$/, '')}.` : ''} I’m an early-career developer working with React and Python and exploring AI tools, and I’d love to stay in touch.${myLink ? `\n\nMy work: ${myLink}` : ''}\n\n— ${ctx.ps.profile.name || 'Me'}`
     : '';
   const fu = ctx.ps.followups[draftKey];
   const [draft, setDraft] = useState(fu?.text ?? defaultDraft);
@@ -935,7 +948,7 @@ export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: {
   const unlocked = unlockedAccessories(ps.rewards).includes(ACCESSORY.id);
   const count = (s: Stamp) => ps.rewards.awards.filter((a) => a.stamp === s);
   return (
-    <Sheet title="Passport" onClose={onClose}>
+    <Sheet title="Badge collection" onClose={onClose}>
       <div className="companion-hero card">
         <Companion kind={ps.profile.companion} color={ps.profile.color} size={110} scarf={unlocked && ps.accessoryOn} label={ps.profile.companionName} />
         <div className="stack" style={{ gap: 6 }}>
@@ -1297,7 +1310,7 @@ export function RaffleSection(ctx: Ctx) {
           <ul className="goodies-list">
             {WAD_GOODIES.map((item) => <li key={`${item.host}:${item.name}`}><b>{item.name}</b><span>{item.host}</span></li>)}
           </ul>
-          <SourceLine source={quests[0]!.source} label="Event app catalog" />
+          <SourceLine source={WAD_GOODIES_SOURCE} label="Event app catalog" />
         </section>
       )}
     </section>

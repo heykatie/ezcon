@@ -182,6 +182,33 @@ describe('ezcon core flow', () => {
     expect(stored().travelChoice).toBe('drive');
   });
 
+  it('clearly marks preparation complete and lets the user undo it', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
+    await user.click(within(card).getByRole('button', { name: 'Add event to Schedule' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Schedule/ }));
+    const mark = await screen.findByRole('button', { name: 'Mark prep complete' });
+    expect(mark.getAttribute('aria-pressed')).toBe('false');
+    await user.click(mark);
+    const complete = screen.getByRole('button', { name: '✓ Prep complete' });
+    expect(complete.getAttribute('aria-pressed')).toBe('true');
+    await user.click(complete);
+    expect(screen.getByRole('button', { name: 'Mark prep complete' }).getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('keeps a future Universe booking out of the past WAD overview', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
+    await user.click(within(card).getByRole('button', { name: 'Add event to Schedule' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
+    expect(screen.getByRole('heading', { name: 'Event recap' })).toBeTruthy();
+    expect(screen.queryByText('Agentic Workflows: Automation at scale')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Mark prep complete' })).toBeNull();
+  });
+
   it('records a self-reported application without applying', async () => {
     const user = await startDemo();
     await openExplore(user);
@@ -193,14 +220,14 @@ describe('ezcon core flow', () => {
     expect(stored().applications).toEqual([]);
   });
 
-  it('earns a Follow-through stamp for applying, shown in the Passport', async () => {
+  it('earns a Follow-through badge for applying, shown in the collection', async () => {
     const user = await startDemo();
     await openExplore(user);
     const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
     await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
     await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
-    await user.click(screen.getByRole('button', { name: /Passport · \d+ stamps?/ }));
-    const passport = await screen.findByRole('dialog', { name: 'Passport' });
+    await user.click(screen.getByRole('button', { name: /Badge collection · \d+ badges?/ }));
+    const passport = await screen.findByRole('dialog', { name: 'Badge collection' });
     expect(within(passport).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
   });
 
@@ -231,6 +258,8 @@ describe('ezcon core flow', () => {
     expect(screen.getByText(/Fictional sample ticket · DEMO-0427/)).toBeTruthy();
     expect(screen.getByText(/No real entry, reminder or reward is recorded/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Snap ticket photo/ })).toBeNull();
+    const pastGiveaways = screen.getByRole('heading', { name: 'Past giveaways' }).closest('section')!;
+    expect(within(pastGiveaways).getByRole('link', { name: 'app.wearedevelopers.com' }).getAttribute('href')).toBe('https://app.wearedevelopers.com/events/18/goodies');
     expect(stored().raffleTickets).toBeUndefined();
   });
 
