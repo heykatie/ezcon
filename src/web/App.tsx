@@ -10,6 +10,7 @@ import { personId } from '../domain/ids';
 import { connectBackend, type Backend } from './backend';
 import { clearAll, load, profileKey, save } from './store';
 import { Companion } from './Companion';
+import { SponsorActivity } from './SponsorActivity';
 import { checkinAfterUndo, meetingIdFor } from './checkins';
 import { Icon, type IconName } from './Icon';
 import { HeaderSearch } from './HeaderSearch';
@@ -404,6 +405,7 @@ export function App() {
             <p className="tiny muted">{backend.mode === 'cached' ? 'Cached demo: your changes live only in this browser.' : 'Live local: meetings are stored in FalkorDB.'}</p>
         </Sheet>
       )}
+      <SponsorActivity />
       {toast && <Toast message={toast.message} action={toast.action} onAction={toast.onAction} onDone={() => setToast(undefined)} />}
     </div>
   );

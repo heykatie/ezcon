@@ -231,3 +231,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Brief sponsor activity, away from the bottom navigation and Undo action. */
+.sponsor-activity { position: fixed; right: 18px; top: 82px; z-index: 80; display: grid; gap: 8px; pointer-events: none; width: min(290px, calc(100vw - 32px)); }
+.sponsor-notice { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); box-shadow: 0 8px 28px #0003; animation: sponsor-appear .18s ease-out; }
+.sponsor-notice strong { font-size: 12px; }
+.sponsor-detail { display: block; font-size: 11px; line-height: 1.5; opacity: .8; }
+.sponsor-dot { color: #b6a5ff; font-size: 20px; }
+.sponsor-dot.done { color: #7bd6bc; font-size: 15px; }
+.sponsor-dot.failed { color: #f3b5a8; }
+@keyframes sponsor-appear { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .sponsor-notice { animation: none; } }

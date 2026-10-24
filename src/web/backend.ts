@@ -5,6 +5,7 @@ import type { Candidate, GraphPath, Meeting, MeetingInput, ProfileInput } from '
 import type { ConferenceId, RoleRecord } from '../domain/types';
 import { ROLES, SESSIONS } from '../data/demo';
 import { load, save } from './store';
+import { observeBackend } from './sponsor-activity';
 
 export interface Backend {
   mode: 'live' | 'cached';
@@ -87,7 +88,7 @@ export async function connectBackend(): Promise<Backend> {
       const t = setTimeout(() => ctrl.abort(), 1500);
       const h = await fetch('/api/health', { signal: ctrl.signal });
       clearTimeout(t);
-      if (h.ok) return liveBackend((await h.json()).graphHost);
+      if (h.ok) return observeBackend(liveBackend((await h.json()).graphHost));
     } catch {
       // API not running: fall back to the cached snapshot
     }
