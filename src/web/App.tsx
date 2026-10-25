@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Candidate, GraphPath, Meeting } from '../domain/graph-types';
-import type { ConferenceId, Goal, SessionRecord } from '../domain/types';
+import type { ConferenceId, EventRecord, Goal, SessionRecord } from '../domain/types';
 import { rankRecommendations } from '../domain/recommend';
 import { hiringConnections } from '../domain/careers';
 import { addItem, defaultBuffer, removeItem, resolveConflict, type Conflict, type ScheduleItem } from '../domain/schedule';
@@ -27,7 +27,7 @@ type SheetState =
   | { kind: 'conflict'; item: ScheduleItem; conflicts: Conflict[] }
   | { kind: 'checkin'; item: ScheduleItem }
   | { kind: 'person'; id: string }
-  | { kind: 'travel'; session: SessionRecord }
+  | { kind: 'travel'; session: EventRecord }
   | { kind: 'qr' | 'profile' | 'menu' | 'passport' }
   | null;
 
@@ -42,7 +42,10 @@ const demoHistory = () => {
 
 const fresh = (profile: DemoProfile): PState => ({
   profile,
-  ...(profile.id === DEMO_PROFILE.id ? demoHistory() : { schedule: [], checkins: {} }),
+  ...(profile.id === DEMO_PROFILE.id ? {
+    ...demoHistory(),
+    applications: [{ roleId: 'wad26na:1917:docker-demo-role', title: 'Software Engineer · Docker (fictional demo application)', company: 'Docker', applyUrl: 'https://www.docker.com/careers/', eventId: 'wad26na:1917', appliedAt: '2026-09-23T15:00:00-07:00', fictional: true }],
+  } : { schedule: [], checkins: {} }),
   seeded: profile.id !== DEMO_PROFILE.id,
   rewards: emptyRewards(),
   prepDone: {},
@@ -53,13 +56,13 @@ const fresh = (profile: DemoProfile): PState => ({
 });
 
 
-/** Stamps are derived from confirmed actions, so duplicates are impossible and undo reverses them. */
+/** Badges are derived from confirmed actions, so duplicates are impossible and undo reverses them. */
 function deriveRewards(ps: PState, meetings: Meeting[], sessions: Record<string, string>): RewardState {
   let r = emptyRewards();
   for (const [eventId, c] of Object.entries(ps.checkins)) {
     if (c === 'went' || c === 'met') r = award(r, 'explorer', `visit:${eventId}`, `Went to ${sessions[eventId] ?? 'an event'} (self-reported)`);
   }
-  for (const a of ps.applications ?? []) r = award(r, 'follow-through', `applied:${a.roleId}`, `Applied to ${a.title} at ${a.company} (self-reported)`);
+  for (const a of ps.applications ?? []) r = award(r, 'follow-through', `applied:${a.roleId}`, `Applied to ${a.title} at ${a.company} (self-reported${a.fictional ? ', fictional demo' : ''})`);
   for (const t of ps.raffleTickets ?? []) r = award(r, 'explorer', `raffle:${t.questId}`, `Entered the ${SIDE_QUESTS.find((q) => q.id === t.questId)?.title ?? 'raffle'} (self-reported)`);
   for (const id of ps.visited) r = award(r, 'explorer', `booth:${id}`, `Visited ${SIDE_QUESTS.find((q) => q.id === id)?.title ?? 'a booth'} (self-reported)`);
   for (const m of meetings) {
@@ -176,16 +179,16 @@ export function App() {
 
   const clock = DEMO_CLOCKS.find((c) => c.id === clockId) ?? DEMO_CLOCKS[0]!;
   const now = clock.now ?? new Date().toISOString();
-  const sessions = SESSIONS[conference];
-  const titles = useMemo(() => Object.fromEntries(Object.values(SESSIONS).flat().map((s) => [s.id, s.title])), []);
+  const sessions = [...SESSIONS[conference], ...(ps?.liveEvents ?? [])];
+  const titles = Object.fromEntries([...Object.values(SESSIONS).flat(), ...(ps?.liveEvents ?? [])].map((s) => [s.id, s.title]));
 
   const derived = useMemo(() => {
     if (!ps || !backend) return undefined;
     const rewards = deriveRewards(ps, meetings, titles);
-    const recs = rankRecommendations(candidates, sessions, { goals: ps.profile.goals, schedule: ps.schedule, now });
+    const recs = rankRecommendations(candidates, SESSIONS[conference], { goals: ps.profile.goals, schedule: ps.schedule, now });
     const verifyAt = backend.mode === 'cached' ? roles.map((r) => r.checkedAt).sort().at(-1) : new Date().toISOString();
     const hiring = ps.profile.goals.includes('career') && CONFERENCES[conference].mode === 'upcoming'
-      ? hiringConnections(hiringPaths, roles, sessions, { now, verifyAt, profile: { maxYearsExperience: ps.profile.maxYearsExperience } })
+      ? hiringConnections(hiringPaths, roles, SESSIONS[conference], { now, verifyAt, profile: { maxYearsExperience: ps.profile.maxYearsExperience } })
       : [];
     // Hiring touchpoints lead; don't repeat them in the general list.
     const hiringIds = new Set(hiring.map((h) => h.session.id));
@@ -244,6 +247,7 @@ export function App() {
     update,
     toggleGoal: (g: Goal) => update((p) => ({ ...p, profile: { ...p.profile, goals: p.profile.goals.includes(g) ? p.profile.goals.filter((x) => x !== g) : [...p.profile.goals, g] } })),
     add: (s) => {
+      if (s.conference === 'external') update((p) => ({ ...p, liveEvents: [...(p.liveEvents ?? []).filter((e) => e.id !== s.id), s] }));
       const item = toScheduleItem(s);
       const r = addItem(ps.schedule, item, defaultBuffer);
       if (r.status === 'added') {

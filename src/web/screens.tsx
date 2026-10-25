@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import type { Candidate, GraphPath, Meeting } from '../domain/graph-types';
-import type { ConferenceId, Goal, SessionRecord } from '../domain/types';
+import type { ConferenceId, EventRecord, ExternalEventRecord, Goal, SessionRecord } from '../domain/types';
 import { GOAL_LABELS } from '../domain/types';
 import { matchesGoals, type Recommendation } from '../domain/recommend';
 import type { HiringConnection } from '../domain/careers';
 import type { ScheduleItem, Conflict } from '../domain/schedule';
-import { STAMP_TEXT, ACCESSORY, unlockedAccessories, type RewardState, type Stamp } from '../domain/rewards';
+import { BADGE_TEXT, ACCESSORY, unlockedAccessories, type RewardState, type Badge } from '../domain/rewards';
 import { validateProfileLink, type LinkKind } from '../domain/urls';
 import { personId } from '../domain/ids';
 import { COMPANIONS, CONFERENCES, INTEREST_OPTIONS, SIDE_QUESTS, WAD_GOODIES, WAD_GOODIES_SOURCE, WAD_RUN, type CompanionKind, type DemoProfile, type SideQuest } from '../data/demo';
@@ -33,11 +33,13 @@ export interface PState {
   accessoryOn: boolean;
   visited: string[];
   /** Self-reported applications; ezcon never applies on the user's behalf. */
-  applications?: Array<{ roleId: string; title: string; company: string; applyUrl: string; eventId: string; appliedAt: string }>;
+  applications?: Array<{ roleId: string; title: string; company: string; applyUrl: string; eventId: string; appliedAt: string; fictional?: boolean }>;
   /** Raffle ticket and reminder details stay on this device/profile. */
   raffleTickets?: Array<{ questId: string; number: string; photo?: string; savedAt: string; remindAt?: string; drawAt?: string; remindedAt?: string }>;
   /** Demo history has been written to the graph once. */
   seeded?: boolean;
+  /** Public event pages imported by the user; saved only in this browser profile. */
+  liveEvents?: ExternalEventRecord[];
 }
 
 export interface Ctx {
@@ -45,19 +47,19 @@ export interface Ctx {
   ps: PState;
   now: string;
   conference: ConferenceId;
-  sessions: SessionRecord[];
+  sessions: EventRecord[];
   recs: Recommendation[];
   hiring: HiringConnection[];
   candidates: Candidate[];
   meetings: Meeting[];
   update: (fn: (p: PState) => PState) => void;
   toggleGoal: (g: Goal) => void;
-  add: (s: SessionRecord) => void;
+  add: (s: EventRecord) => void;
   remove: (eventId: string) => void;
   openWhy: (title: string, paths: GraphPath[], note?: string) => void;
   openCheckIn: (item: ScheduleItem) => void;
   openPerson: (id: string) => void;
-  openTravel: (s: SessionRecord) => void;
+  openTravel: (s: EventRecord) => void;
   openLevelUp: () => void;
   openProfile: () => void;
   goTab: (t: 'today' | 'discover' | 'schedule' | 'people') => void;
@@ -73,8 +75,9 @@ const whyNote = (ctx: Ctx) =>
 
 export function Today(ctx: Ctx) {
   const { ps, now } = ctx;
-  const past = localOf(now).slice(0, 10) > CONFERENCES[ctx.conference].endDate;
-  const upcoming = ps.schedule.filter((s) => s.eventId.startsWith(`${ctx.conference}:`) && Date.parse(s.end) > Date.parse(now)).sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const liveIds = new Set((ps.liveEvents ?? []).map((s) => s.id));
+  const upcoming = ps.schedule.filter((s) => (s.eventId.startsWith(`${ctx.conference}:`) || liveIds.has(s.eventId)) && Date.parse(s.end) > Date.parse(now)).sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const past = CONFERENCES[ctx.conference].mode === 'past' && upcoming.length === 0;
   const next = upcoming[0];
   const start = !next ? ctx.hiring.find((h) => !isScheduled(ctx, h.session.id)) : undefined;
   const prep = next ? prepFor(next, ctx) : undefined;
@@ -94,7 +97,7 @@ export function Today(ctx: Ctx) {
       <button className="btn primary" onClick={() => ctx.goTab('people')}>See people &amp; follow up</button>
       <button className="btn" onClick={() => ctx.goTab('schedule')}>Review past schedule</button>
     </section>
-    <button className="btn" onClick={ctx.openLevelUp}>Badge collection · {ps.rewards.awards.length} badges</button>
+    <button className="btn" onClick={ctx.openLevelUp}>Achievements · {ps.rewards.awards.length} badges</button>
   </div>;
 
   return (
@@ -189,8 +192,8 @@ export function Today(ctx: Ctx) {
           <h2 id="plan-h">
             Your plan · {doneCount} of {steps.length} done
           </h2>
-          <button className="btn small" onClick={ctx.openLevelUp}>
-            Badge collection · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'badge' : 'badges'}
+            <button className="btn small" onClick={ctx.openLevelUp}>
+            Achievements · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'badge' : 'badges'}
           </button>
         </div>
         <ol className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
@@ -325,7 +328,7 @@ export function HiringCard({ ctx, h }: { ctx: Ctx; h: HiringConnection }) {
   );
 }
 
-function SessionDetails({ session }: { session: SessionRecord }) {
+function SessionDetails({ session }: { session: EventRecord }) {
   const links = PEOPLE_LINKS as Record<string, { status: string; url?: string }>;
   return (
     <div className="stack" style={{ gap: 8, borderTop: '1px dashed var(--line)', paddingTop: 10 }}>
@@ -360,7 +363,7 @@ function SessionDetails({ session }: { session: SessionRecord }) {
   );
 }
 
-function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: SessionRecord; reasons?: string[]; paths: GraphPath[] }) {
+function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: EventRecord; reasons?: string[]; paths: GraphPath[] }) {
   const scheduled = isScheduled(ctx, session.id);
   const past = Date.parse(session.start) <= Date.parse(ctx.now);
   const [open, setOpen] = useState(false);
@@ -387,7 +390,7 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Sess
         <button className="btn primary small" disabled={scheduled || past} onClick={() => ctx.add(session)}>
           {scheduled ? 'On your schedule' : past ? 'Already started' : 'Add to Schedule'}
         </button>
-        {ctx.conference === 'universe26' && !past && (
+        {(ctx.conference === 'universe26' || session.conference === 'external') && !past && (
           <button className="btn small" onClick={() => ctx.openTravel(session)}>
             Getting there
           </button>
@@ -412,7 +415,7 @@ export function Explore(ctx: Ctx) {
   const matchingRecs = ctx.recs.filter((r) => matchesGoals(r.session, ctx.ps.profile.goals, hiringIds));
   const recIds = new Set(matchingRecs.map((r) => r.session.id));
   const rest = ctx.sessions
-    .filter((s) => s.catalogs.includes('quest') && matchesGoals(s, ctx.ps.profile.goals, hiringIds) && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
+    .filter((s) => s.conference !== 'external' && s.catalogs.includes('quest') && matchesGoals(s, ctx.ps.profile.goals, hiringIds) && !hiringIds.has(s.id) && !recIds.has(s.id) && (!upcoming || Date.parse(s.start) > Date.parse(ctx.now)))
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   return (
     <div className="stack">
@@ -435,6 +438,7 @@ export function Explore(ctx: Ctx) {
               ))}
             </div>
             {ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
+            <LiveEventSearch ctx={ctx} />
             <section className="stack" aria-labelledby="quests-h">
               <div className="section-title">
                 <h2 id="quests-h">Quests</h2>
@@ -463,6 +467,135 @@ export function Explore(ctx: Ctx) {
       )}
     </div>
   );
+}
+
+/** Live discovery stays on Luma; event links can be researched with Bright Data locally,
+ * or entered manually in cached mode. Imported facts retain their source and confidence. */
+function LiveEventSearch({ ctx }: { ctx: Ctx }) {
+  const [query, setQuery] = useState('');
+  const [url, setUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const [location, setLocation] = useState('');
+  const [summary, setSummary] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [researchSources, setResearchSources] = useState<Array<{ url: string; title: string }>>([]);
+  const [importedSource, setImportedSource] = useState<ExternalEventRecord['source'] | null>(null);
+  const [importedTimezone, setImportedTimezone] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<Array<{ title: string; url: string; summary: string | null; start: string | null; location: string | null; sources: Array<{ url: string; title: string }> }>>([]);
+  const [searching, setSearching] = useState(false);
+  const [detailsEdited, setDetailsEdited] = useState(false);
+
+  const fill = (event: EventRecord) => {
+    setTitle(event.title);
+    setStart(eventLocalDateTime(event.start, event.timezone));
+    setEnd(eventLocalDateTime(event.end, event.timezone));
+    setLocation(event.location ?? '');
+    setSummary(event.summary ?? '');
+    setImportedSource(event.source);
+    setImportedTimezone(event.timezone);
+    setDetailsEdited(false);
+    setMessage(event.source.via === 'openai-web-search'
+      ? 'AI-assisted details found. Check the source links and fields before adding.'
+      : 'Details pulled from the public Luma page. Check them, then add it.');
+  };
+  const pull = async () => {
+    setError(''); setMessage('');
+    setResearchSources([]); setImportedSource(null); setDetailsEdited(false);
+    let parsed: URL;
+    try { parsed = new URL(url); } catch { setError('Paste a valid Luma event link.'); return; }
+    if (parsed.protocol !== 'https:' || !['luma.com', 'www.luma.com'].includes(parsed.hostname.toLowerCase()) || parsed.pathname === '/sf') {
+      setError('Use an individual event page from luma.com, not a search or city page.'); return;
+    }
+    setBusy(true);
+    try {
+      if (!ctx.backend.research) {
+        setMessage('Live page import is unavailable in this cached build. Open the event page, then enter its details below; the source will stay marked unconfirmed.');
+        window.open(parsed.toString(), '_blank', 'noopener,noreferrer');
+        return;
+      }
+      const result = await ctx.backend.research('luma-event', parsed.toString());
+      const record = result.records[0];
+      if (!record) throw new Error(result.error ?? 'No structured event details found on that page.');
+      setUrl(record.url);
+      setResearchSources(result.sources ?? []);
+      fill(record);
+      if (result.error) setMessage(result.error);
+    } catch (e) {
+      setError(`Could not pull event details: ${(e as Error).message}`);
+    } finally { setBusy(false); }
+  };
+  const add = () => {
+    setError('');
+    let parsed: URL;
+    try { parsed = new URL(url); } catch { setError('Add the event page link first.'); return; }
+    if (parsed.protocol !== 'https:' || !['luma.com', 'www.luma.com'].includes(parsed.hostname.toLowerCase()) || !title.trim() || !location.trim() || !start || !end || !Number.isFinite(Date.parse(start)) || !Number.isFinite(Date.parse(end)) || Date.parse(end) <= Date.parse(start)) {
+      setError('Check the Luma link, event name, venue, start time and end time.'); return;
+    }
+    const slugPart = parsed.pathname.split('/').filter(Boolean).at(-1)!.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 80) || 'event';
+    const imported = !detailsEdited && importedSource?.url === parsed.toString() ? importedSource : null;
+    const timezone = imported ? (importedTimezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')) : (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+    const record: ExternalEventRecord = {
+      id: `luma:${slugPart}`, conference: 'external', sourceRecordId: slugPart,
+      title: title.trim(), summary: summary.trim() || undefined,
+      start: imported ? eventDateTimeToIso(start, timezone) ?? new Date(start).toISOString() : new Date(start).toISOString(), end: imported ? eventDateTimeToIso(end, timezone) ?? new Date(end).toISOString() : new Date(end).toISOString(),
+      timezone, location: location.trim(),
+      speakers: [], topics: [], sessionType: 'Event', url: parsed.toString(), catalogs: ['quest'],
+      source: imported ?? { url: parsed.toString(), retrievedAt: new Date().toISOString(), via: 'manual-browser', status: 'unconfirmed', note: 'Details entered or edited by the user; verify against the linked event page.' },
+    };
+    ctx.openTravel(record);
+    setMessage(`Review commute options for “${record.title}”, then add it to your schedule.`);
+  };
+  const search = async () => {
+    setError(''); setSearchResults([]);
+    if (!ctx.backend.eventSearch) { setError('Live search needs the OpenAI API key on the local server.'); return; }
+    if (query.trim().length < 2) { setError('Enter at least two characters to search.'); return; }
+    setSearching(true);
+    try {
+      const result = await ctx.backend.eventSearch(query.trim());
+      if (result.status !== 'ok') throw new Error(result.error ?? 'No cited event results found.');
+      setSearchResults(result.events);
+    } catch (e) { setError((e as Error).message); }
+    finally { setSearching(false); }
+  };
+
+  return <section className="card stack" aria-labelledby="live-events-h">
+    <div className="between"><div><h2 id="live-events-h">Find a real event</h2><p className="small muted">Search what’s happening, check the route, then add a stop.</p></div><span className="badge accent">Live</span></div>
+    <label className="field"><span className="small">What are you looking for?</span><input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void search()} placeholder="AI meetup, hackathon, hiring event…" /></label>
+    <button className="btn small" disabled={searching || query.trim().length < 2} onClick={() => void search()}>{searching ? 'Searching live sources…' : 'Search Bay Area events'}</button>
+    <a className="btn ghost small" href="https://luma.com/sf" target="_blank" rel="noopener noreferrer">Browse Luma ↗</a>
+    {!!searchResults.length && <div className="stack" aria-label="Live event results">{searchResults.map((event) => <article className="card soft stack" key={event.url}>
+      <div className="between"><strong>{event.title}</strong><a href={event.url} target="_blank" rel="noopener noreferrer">Open page ↗</a></div>
+      <p className="small muted">{[event.start, event.location].filter(Boolean).join(' · ') || 'Date and venue not established; open the event page to check.'}</p>
+      {event.summary && <p className="small">{event.summary}</p>}
+      <button className="btn ghost small" onClick={() => { setUrl(event.url); setResearchSources(event.sources); setError(''); }}>Use this event</button>
+    </article>)}</div>}
+    <label className="field"><span className="small">Luma event link</span><input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://luma.com/your-event" /></label>
+    <div className="row"><button className="btn small" disabled={busy || !url} onClick={pull}>{busy ? 'Pulling event details…' : 'Pull details from event page'}</button>{url && <a className="btn ghost small" href={url} target="_blank" rel="noopener noreferrer">Open event page ↗</a>}</div>
+    <p className="tiny muted">{ctx.backend.mode === 'live' ? 'Live search uses OpenAI web search; Bright Data reads event pages first, with OpenAI as a fallback. AI-assisted details stay unconfirmed.' : 'Cached app: event details can be entered manually and will be marked unconfirmed.'}</p>
+    {!!researchSources.length && <div className="small stack" aria-label="Research sources"><strong>Sources to check</strong>{researchSources.map((s) => <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} ↗</a>)}</div>}
+    <details>
+      <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Review or enter event details</summary>
+      <div className="stack" style={{ marginTop: 10 }}>
+        <label className="field"><span className="small">Event name</span><input value={title} onChange={(e) => { setTitle(e.target.value); setDetailsEdited(true); }} /></label>
+        <div className="row"><label className="field"><span className="small">Starts</span><input type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); setDetailsEdited(true); }} /></label><label className="field"><span className="small">Ends</span><input type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); setDetailsEdited(true); }} /></label></div>
+        <label className="field"><span className="small">Venue / address</span><input value={location} onChange={(e) => { setLocation(e.target.value); setDetailsEdited(true); }} /></label>
+        <label className="field"><span className="small">What’s happening? (optional)</span><textarea value={summary} onChange={(e) => { setSummary(e.target.value); setDetailsEdited(true); }} /></label>
+        <button className="btn primary" disabled={!title || !location || !start || !end} onClick={add}>Review commute &amp; add</button>
+      </div>
+    </details>
+    {message && <p className="notice" role="status">{message}</p>}{error && <p className="error" role="alert">{error}</p>}
+  </section>;
+}
+
+function SpeakerAvatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
+  const [failed, setFailed] = useState(false);
+  return photoUrl && !failed
+    ? <img className="speaker-photo" src={photoUrl} alt="" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
+    : <span className="speaker-photo speaker-fallback" aria-hidden="true">{name.split(/\s+/).map((n) => n[0]).slice(0, 2).join('').toUpperCase()}</span>;
 }
 
 function ResearchPanel({ ctx }: { ctx: Ctx }) {
@@ -548,12 +681,13 @@ interface Leg {
 
 export function Schedule(ctx: Ctx) {
   const { ps, now } = ctx;
-  const mine = ps.schedule.filter((s) => s.eventId.startsWith(`${ctx.conference}:`));
-  const past = localOf(ctx.now).slice(0, 10) > CONFERENCES[ctx.conference].endDate;
+  const liveIds = new Set((ps.liveEvents ?? []).map((s) => s.id));
+  const mine = ps.schedule.filter((s) => s.eventId.startsWith(`${ctx.conference}:`) || liveIds.has(s.eventId));
   const days = [...new Set(mine.map((s) => localOf(s.start).slice(0, 10)))].sort();
   const [day, setDay] = useState<string | undefined>(days[0]);
   const activeDay = day && days.includes(day) ? day : days[0];
   const items = mine.filter((s) => localOf(s.start).slice(0, 10) === activeDay);
+  const past = items.length > 0 && items.every((s) => Date.parse(s.end) <= Date.parse(now));
   const universe = ctx.conference === 'universe26';
 
   const travel = useMemo(() => (universe ? compareTravel(items, ps.profile.budgetCents) : undefined), [items, universe, ps.profile.budgetCents]);
@@ -641,7 +775,7 @@ export function Schedule(ctx: Ctx) {
           <TravelOptions travel={travel} chosenId={chosenId} onChoose={(id) => ctx.update((p) => ({ ...p, travelChoice: id }))} origin={ps.profile.origin} budgetCents={ps.profile.budgetCents} />
         </section>
       )}
-      {past && items.length > 0 && <p className="tiny muted">Fictional demo history from a finished conference. Sessions are real listings; attendance and the meeting are made up for the demo, and nothing sends reminders.</p>}
+      {past && items.length > 0 && items.every((s) => s.eventId.startsWith('wad26na:')) && <p className="tiny muted">Fictional demo history from a finished conference. Sessions are real listings; attendance and the meeting are made up for the demo, and nothing sends reminders.</p>}
       <p className="tiny muted">Clock: {fmtStamp(now)}</p>
     </div>
   );
@@ -703,6 +837,9 @@ function EventActions({ ctx, item }: { ctx: Ctx; item: ScheduleItem }) {
         ) : ci ? (
           <span className={`badge ${ci === 'skipped' ? '' : 'good'}`}>{{ met: 'Met someone', went: '✓ Went', skipped: 'Skipped', later: 'Later' }[ci]}</span>
         ) : null}
+        {!ended && ctx.sessions.find((s) => s.id === item.eventId)?.conference === 'external' && (
+          <button className="btn small" onClick={() => ctx.openTravel(ctx.sessions.find((s) => s.id === item.eventId)!)}>Getting there</button>
+        )}
         {!ended && (
           <button className="btn ghost small" onClick={() => ctx.remove(item.eventId)}>
             Remove
@@ -810,11 +947,16 @@ export function People(ctx: Ctx) {
   const [tab, setTab] = useState<'want' | 'met'>('want');
   const meetings = ctx.meetings.filter((m) => m.eventId.startsWith(`${ctx.conference}:`));
   const metIds = new Set(meetings.map((m) => m.personId));
-  const want = new Map<string, { name: string; detail: string; why: string }>();
-  const addPerson = (s: SessionRecord, why: string) =>
+  const want = new Map<string, { name: string; detail: string; why: string; photoUrl?: string }>();
+  const addPerson = (s: EventRecord, why: string) =>
     s.speakers.forEach((sp) => {
       const id = personId(sp.name, sp.company);
-      if (!metIds.has(id) && !want.has(id)) want.set(id, { name: sp.name, detail: [sp.title, sp.company].filter(Boolean).join(', '), why: `${why}: ${s.title}` });
+      if (!metIds.has(id) && !want.has(id)) {
+        const goalReason = s.topics.some((topic) => ctx.ps.profile.interests.some((interest) => topic.toLowerCase().includes(interest.toLowerCase()) || interest.toLowerCase().includes(topic.toLowerCase())))
+          ? `Matches your ${ctx.ps.profile.goals.map((g) => GOAL_LABELS[g]).join(' and ')} goals`
+          : why;
+        want.set(id, { name: sp.name, detail: [sp.title, sp.company].filter(Boolean).join(', '), why: `${goalReason}: ${s.title}`, photoUrl: sp.photoUrl });
+      }
     });
   ctx.hiring.forEach((h) => addPerson(h.session, `Listed with ${h.role.company} (open role)`));
   ctx.ps.schedule.forEach((it) => {
@@ -840,7 +982,7 @@ export function People(ctx: Ctx) {
         (want.size ? (
           [...want].map(([id, p]) => (
             <button key={id} className="card stack" style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => ctx.openPerson(id)}>
-              <b>{p.name}</b>
+              <div className="row"><SpeakerAvatar name={p.name} photoUrl={p.photoUrl} /><b>{p.name}</b></div>
               <span className="small muted">{p.detail}</span>
               <span className="small">{p.why}</span>
             </button>
@@ -887,6 +1029,7 @@ export function PersonSheet({ ctx, id, onClose, onUndoMeeting }: { ctx: Ctx; id:
     <Sheet title={sp?.name ?? meeting?.personName ?? 'Person'} onClose={onClose}>
       <section className="card stack">
         <h3>Public professional profile</h3>
+        {sp?.photoUrl && <img className="speaker-photo profile-photo" src={sp.photoUrl} alt={`${sp.name} profile`} referrerPolicy="no-referrer" />}
         <p className="small">
           {sp?.title ?? 'Title not listed'} · {sp?.company ?? 'Company not listed'}
         </p>
@@ -946,9 +1089,9 @@ export function PersonSheet({ ctx, id, onClose, onUndoMeeting }: { ctx: Ctx; id:
 
 export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: { ps: PState; onClose: () => void; onToggleAccessory: () => void; onCustomize: () => void }) {
   const unlocked = unlockedAccessories(ps.rewards).includes(ACCESSORY.id);
-  const count = (s: Stamp) => ps.rewards.awards.filter((a) => a.stamp === s);
+  const count = (s: Badge) => ps.rewards.awards.filter((a) => a.badge === s);
   return (
-    <Sheet title="Badge collection" onClose={onClose}>
+    <Sheet title="Achievements" onClose={onClose}>
       <div className="companion-hero card">
         <Companion kind={ps.profile.companion} color={ps.profile.color} size={110} scarf={unlocked && ps.accessoryOn} label={ps.profile.companionName} />
         <div className="stack" style={{ gap: 6 }}>
@@ -959,10 +1102,10 @@ export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: {
           </button>
         </div>
       </div>
-      <div className="stamps">
-        {(['explorer', 'connection', 'follow-through'] as Stamp[]).map((s) => (
-          <div key={s} className={`stamp ${count(s).length ? 'got pop' : ''}`}>
-            {STAMP_TEXT[s]}
+      <div className="badge-grid">
+        {(['explorer', 'connection', 'follow-through'] as Badge[]).map((s) => (
+          <div key={s} className={`badge-item ${count(s).length ? 'got pop' : ''}`}>
+            {BADGE_TEXT[s]}
             <br />
             {count(s).length ? `×${count(s).length}` : 'not yet'}
           </div>
@@ -971,7 +1114,7 @@ export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: {
       <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
         {ps.rewards.awards.map((a) => (
           <li key={a.id}>
-            {STAMP_TEXT[a.stamp]} — {a.label}
+            {BADGE_TEXT[a.badge]} — {a.label}
           </li>
         ))}
       </ul>
@@ -984,7 +1127,7 @@ export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: {
           {ps.accessoryOn ? 'Take off' : 'Wear'}
         </button>
       </div>
-      <p className="tiny muted">Stamps are self-confirmed and reversible. No points, streaks, spending or prize rewards.</p>
+      <p className="tiny muted">Badges reflect self-confirmed actions and can be reversed. No points, streaks, spending or prize rewards.</p>
     </Sheet>
   );
 }
@@ -1135,7 +1278,8 @@ export function WhySheet({ title, paths, note, onClose }: { title: string; paths
   );
 }
 
-export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: SessionRecord; onClose: () => void }) {
+export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: EventRecord; onClose: () => void }) {
+  if (session.conference === 'external') return <ExternalTravelSheet ctx={ctx} session={session} onClose={onClose} />;
   const travel = compareTravel([{ eventId: session.id, start: session.start, end: session.end }], ctx.ps.profile.budgetCents);
   const scheduled = isScheduled(ctx, session.id);
   const [route, setRoute] = useState<string | undefined>(ctx.ps.travelChoice);
@@ -1166,6 +1310,29 @@ export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: Sess
       </button>
     </Sheet>
   );
+}
+
+function ExternalTravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: ExternalEventRecord; onClose: () => void }) {
+  const destination = session.location ?? '';
+  const origin = ctx.ps.profile.origin || 'San Leandro Marina, CA';
+  const url = (mode: 'driving' | 'transit') => `https://www.google.com/maps/dir/?api=1&${new URLSearchParams({ origin, destination, travelmode: mode })}`;
+  const parking = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`parking near ${destination}`)}`;
+  const [mode, setMode] = useState<'driving' | 'transit' | undefined>();
+  const scheduled = isScheduled(ctx, session.id);
+  return <Sheet title="Getting there" onClose={onClose}>
+    <div className="stack">
+      <p><b>{session.title}</b><br /><span className="small muted">{fmtRange(session.start, session.end)} · {destination}</span></p>
+      <p className="notice">Live route choices open Google Maps for current directions. Ezcon has no verified fare, drive time or parking price for this venue yet.</p>
+      <a className="btn" href={url('transit')} target="_blank" rel="noopener noreferrer" onClick={() => setMode('transit')}>Transit directions ↗</a>
+      <a className="btn" href={url('driving')} target="_blank" rel="noopener noreferrer" onClick={() => setMode('driving')}>Driving directions ↗</a>
+      <a className="btn" href={parking} target="_blank" rel="noopener noreferrer">Find nearby parking ↗</a>
+      <SourceLine source={session.source} label="Event details" />
+      <p className="tiny muted">Origin: {origin}. Set a different home area in your profile to update these links. Check event times, parking signs and prices before you leave.</p>
+      <button className="btn primary" disabled={scheduled} onClick={() => { if (mode) ctx.update((p) => ({ ...p, travelChoice: `live-${mode}` })); ctx.add(session); onClose(); }}>
+        {scheduled ? 'On your schedule' : 'Add event to Schedule'}
+      </button>
+    </div>
+  </Sheet>;
 }
 
 function LinkedInLine({ id }: { id: string }) {
@@ -1218,9 +1385,7 @@ function PastExplore(ctx: Ctx) {
                   {a.company} · marked applied {fmtStamp(a.appliedAt)} · linked to {ctx.sessions.find((s) => s.id === a.eventId)?.title}
                 </span>
               </span>
-              <a className="btn small" href={a.applyUrl} target="_blank" rel="noopener noreferrer">
-                Listing ↗
-              </a>
+              {a.fictional ? <span className="badge">No application was submitted</span> : <a className="btn small" href={a.applyUrl} target="_blank" rel="noopener noreferrer">Listing ↗</a>}
             </article>
           ))
         ) : (

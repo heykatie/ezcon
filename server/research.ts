@@ -6,10 +6,12 @@ import { TrueForge } from '@truefoundry/trueforge-sdk';
 import { isPublicFetchTarget } from '../src/domain/urls';
 import { parseUniverseCatalog } from '../src/domain/extract/universe';
 import { parseWadSession } from '../src/domain/extract/wad';
-import type { ExtractionResult } from '../src/domain/types';
+import { parseLumaEvent } from '../src/domain/extract/luma';
+import type { EventRecord, ExtractionResult } from '../src/domain/types';
 import { offTargetCalls, withDeadline } from './research-guard';
+import { researchLumaWithOpenAI, type OpenAISource } from './openai-research';
 
-export type ResearchKind = 'wad-session' | 'universe-catalog';
+export type ResearchKind = 'wad-session' | 'universe-catalog' | 'luma-event';
 
 // Iterations include TrueForge's tool discovery (list_tools, get_tool_info) before the real calls.
 const SOURCES: Record<ResearchKind, { hosts: string[]; tools: string[]; steps: string; iterations: number }> = {
@@ -26,6 +28,12 @@ const SOURCES: Record<ResearchKind, { hosts: string[]; tools: string[]; steps: s
     steps: 'Call scraping_browser_navigate on the URL, then scraping_browser_scroll once, then scraping_browser_get_html once with full_page set to true.',
     iterations: 8,
   },
+  'luma-event': {
+    hosts: ['luma.com', 'www.luma.com'],
+    tools: ['scrape_as_html'],
+    steps: 'Call scrape_as_html once on the URL.',
+    iterations: 5,
+  },
 };
 
 export const LIMITS = { maxIterations: 8, timeoutMs: 150_000 } as const;
@@ -37,7 +45,8 @@ export interface ToolTrace {
   at: string;
 }
 
-export interface ResearchResult extends ExtractionResult {
+export interface ResearchResult extends Omit<ExtractionResult, 'records'> {
+  records: EventRecord[];
   kind: ResearchKind;
   url: string;
   retrievedAt: string;
@@ -46,6 +55,7 @@ export interface ResearchResult extends ExtractionResult {
   sessionId: string;
   trace: ToolTrace[];
   usage: { inputTokens: number; outputTokens: number };
+  sources?: OpenAISource[];
   status: 'ok' | 'partial' | 'failed';
   error?: string;
 }
@@ -73,8 +83,39 @@ interface RawEvent {
 /** One bounded research run. A single deadline covers session creation, the turn and event retrieval. */
 export async function runResearch(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {
   // The deadline also covers target validation, which resolves DNS.
-  const run = assertResearchTarget(kind, url).then(() => runBounded(kind, url, opts));
-  return withDeadline(run, LIMITS.timeoutMs + 15_000, 'research');
+  const run = assertResearchTarget(kind, url).then(async () => {
+    let primary: ResearchResult;
+    try { primary = await runBounded(kind, url, opts); }
+    catch (err) {
+      const now = new Date().toISOString();
+      primary = {
+        kind, url, retrievedAt: now, model: opts.model, records: [], rejected: [], trace: [],
+        usage: { inputTokens: 0, outputTokens: 0 }, sessionId: 'unavailable', durationMs: 0,
+        status: 'failed', error: `Bright Data retrieval failed (${(err as Error).name ?? 'request error'})`,
+      };
+    }
+    if (kind !== 'luma-event' || (primary.records.length && primary.records[0]?.location)) return primary;
+
+    const fallback = await researchLumaWithOpenAI(url);
+    if (fallback.status !== 'ok') {
+      if (fallback.status === 'disabled') return { ...primary, error: `${primary.error ?? 'Bright Data could not extract event details'}. OpenAI fallback is off: add OPENAI_API_KEY to the local server environment.` };
+      return { ...primary, error: `${primary.error ?? 'Bright Data could not extract event details'}. OpenAI fallback: ${fallback.reason}.` };
+    }
+    return {
+      ...primary,
+      records: [fallback.record],
+      sources: fallback.sources,
+      retrievedAt: fallback.record.source.retrievedAt,
+      model: `${primary.model}; OpenAI ${fallback.model}`,
+      sessionId: `${primary.sessionId}; ${fallback.responseId}`,
+      durationMs: primary.durationMs,
+      usage: { inputTokens: primary.usage.inputTokens + fallback.usage.inputTokens, outputTokens: primary.usage.outputTokens + fallback.usage.outputTokens },
+      trace: [...primary.trace, { tool: 'openai.web_search', args: { url }, responseChars: 0, at: fallback.record.source.retrievedAt }],
+      status: 'partial' as const,
+      error: 'Event details came from OpenAI web search and remain unconfirmed. Check the source links before relying on them.',
+    };
+  });
+  return withDeadline(run, LIMITS.timeoutMs + 45_000, 'research');
 }
 
 async function runBounded(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {
@@ -178,7 +219,9 @@ async function runBounded(kind: ResearchKind, url: string, opts: { baseUrl: stri
   const html = String(htmlResponse.content);
   const meta = { sourceUrl: url, retrievedAt, via: 'bright-data' as const };
   try {
-    const extracted = kind === 'wad-session' ? { records: [parseWadSession(html, meta)], rejected: [] } : parseUniverseCatalog(html, { ...meta, year: 2026 });
+    const extracted = kind === 'wad-session' ? { records: [parseWadSession(html, meta)], rejected: [] }
+      : kind === 'luma-event' ? parseLumaEvent(html, meta)
+        : parseUniverseCatalog(html, { ...meta, year: 2026 });
     const status = extracted.records.length === 0 ? 'failed' : extracted.rejected.length ? 'partial' : 'ok';
     return { ...result, ...extracted, status, error: extracted.records.length ? undefined : 'no session containers found (shell page?)' };
   } catch (err) {

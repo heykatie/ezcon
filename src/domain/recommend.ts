@@ -1,7 +1,7 @@
 // Deterministic ranking over graph candidates. Hard constraints (time, schedule, conflicts)
 // filter first; goal fit only orders what qualifies. Never pads to three.
 import type { Candidate, GraphPath } from './graph-types';
-import type { Goal, SessionRecord } from './types';
+import type { EventRecord, Goal, SessionRecord } from './types';
 import { defaultBuffer, findConflicts, type ScheduleItem } from './schedule';
 
 export interface Recommendation {
@@ -31,7 +31,7 @@ export function matchesGoals(session: SessionRecord, goals: Goal[], hiringIds: R
   });
 }
 
-export const toScheduleItem = (s: SessionRecord): ScheduleItem => ({
+export const toScheduleItem = (s: EventRecord): ScheduleItem => ({
   eventId: s.id,
   title: s.title,
   start: s.start,

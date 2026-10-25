@@ -4,9 +4,9 @@ Status: design, not an implementation inventory.
 
 ## Components and data flow
 
-React/TypeScript dashboard → Node/TypeScript application API → TrueForge SDK → OpenAI-powered agent and narrowly scoped MCP tools.
+React/TypeScript dashboard → Node/TypeScript application API → TrueForge SDK → OpenAI-powered agent and narrowly scoped MCP tools. For live Luma discovery only, an optional server-side OpenAI Responses API web-search fallback supports direct cited event search and fills gaps when Bright Data cannot extract a usable event.
 
-Research tools retrieve public sources through Bright Data, normalize structured facts and record provenance. Validated graph tools write/query FalkorDB. Application code owns money arithmetic, dates, constraints, authorization, profile separation and rewards. Models extract and explain; they do not certify facts or authorize actions.
+Research tools retrieve public sources through Bright Data, normalize structured facts and record provenance. The OpenAI web-search fallback returns clickable citations, and its event details remain marked unconfirmed until checked. Validated graph tools write/query FalkorDB. Application code owns money arithmetic, dates, constraints, authorization, profile separation and rewards. Models extract and explain; they do not certify facts or authorize actions.
 
 TrueForge standalone runs locally with SQLite; FalkorDB runs locally with a named Docker volume. Durable domain memory lives in FalkorDB, separate from transient agent conversation. Credentials stay server-side and outside the repository. Shared hosting requires a separate authentication and storage design; do not expose unauthenticated local services publicly.
 
@@ -20,7 +20,7 @@ Recommendation paths link profile goals/skills to roles, companies, representati
 
 ## Tool boundaries
 
-- Research: allowlisted source types; public URLs only; prevent private-network fetching and bound requests/costs.
+- Research: allowlisted source types; public URLs only; prevent private-network fetching and bound requests/costs. Direct OpenAI web search requires a server-side API key and `EZCON_OPENAI_FREE_CREDITS_CONFIRMED=true`; never send keys to the browser.
 - Extraction: schema validation, deduplication, source timestamps and unknown fields.
 - Graph: parameterized, bounded query templates; separate read and write tools; no unrestricted model-generated Cypher execution.
 - Planning: timezone-aware intervals, travel buffers, cost ranges, eligibility and hard constraints.

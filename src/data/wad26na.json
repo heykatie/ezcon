@@ -13,7 +13,8 @@
         {
           "name": "Michael Irwin",
           "title": "Principal Engineer, Developer Success",
-          "company": "Docker"
+          "company": "Docker",
+          "photoUrl": "https://cdn.wearedevelopers.com/cdn-cgi/image/width=80,height=80,fit=cover,format=avif,quality=80/speakers/2217/profile_picture.png"
         }
       ],
       "topics": [],
