@@ -42,6 +42,7 @@ The four main tabs are **Today**, **Explore**, **Schedule**, and **People**. Pro
 | Raffle tickets and reminders | Saves a ticket number and/or resized photo on the device; accepts a reminder time or a draw time with a reminder 15 minutes before. | Manual number entry; no OCR or organizer entry submission. Reminders need the app open; overdue reminders can appear on reopening. System alerts require browser support and permission. |
 | Historical side quests | Displays sourced WAD North America 2026 raffle and giveaway examples with unknown conditions called out. | Read-only replay. Fictional sample tickets do not create entries, reminders, or rewards. |
 | Research evidence | Local mode can show tool calls, elapsed time, source URL, retrieval time, and parsed session fields. | Public cached mode displays a recorded result, not a new fetch. |
+| Live event search | Local mode can search cited upcoming Luma events in the Bay Area, pull event details, show their source links, open current Google Maps commute routes, and add selected events to Schedule. | Search requires a privately configured OpenAI API key and confirmed free/sponsor credits. OpenAI-assisted details are marked unconfirmed. External event commute links open Maps; ezcon does not claim live fares, drive times, parking prices, or availability. |
 
 Implementation: [UI workflows](src/web/screens.tsx), [application state](src/web/App.tsx), [recommendation rules](src/domain/recommend.ts), [career checks](src/domain/careers.ts), [travel rules](src/domain/travel.ts), and [rewards](src/domain/rewards.ts).
 
@@ -78,6 +79,8 @@ Saved local research artifacts include successful WAD retrievals. Full Universe 
 The application uses `@truefoundry/trueforge-sdk` to create a research session, configure an OpenAI model, expose a narrow Bright Data MCP tool set, run the turn, and inspect stored tool events. The default model identifier in the code is `openai/gpt-5-4-nano`; availability depends on the configured TrueForge instance.
 
 The agent handles retrieval tool calls. Deterministic code parses session fields and owns ranking, dates, scheduling, money arithmetic, and rewards. Session research validates approved HTTPS hosts and public network targets, limits iterations and duration, and discards results when recorded calls target a different URL. This is bounded retrieval, not an autonomous conference crawler or a guarantee against every downstream redirect/tool failure.
+
+For real-event discovery, a separate optional local-only integration calls the OpenAI Responses API with its native `web_search` tool. Search candidates are restricted to individual Luma URLs with matching clickable citations and a future date. When Bright Data cannot return usable event details (including a venue), OpenAI can fill a schedule-ready record only when it finds a valid time, timezone, venue and citations; the record remains **unconfirmed** and needs user review. The API key stays in the local Node server environment. The API does not call OpenAI unless both `OPENAI_API_KEY` is present and `EZCON_OPENAI_FREE_CREDITS_CONFIRMED=true`; it also limits direct requests to 20 per local API process per day. That in-process brake resets on restart, so it is not a substitute for a hard spend limit in the OpenAI project dashboard. The repository has no direct API key configured and cannot verify the account's available credits. The static Vercel build does not host this local API or make these calls.
 
 Local saved traces and the [recorded UI result](src/web/screens.tsx) provide evidence of the TrueForge → OpenAI → Bright Data path. No paid research call is required to explore the public demo or run the default tests.
 
@@ -164,6 +167,9 @@ Use `FALKORDB_URL=redis://127.0.0.1:6379` for that local instance, or the privat
 | `EZCON_API_PORT` | API listen port; update Vite’s proxy too if changed | `8787` |
 | `TRUEFORGE_URL` | Independently configured TrueForge service | `http://localhost:8790` |
 | `EZCON_MODEL` | Model identifier available in that service | `openai/gpt-5-4-nano` |
+| `OPENAI_API_KEY` | Optional direct OpenAI key for cited live Luma search and fallback; keep only in ignored local `.env` | None |
+| `EZCON_OPENAI_FREE_CREDITS_CONFIRMED` | Must be `true` to permit any direct OpenAI request; set only after confirming free/sponsor credits and no personal billing | `false` |
+| `EZCON_OPENAI_MODEL` | Direct Responses API model with web-search support | `gpt-5.5` |
 | `FALKORDB_TEST_URL` | Optional connection for graph integration tests | `redis://127.0.0.1:6379` |
 
 ```bash
@@ -174,7 +180,7 @@ npm run dev:api
 npm run dev
 ```
 
-The graph workflow can run without TrueForge; research needs the separate service and confirmed provider access. Starting the API also makes direct employer-role requests. Use only confirmed sponsor/free credits for research; the repository does not enforce a dollar spending cap.
+The graph workflow can run without TrueForge; research needs the separate service and confirmed provider access. Starting the API also makes direct employer-role requests. Use only confirmed sponsor/free credits for research; OpenAI web search has a local per-process request cap, but the repository does not enforce a dollar spending cap.
 
 Optional diagnostics:
 

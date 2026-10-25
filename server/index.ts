@@ -5,6 +5,7 @@ import { FalkorDB } from 'falkordb';
 import { z } from 'zod';
 import { FalkorGraph } from './graph';
 import { runResearch } from './research';
+import { searchLumaEventsWithOpenAI } from './openai-research';
 import { checkRoles } from './roles';
 import type { RoleRecord } from '../src/domain/types';
 import { describeError } from '../scripts/check-falkordb-lib.mjs';
@@ -49,7 +50,8 @@ const schemas = {
       meeting: z.object({ meetingId: z.string().regex(/^[a-z0-9:-]{1,80}$/), personId: z.string().max(200), eventId: z.string().max(200), at: z.string().max(40), fictional: z.boolean(), note: z.string().max(500).optional() }).strict(),
     })
     .strict(),
-  research: z.object({ kind: z.enum(['wad-session', 'universe-catalog']), url: z.string().url().max(500) }).strict(),
+  research: z.object({ kind: z.enum(['wad-session', 'universe-catalog', 'luma-event']), url: z.string().url().max(500) }).strict(),
+  eventSearch: z.object({ query: z.string().trim().min(2).max(120) }).strict(),
 };
 
 async function body(req: IncomingMessage): Promise<unknown> {
@@ -101,11 +103,25 @@ const server = createServer(async (req, res) => {
       try {
         const { kind, url: target } = schemas.research.parse(await body(req));
         const r = await runResearch(kind, target, { baseUrl: process.env.TRUEFORGE_URL ?? 'http://localhost:8790', model: process.env.EZCON_MODEL ?? 'openai/gpt-5-4-nano' });
-        if (r.records.length) await graph.seedPublic(r.records);
+        const graphRecords = r.records.filter((record) => record.conference !== 'external');
+        if (graphRecords.length) await graph.seedPublic(graphRecords);
         return send(res, 200, r);
       } finally {
         researching = false;
       }
+    }
+    if (req.method === 'POST' && u.pathname === '/api/event-search') {
+      if (researching) return send(res, 429, { error: 'a research run is already in progress' });
+      researching = true;
+      try {
+        const { query } = schemas.eventSearch.parse(await body(req));
+        const result = await searchLumaEventsWithOpenAI(query);
+        return send(res, result.status === 'ok' ? 200 : result.status === 'disabled' ? 503 : 502, {
+          status: result.status, events: result.status === 'ok' ? result.events : [],
+          sources: result.status === 'ok' ? [...new Map(result.events.flatMap((e) => e.sources).map((s) => [s.url, s])).values()] : [],
+          error: result.status === 'ok' ? undefined : result.reason,
+        });
+      } finally { researching = false; }
     }
     return send(res, 404, { error: 'not found' });
   } catch (err) {

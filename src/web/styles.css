@@ -160,9 +160,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .companion-hero { display: flex; gap: 14px; align-items: center; }
 .passport-strip { display: flex; gap: 10px; align-items: center; cursor: pointer; border: 1px solid var(--line); }
-.stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.stamp { aspect-ratio: 1; border-radius: 50%; border: 2.5px dashed var(--line); display: grid; place-items: center; text-align: center; padding: 8px; font-weight: 800; font-size: 0.8rem; color: var(--ink-3); }
-.stamp.got { border-style: solid; border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.badge-item { aspect-ratio: 1; border-radius: 22px; border: 2px dashed var(--line); display: grid; place-items: center; text-align: center; padding: 8px; font-weight: 800; font-size: 0.8rem; color: var(--ink-3); background: var(--surface-2); }
+.badge-item.got { border-style: solid; border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.speaker-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--line); background: var(--surface-2); }
+.profile-photo { width: 88px; height: 88px; }
 .qr { width: min(260px, 70vw); aspect-ratio: 1; border-radius: 16px; background: #fff; padding: 10px; }
 .field { display: grid; gap: 4px; }
 .field input, .field textarea, .field select { min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); }

@@ -23,6 +23,13 @@ export function parseWadSession(html: string, meta: { sourceUrl: string; retriev
     const s: Speaker = { name: name ?? '' };
     if (titlePart) s.title = titlePart;
     if (company) s.company = company;
+    const image = a.querySelector('img')?.getAttribute('src');
+    if (image) {
+      try {
+        const photo = new URL(image, meta.sourceUrl);
+        if (photo.protocol === 'https:' && photo.hostname === 'cdn.wearedevelopers.com') s.photoUrl = photo.toString();
+      } catch { /* Invalid or off-site photo URLs are ignored. */ }
+    }
     return s;
   });
 

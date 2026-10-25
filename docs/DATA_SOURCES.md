@@ -2,6 +2,8 @@
 
 Checked October 24, 2026. The app includes bounded source-specific retrieval/parsing through TrueForge and Bright Data, plus cached conference snapshots. It does not provide exhaustive catalog coverage. Public availability is not a license to redistribute media or an assurance of complete coverage.
 
+Live Luma event search and details import are available only in local live mode. A direct OpenAI Responses API `web_search` fallback can search cited upcoming Luma pages or fill a gap Bright Data cannot extract. Its facts remain unconfirmed; source citations are displayed for review. The fallback requires a server-side `OPENAI_API_KEY` and the explicit local flag `EZCON_OPENAI_FREE_CREDITS_CONFIRMED=true`, and is capped at 20 calls per local API process per day. No API request has been run from this checkout because no direct key is configured and the account's credit balance has not been verified. On the public static Vercel site, live search is unavailable; manual entry stays marked unconfirmed. External-event directions open Google Maps, while prices/times and parking availability remain unknown unless separately sourced.
+
 | Source | Established facts | Limits and use |
 | --- | --- | --- |
 | [WAD 2026 North America archive](https://www.wearedevelopers.com/events/world-congress-2026-north-america/sessions) | September 23–25, San José; archive lists 315 sessions | Historical session discovery; do not import 2027 agenda |

@@ -155,6 +155,34 @@ describe('ezcon core flow', () => {
     expect(await screen.findByText('Michael Irwin')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Add to Schedule' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Find a real event' })).toBeTruthy();
+  });
+
+  it('lets a past-event replay search/import a real event and remember a custom attendee locally', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Explore/ }));
+    await user.click(screen.getByText('Review or enter event details'));
+    await user.type(screen.getByLabelText('Luma event link'), 'https://luma.com/community-night');
+    await user.type(screen.getByLabelText('Event name'), 'Community Night');
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-09-20T18:00' } });
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-09-20T20:00' } });
+    await user.type(screen.getByLabelText('Venue / address'), 'Oakland, CA');
+    await user.click(screen.getByRole('button', { name: 'Review commute & add' }));
+    await user.click(await screen.findByRole('button', { name: 'Add event to Schedule' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Schedule/ }));
+    const event = await screen.findByText('Community Night');
+    const card = event.closest('li')!;
+    await user.click(within(card).getByRole('button', { name: 'How did it go?' }));
+    const dialog = await screen.findByRole('dialog', { name: 'How did it go?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Met someone' }));
+    await user.type(within(dialog).getByLabelText('Name'), 'Jordan Example');
+    await user.type(within(dialog).getByLabelText('Private note (optional)'), 'Met at the demo booth');
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm meeting' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /People/ }));
+    await user.click(screen.getByRole('tab', { name: /Met/ }));
+    expect(await screen.findByText('Jordan Example')).toBeTruthy();
+    expect(stored().externalMeetings[0]).toMatchObject({ personName: 'Jordan Example', note: 'Met at the demo booth', eventId: expect.stringContaining('luma:') });
   });
 
   it('expands a session card in place for more information', async () => {
@@ -215,9 +243,12 @@ describe('ezcon core flow', () => {
     const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
     await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
     expect(within(card).getByRole('button', { name: '✓ Applied' })).toBeTruthy();
-    expect(stored().applications).toEqual([expect.objectContaining({ company: 'Microsoft', title: 'Software Engineer - Forward Deployed Engineer' })]);
+    expect(stored().applications).toEqual([
+      expect.objectContaining({ fictional: true, company: 'Docker' }),
+      expect.objectContaining({ company: 'Microsoft', title: 'Software Engineer - Forward Deployed Engineer' }),
+    ]);
     await user.click(within(card).getByRole('button', { name: '✓ Applied' }));
-    expect(stored().applications).toEqual([]);
+    expect(stored().applications).toEqual([expect.objectContaining({ fictional: true, company: 'Docker' })]);
   });
 
   it('earns a Follow-through badge for applying, shown in the collection', async () => {
@@ -226,8 +257,8 @@ describe('ezcon core flow', () => {
     const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
     await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
     await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
-    await user.click(screen.getByRole('button', { name: /Badge collection · \d+ badges?/ }));
-    const passport = await screen.findByRole('dialog', { name: 'Badge collection' });
+    await user.click(screen.getByRole('button', { name: /Achievements · \d+ badges?/ }));
+    const passport = await screen.findByRole('dialog', { name: 'Achievements' });
     expect(within(passport).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
   });
 
@@ -280,6 +311,64 @@ describe('ezcon core flow', () => {
     expect(within(list).getAllByRole('option').map((o) => o.textContent)).toEqual([expect.stringContaining('KubeCon')]);
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('lets me add a real Luma event with editable details and route links in cached mode', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    await user.type(screen.getByRole('textbox', { name: 'What are you looking for?' }), 'AI meetup');
+    expect(screen.getByRole('link', { name: 'Browse Luma ↗' }).getAttribute('href')).toBe('https://luma.com/sf');
+    expect(screen.getByRole('button', { name: 'Search Bay Area events' })).toBeTruthy();
+    await user.type(screen.getByRole('textbox', { name: 'Luma event link' }), 'https://luma.com/ai-builders-night');
+    await user.click(screen.getByText('Review or enter event details'));
+    await user.type(screen.getByRole('textbox', { name: 'Event name' }), 'AI Builders Night');
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-11-03T18:00' } });
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-11-03T20:30' } });
+    await user.type(screen.getByRole('textbox', { name: 'Venue / address' }), '1 Market St, San Francisco');
+    const live = screen.getByRole('region', { name: 'Find a real event' });
+    await user.click(within(live).getByRole('button', { name: 'Review commute & add' }));
+    const directions = await screen.findByRole('dialog', { name: 'Getting there' });
+    expect(within(directions).getByText(/no verified fare, drive time or parking price/i)).toBeTruthy();
+    await user.click(within(directions).getByRole('button', { name: 'Add event to Schedule' }));
+    expect(stored().liveEvents).toEqual([expect.objectContaining({ title: 'AI Builders Night', source: expect.objectContaining({ status: 'unconfirmed' }) })]);
+    expect(schedule()).toEqual([]); // external events are stored alongside, not misfiled as GitHub Universe sessions
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Schedule/ }));
+    expect(screen.getByText('AI Builders Night')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Getting there' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Getting there' });
+    expect(within(dialog).getByRole('link', { name: 'Transit directions ↗' }).getAttribute('href')).toContain('travelmode=transit');
+    expect(within(dialog).getByRole('link', { name: 'Driving directions ↗' }).getAttribute('href')).toContain('travelmode=driving');
+    expect(within(dialog).getByRole('link', { name: 'Find nearby parking ↗' })).toBeTruthy();
+  });
+
+  it('seeds a clearly fictional demo application in WAD history', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Explore/ }));
+    await screen.findByRole('heading', { name: 'Open roles at companies from this event' });
+    expect(screen.getByText('Software Engineer · Docker (fictional demo application)')).toBeTruthy();
+    expect(screen.getByText('No application was submitted')).toBeTruthy();
+  });
+
+  it('shows the extracted WAD speaker photo on the person card', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /People/ }));
+    await user.click(screen.getByRole('tab', { name: /Met/ }));
+    await user.click(screen.getByRole('button', { name: /Michael Irwin/ }));
+    expect(await screen.findByRole('img', { name: 'Michael Irwin profile' })).toBeTruthy();
+  });
+
+  it('makes Explore goal filters visibly toggle on and off', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const career = screen.getByRole('button', { name: 'Find my next opportunity' });
+    expect(career.getAttribute('aria-pressed')).toBe('true');
+    await user.click(career);
+    expect(career.getAttribute('aria-pressed')).toBe('false');
+    expect(screen.queryByRole('heading', { name: 'Hiring connections' })).toBeNull();
+    await user.click(career);
+    expect(screen.getByRole('heading', { name: 'Hiring connections' })).toBeTruthy();
   });
 
   it('labels future features as previews, not working features', async () => {

@@ -2,7 +2,7 @@
 // Cached mode (public site): the in-browser graph seeded from the labeled snapshot.
 import { MemoryGraph, type MemoryState } from '../domain/memory-graph';
 import type { Candidate, GraphPath, Meeting, MeetingInput, ProfileInput } from '../domain/graph-types';
-import type { ConferenceId, RoleRecord } from '../domain/types';
+import type { ConferenceId, EventRecord, RoleRecord } from '../domain/types';
 import { ROLES, SESSIONS } from '../data/demo';
 import { load, save } from './store';
 import { observeBackend } from './sponsor-activity';
@@ -20,7 +20,15 @@ export interface Backend {
   meetings(profileId: string): Promise<Meeting[]>;
   /** Drop and reopen the store (new DB connection, or re-read browser storage). */
   reopen(): Promise<void>;
-  research?(kind: 'wad-session' | 'universe-catalog', url: string): Promise<ResearchResponse>;
+  research?(kind: 'wad-session' | 'universe-catalog' | 'luma-event', url: string): Promise<ResearchResponse>;
+  eventSearch?(query: string): Promise<EventSearchResponse>;
+}
+
+export interface EventSearchResponse {
+  status: 'ok' | 'failed' | 'disabled';
+  error?: string;
+  events: Array<{ title: string; url: string; summary: string | null; start: string | null; location: string | null; sources: Array<{ url: string; title: string }> }>;
+  sources: Array<{ url: string; title: string }>;
 }
 
 export interface ResearchResponse {
@@ -32,7 +40,8 @@ export interface ResearchResponse {
   url: string;
   usage: { inputTokens: number; outputTokens: number };
   trace: Array<{ tool: string; args: unknown; responseChars: number }>;
-  records: Array<{ title: string; start: string; end: string; location?: string; speakers: Array<{ name: string; title?: string; company?: string }> }>;
+  sources?: Array<{ url: string; title: string }>;
+  records: EventRecord[];
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -55,6 +64,7 @@ function liveBackend(graphHost: string): Backend {
     meetings: (id) => api(`/api/meetings?profile=${encodeURIComponent(id)}`),
     reopen: async () => void (await api('/api/reconnect', { method: 'POST' })),
     research: (kind, url) => api('/api/research', { method: 'POST', body: JSON.stringify({ kind, url }) }),
+    eventSearch: (query) => api('/api/event-search', { method: 'POST', body: JSON.stringify({ query }) }),
   };
 }
 

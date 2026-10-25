@@ -58,7 +58,7 @@ describe('schedule', () => {
 });
 
 describe('rewards', () => {
-  it('awards a stamp once per action, however many times it is confirmed', () => {
+  it('awards a badge once per action, however many times it is confirmed', () => {
     let s = emptyRewards();
     s = award(s, 'connection', 'meeting:andrea', 'Met Andrea');
     s = award(s, 'connection', 'meeting:andrea', 'Met Andrea');
@@ -77,14 +77,14 @@ describe('rewards', () => {
     let s = award(emptyRewards(), 'connection', 'meeting:1', 'Met someone');
     s = award(s, 'follow-through', 'followup:meeting:1', 'Drafted follow-up');
     s = revokeAction(s, 'meeting:1');
-    expect(s.awards.map((a) => a.stamp)).toEqual([]);
+    expect(s.awards.map((a) => a.badge)).toEqual([]);
     expect(unlockedAccessories(s)).toEqual([]);
   });
 
   it('has no points, spending or prize fields', () => {
     const s = award(emptyRewards(), 'explorer', 'visit:a', 'Went');
     expect(Object.keys(s)).toEqual(['awards']);
-    expect(Object.keys(s.awards[0]!).sort()).toEqual(['actionId', 'id', 'label', 'stamp']);
+    expect(Object.keys(s.awards[0]!).sort()).toEqual(['actionId', 'badge', 'id', 'label']);
   });
 });
 

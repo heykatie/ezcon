@@ -3,7 +3,7 @@
 /** How a fact is supported. Only `verified` facts may be presented as confirmed. */
 export type EvidenceStatus = 'verified' | 'derived' | 'estimated' | 'unconfirmed' | 'fictional';
 
-export type RetrievalChannel = 'bright-data' | 'official-api' | 'official-page' | 'manual-browser' | 'fixture';
+export type RetrievalChannel = 'bright-data' | 'openai-web-search' | 'official-api' | 'official-page' | 'manual-browser' | 'fixture';
 
 export interface SourceRef {
   url: string;
@@ -31,6 +31,8 @@ export interface Speaker {
   name: string;
   title?: string;
   company?: string;
+  /** Public speaker photo only when supplied by the authoritative conference page. */
+  photoUrl?: string;
 }
 
 export type Catalog = 'quest' | 'side-quest';
@@ -55,6 +57,10 @@ export interface SessionRecord {
   source: SourceRef;
 }
 
+/** Public standalone event imported from a provider, not falsely assigned to a conference. */
+export type ExternalEventRecord = Omit<SessionRecord, 'conference'> & { conference: 'external' };
+export type EventRecord = SessionRecord | ExternalEventRecord;
+
 export interface ExtractionReject {
   sourceRecordId: string;
   reason: string;
@@ -62,6 +68,11 @@ export interface ExtractionReject {
 
 export interface ExtractionResult {
   records: SessionRecord[];
+  rejected: ExtractionReject[];
+}
+
+export interface ExternalExtractionResult {
+  records: ExternalEventRecord[];
   rejected: ExtractionReject[];
 }
 

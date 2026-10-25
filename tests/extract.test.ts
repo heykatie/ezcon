@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { parseUniverseCatalog } from '../src/domain/extract/universe';
 import { parseWadSession } from '../src/domain/extract/wad';
+import { parseLumaEvent } from '../src/domain/extract/luma';
 import { parseCatalogTimes } from '../src/domain/time';
 
 const CATALOG_URL = 'https://reg.githubuniverse.com/flow/github/universe26/attendee-portal/page/sessioncatalog';
@@ -113,15 +114,59 @@ describe('WAD session page extraction', () => {
   it('extracts the sampled session with its edition and local timezone', () => {
     const r = parseWadSession(wad, { sourceUrl: url, retrievedAt: '2026-10-24T20:00:00Z', via: 'fixture' });
     expect(r.title).toBe('Making “Works on All Machines” Work for Agent Environments');
-    expect(r.speakers).toEqual([{ name: 'Michael Irwin', title: 'Principal Engineer, Developer Success', company: 'Docker' }]);
+    expect(r.speakers).toEqual([{ name: 'Michael Irwin', title: 'Principal Engineer, Developer Success', company: 'Docker', photoUrl: 'https://cdn.wearedevelopers.com/cdn-cgi/image/width=80,height=80,fit=cover,format=avif,quality=80/speakers/2217/profile_picture.png' }]);
     expect(r.start).toBe('2026-09-23T10:00:00-07:00');
     expect(r.end).toBe('2026-09-23T10:30:00-07:00');
     expect(r.location).toBe('Stage 1');
     expect(r.conference).toBe('wad26na');
+    expect(r.speakers[0]?.photoUrl).toBe('https://cdn.wearedevelopers.com/cdn-cgi/image/width=80,height=80,fit=cover,format=avif,quality=80/speakers/2217/profile_picture.png');
   });
 
   it('refuses a page from a different edition', () => {
     const drifted = wad.replace('World Congress 2026 North America', 'World Congress 2027 North America');
     expect(() => parseWadSession(drifted, { sourceUrl: url, retrievedAt: '2026-10-24T20:00:00Z', via: 'fixture' })).toThrow(/edition/);
+  });
+});
+
+describe('live Luma event extraction', () => {
+  const url = 'https://luma.com/example-event';
+  const html = `<html><head><meta property="og:title" content="AI Builders Night"><meta property="og:description" content="Meet local builders"><script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'Event', name: 'AI Builders Night', url, timeZone: 'America/Los_Angeles', description: 'Meet local builders',
+    startDate: '2026-11-03T18:00:00-08:00', endDate: '2026-11-03T20:30:00-08:00',
+    location: { '@type': 'Place', name: 'Example Hall', address: { streetAddress: '1 Market St', addressLocality: 'San Francisco', addressRegion: 'CA' } },
+  })}</script></head><body></body></html>`;
+
+  it('extracts verified event times, venue, description, and the source page from JSON-LD', () => {
+    const result = parseLumaEvent(html, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' });
+    expect(result.records).toHaveLength(1);
+    expect(result.records[0]).toMatchObject({
+      id: 'luma:example-event', title: 'AI Builders Night', summary: 'Meet local builders',
+      start: '2026-11-03T18:00:00-08:00', end: '2026-11-03T20:30:00-08:00',
+      timezone: 'America/Los_Angeles',
+      location: 'Example Hall, 1 Market St, San Francisco, CA', url,
+      source: { url, status: 'verified', via: 'fixture' },
+    });
+  });
+
+  it('rejects unsupported hosts and incomplete event pages instead of guessing', () => {
+    expect(() => parseLumaEvent(html, { sourceUrl: 'https://attacker.example/ai', retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' })).toThrow(/allowlisted/);
+    expect(parseLumaEvent('<html><head><title>Event</title></head></html>', { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records).toEqual([]);
+  });
+
+  it('selects the JSON-LD event matching the requested page instead of the first event', () => {
+    const unrelated = { '@type': 'Event', url: 'https://luma.com/other', name: 'Other event', startDate: '2026-11-03T18:00:00-08:00', endDate: '2026-11-03T19:00:00-08:00', location: 'Other place' };
+    const requested = { '@type': 'Event', url, name: 'Requested event', startDate: '2026-11-04T18:00:00-08:00', endDate: '2026-11-04T19:00:00-08:00', timeZone: 'America/Los_Angeles', location: 'Requested place' };
+    const page = `<script type="application/ld+json">${JSON.stringify([unrelated, requested])}</script>`;
+    expect(parseLumaEvent(page, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records[0]?.title).toBe('Requested event');
+  });
+
+  it('rejects ambiguous or offset-free event dates rather than assigning the browser timezone', () => {
+    const ambiguous = `<script type="application/ld+json">${JSON.stringify([
+      { '@type': 'Event', name: 'One', startDate: '2026-11-04T18:00:00-08:00', endDate: '2026-11-04T19:00:00-08:00', location: 'A' },
+      { '@type': 'Event', name: 'Two', startDate: '2026-11-05T18:00:00-08:00', endDate: '2026-11-05T19:00:00-08:00', location: 'B' },
+    ])}</script>`;
+    expect(parseLumaEvent(ambiguous, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records).toEqual([]);
+    const offsetFree = `<script type="application/ld+json">${JSON.stringify({ '@type': 'Event', url, name: 'Unknown timezone', startDate: '2026-11-04T18:00:00', endDate: '2026-11-04T19:00:00', location: 'A' })}</script>`;
+    expect(parseLumaEvent(offsetFree, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records).toEqual([]);
   });
 });
