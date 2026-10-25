@@ -395,3 +395,45 @@ describe('ezcon core flow', () => {
     expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
   });
 });
+
+it('keeps focus in a person note while autosaving and restores the opener on Escape', async () => {
+  const user = await startDemo();
+  await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'People' }));
+  const opener = screen.getByRole('button', { name: /Landon Cox/ });
+  await user.click(opener);
+  const note = screen.getByRole('textbox', { name: /Your notes/ });
+  await user.click(note);
+  await user.keyboard('A useful question');
+  expect((note as HTMLTextAreaElement).value).toBe('A useful question');
+  expect(document.activeElement).toBe(note);
+  expect(Object.values(stored().notes)).toContain('A useful question');
+  await user.keyboard('{Escape}');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(document.activeElement).toBe(opener);
+});
+
+it('navigates Explore and People tabs with arrows, Home and End using one tab stop', async () => {
+  const user = await startDemo();
+  await openExplore(user);
+  const quests = screen.getByRole('tab', { name: 'Quests' });
+  const side = screen.getByRole('tab', { name: 'Side quests' });
+  expect(quests.tabIndex).toBe(0);
+  expect(side.tabIndex).toBe(-1);
+  await user.click(quests);
+  await user.keyboard('{ArrowRight}');
+  expect(document.activeElement).toBe(side);
+  expect(side.getAttribute('aria-selected')).toBe('true');
+  expect(screen.getByRole('tabpanel', { name: 'Side quests' })).toBeTruthy();
+  await user.keyboard('{ArrowRight}');
+  expect(document.activeElement).toBe(quests);
+  await user.keyboard('{End}');
+  expect(document.activeElement).toBe(side);
+  await user.keyboard('{Home}');
+  expect(document.activeElement).toBe(quests);
+  await user.keyboard('{ArrowLeft}');
+  expect(document.activeElement).toBe(side);
+  await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: 'People' }));
+  await user.click(screen.getByRole('tab', { name: 'Want to meet' }));
+  await user.keyboard('{ArrowRight}');
+  expect(screen.getByRole('tab', { name: /Met \(/ }).getAttribute('aria-selected')).toBe('true');
+});

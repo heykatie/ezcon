@@ -220,7 +220,7 @@ The [official PTC criteria](https://www.wemakedevs.org/hackathons/ptc) require a
 
 README inspection checkpoint: **October 24, 2026**, against repository commit `6e7d114`. The public demo returned HTTP 200 and rendered its cached/fictional labels and four-tab interface. That confirms public frontend availability, not a deployed live backend.
 
-The default suite passes **154 tests**, including the updated raffle autosave and draw-time reminder flow. The production build, including TypeScript checks, passed, and `git diff --check` found no whitespace errors. Graph integration and live provider checks were not rerun for these README/test updates; the default suite does not establish live provider reliability.
+The default suite passes **173 tests**, including raffle autosave, draw-time reminders, continuous note entry, dialog focus restoration, and keyboard tab navigation. The production build, including TypeScript checks, passed, and `git diff --check` found no whitespace errors. Graph integration and live provider checks were not rerun for these UI/documentation updates; the default suite does not establish live provider reliability.
 
 Other current limits:
 
@@ -229,7 +229,7 @@ Other current limits:
 - Live extraction is source-specific. Full Universe catalog ingestion, continuous source freshness, and arbitrary conference import remain incomplete.
 - Follow-ups are editable drafts, not AI messaging automation. No email, application, registration, raffle entry, or prize claim is submitted by ezcon.
 - Reminders are browser timers, not background push or guaranteed alarms. Storage limits, cleared site data, browser throttling, and unsupported alerts can affect persistence or delivery.
-- Keyboard and phone-sized usability need a complete end-to-end pass; component tests do not establish full accessibility conformance.
+- Phone-width (320px and 390px) and keyboard smoke checks cover the main screens, raffle form, note editing, and dialogs. These checks and component tests do not establish full accessibility conformance; physical-device and screen-reader testing remain outstanding.
 - No hosted authenticated backend, cross-device sync, live indoor positioning, or validated accessible booth routing is implemented.
 
 ### Roadmap / concept previews
