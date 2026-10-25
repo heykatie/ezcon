@@ -119,6 +119,34 @@ export function App() {
     [],
   );
 
+  // Local raffle reminders fire while ezcon is open. If a reminder elapsed while it was
+  // closed, show it once when the profile is opened again.
+  const raffleReminderKey = JSON.stringify((ps?.raffleTickets ?? []).map((t) => [t.questId, t.remindAt, t.remindedAt]));
+  useEffect(() => {
+    if (!ps) return;
+    const timers: number[] = [];
+    for (const ticket of ps.raffleTickets ?? []) {
+      if (!ticket.remindAt || ticket.remindedAt) continue;
+      const delay = Date.parse(ticket.remindAt) - Date.now();
+      const fire = () => {
+        update((current) => ({
+          ...current,
+          raffleTickets: (current.raffleTickets ?? []).map((item) => item.questId === ticket.questId && item.remindAt === ticket.remindAt && !item.remindedAt ? { ...item, remindedAt: new Date().toISOString() } : item),
+        }));
+        const title = SIDE_QUESTS.find((q) => q.id === ticket.questId)?.title ?? 'your raffle';
+        setToast({ message: `Raffle reminder: ${title}`, action: 'Open Explore', onAction: () => setTab('discover') });
+        try {
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification('ezcon raffle reminder', { body: `Check the draw for ${title}.` });
+        } catch {
+          // In-app reminder remains available when system notifications are unsupported.
+        }
+      };
+      if (delay <= 0) fire();
+      else timers.push(window.setTimeout(fire, Math.min(delay, 2_147_000_000)));
+    }
+    return () => timers.forEach(window.clearTimeout);
+  }, [raffleReminderKey, ps?.profile.id, update]);
+
   // Sync the profile into the graph, then load graph-derived data.
   const interestsKey = ps ? `${ps.profile.id}|${ps.profile.interests.join(',')}` : '';
   useEffect(() => {

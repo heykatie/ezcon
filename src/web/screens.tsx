@@ -34,8 +34,8 @@ export interface PState {
   visited: string[];
   /** Self-reported applications; ezcon never applies on the user's behalf. */
   applications?: Array<{ roleId: string; title: string; company: string; applyUrl: string; eventId: string; appliedAt: string }>;
-  /** Raffle entries: ticket number confirmed by the user, photo kept on this device only. */
-  raffleTickets?: Array<{ questId: string; number: string; photo?: string; savedAt: string }>;
+  /** Raffle ticket and reminder details stay on this device/profile. */
+  raffleTickets?: Array<{ questId: string; number: string; photo?: string; savedAt: string; remindAt?: string; drawAt?: string; remindedAt?: string }>;
   /** Demo history has been written to the graph once. */
   seeded?: boolean;
 }
@@ -1290,6 +1290,27 @@ async function shrinkPhoto(file: File, max = 480): Promise<string> {
   }
 }
 
+function eventLocalDateTime(iso: string | undefined, timezone: string) {
+  if (!iso) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(iso));
+  const value = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+  return `${value('year')}-${value('month')}-${value('day')}T${value('hour')}:${value('minute')}`;
+}
+
+function eventDateTimeToIso(value: string, timezone: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return undefined;
+  const [, y, mo, d, h, mi] = match;
+  const wanted = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi));
+  let guess = wanted;
+  for (let i = 0; i < 3; i++) {
+    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(guess));
+    const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+    guess += wanted - Date.UTC(part('year'), part('month') - 1, part('day'), part('hour'), part('minute'));
+  }
+  return new Date(guess).toISOString();
+}
+
 export function RaffleSection(ctx: Ctx) {
   const quests = SIDE_QUESTS.filter((x) => x.conference === ctx.conference);
   if (!quests.length) return <p className="card soft small">No sourced raffles for this conference.</p>;
@@ -1318,10 +1339,27 @@ export function RaffleSection(ctx: Ctx) {
 }
 
 function RaffleCard({ q, ctx }: { q: SideQuest; ctx: Ctx }) {
-  const [photo, setPhoto] = useState<string>();
-  const [number, setNumber] = useState('');
-  const [error, setError] = useState<string>();
   const saved = (ctx.ps.raffleTickets ?? []).find((t) => t.questId === q.id);
+  const [photo, setPhoto] = useState<string | undefined>(saved?.photo);
+  const [number, setNumber] = useState(saved?.number ?? '');
+  const [error, setError] = useState<string>();
+  const [permission, setPermission] = useState(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
+  const saveDraft = (fields: { number?: string; photo?: string }) => ctx.update((p) => {
+    const old = (p.raffleTickets ?? []).find((t) => t.questId === q.id);
+    const next = { questId: q.id, number: fields.number ?? old?.number ?? '', photo: fields.photo ?? old?.photo, savedAt: old?.savedAt ?? new Date().toISOString(), remindAt: old?.remindAt, drawAt: old?.drawAt, remindedAt: old?.remindedAt };
+    return { ...p, raffleTickets: [...(p.raffleTickets ?? []).filter((t) => t.questId !== q.id), next] };
+  });
+  const updateReminder = (field: 'remindAt' | 'drawAt', value: string) => ctx.update((p) => ({
+    ...p,
+    raffleTickets: (p.raffleTickets ?? []).map((t) => {
+      if (t.questId !== q.id) return t;
+      if (!value) return { ...t, [field]: undefined, remindedAt: undefined };
+      const selected = eventDateTimeToIso(value, CONFERENCES[q.conference].timezone);
+      if (!selected) return t;
+      const remindAt = field === 'drawAt' ? new Date(Date.parse(selected) - 15 * 60_000).toISOString() : selected;
+      return { ...t, [field]: selected, remindAt, remindedAt: undefined };
+    }),
+  }));
   return (
     <article className="card stack">
       <div className="between">
@@ -1338,22 +1376,27 @@ function RaffleCard({ q, ctx }: { q: SideQuest; ctx: Ctx }) {
           <span><b>Fictional sample ticket · {q.sampleTicket}</b><br /><small>No real entry, reminder or reward is recorded.</small></span>
         </div>
       )}
-      {q.historical ? null : saved ? (
-        <div className="row" style={{ alignItems: 'center' }}>
-          {saved.photo && <img src={saved.photo} alt="Your raffle ticket" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12 }} />}
-          <span className="small"><b>Ticket #{saved.number}</b> saved {fmtStamp(saved.savedAt)}</span>
-          <button className="btn ghost small" onClick={() => ctx.update((p) => ({ ...p, raffleTickets: (p.raffleTickets ?? []).filter((t) => t.questId !== q.id) }))}>Remove</button>
-        </div>
-      ) : (
-        <RaffleTicketForm q={q} ctx={ctx} photo={photo} number={number} error={error} setPhoto={setPhoto} setNumber={setNumber} setError={setError} />
-      )}
+      {q.historical ? null : <>
+        {saved && <div className="between"><span className="small"><b>Ticket saved</b> · {saved.number ? `#${saved.number}` : 'photo saved'} · {fmtStamp(saved.savedAt)}</span><button className="btn ghost small" onClick={() => ctx.update((p) => ({ ...p, raffleTickets: (p.raffleTickets ?? []).filter((t) => t.questId !== q.id) }))}>Remove</button></div>}
+        <RaffleTicketForm q={q} photo={photo} number={number} error={error}
+          setPhoto={(v) => { setPhoto(v); if (v) saveDraft({ photo: v }); }}
+          setNumber={(v) => { setNumber(v); if (v) saveDraft({ number: v }); }} setError={setError} />
+        {saved && <section className="card soft stack" aria-label="Raffle reminder">
+          <b>Set a reminder</b>
+          <p className="tiny muted">Choose the reminder time, or enter the raffle draw time and ezcon will remind you 15 minutes before. Enter times in {CONFERENCES[q.conference].timezone}.</p>
+          <label className="field"><span className="small">Remind me at</span><input type="datetime-local" aria-label={`Reminder time for ${q.title}`} value={eventLocalDateTime(saved.remindAt, CONFERENCES[q.conference].timezone)} onChange={(e) => updateReminder('remindAt', e.target.value)} /></label>
+          <label className="field"><span className="small">Raffle draw time (optional)</span><input type="datetime-local" aria-label={`Draw time for ${q.title}`} value={eventLocalDateTime(saved.drawAt, CONFERENCES[q.conference].timezone)} onChange={(e) => updateReminder('drawAt', e.target.value)} /></label>
+          {saved.remindAt && <p className="small">Reminder set for {fmtStamp(saved.remindAt)}{saved.remindedAt ? ' · delivered' : ' · ezcon needs to be open at that time'}</p>}
+          {permission === 'granted' ? <p className="tiny">Browser alerts enabled</p> : permission === 'unsupported' ? <p className="tiny muted">This browser does not support system alerts; the reminder will appear in ezcon.</p> : permission === 'denied' ? <p className="tiny muted">Browser alerts are blocked in site settings. The reminder will appear in ezcon when it is open.</p> : <button className="btn small" onClick={async () => { const result = await Notification.requestPermission(); setPermission(result); }}>Enable browser alerts</button>}
+        </section>}
+      </>}
       <SourceLine source={q.source} />
     </article>
   );
 }
 
-function RaffleTicketForm({ q, ctx, photo, number, error, setPhoto, setNumber, setError }: {
-  q: SideQuest; ctx: Ctx; photo?: string; number: string; error?: string;
+function RaffleTicketForm({ q, photo, number, error, setPhoto, setNumber, setError }: {
+  q: SideQuest; photo?: string; number: string; error?: string;
   setPhoto: (value?: string) => void; setNumber: (value: string) => void; setError: (value?: string) => void;
 }) {
   return (
@@ -1372,11 +1415,7 @@ function RaffleTicketForm({ q, ctx, photo, number, error, setPhoto, setNumber, s
         <input inputMode="numeric" value={number} maxLength={20} onChange={(e) => setNumber(e.target.value.replace(/[^0-9A-Za-z-]/g, ''))} />
       </label>
       {error && <p className="error">{error}</p>}
-      <button className="btn primary small" style={{ width: 'fit-content' }} disabled={!number} onClick={() => {
-        ctx.update((p) => ({ ...p, raffleTickets: [...(p.raffleTickets ?? []).filter((t) => t.questId !== q.id), { questId: q.id, number, photo, savedAt: new Date().toISOString() }] }));
-        setPhoto(undefined); setNumber('');
-      }}>Save ticket</button>
-      <p className="tiny muted">The photo stays on this device and never goes into public data. Keep it out of recordings — tickets can carry barcodes.</p>
+      <p className="tiny muted">Your number and photo save automatically on this device. Keep ticket photos out of recordings; they may contain barcodes.</p>
     </div>
   );
 }
