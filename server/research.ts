@@ -83,6 +83,7 @@ interface RawEvent {
 /** One bounded research run. A single deadline covers session creation, the turn and event retrieval. */
 export async function runResearch(kind: ResearchKind, url: string, opts: { baseUrl: string; model: string }): Promise<ResearchResult> {
   // The deadline also covers target validation, which resolves DNS.
+  const runStartedAt = Date.now();
   const run = assertResearchTarget(kind, url).then(async () => {
     let primary: ResearchResult;
     try { primary = await runBounded(kind, url, opts); }
@@ -98,7 +99,7 @@ export async function runResearch(kind: ResearchKind, url: string, opts: { baseU
 
     const fallback = await researchLumaWithOpenAI(url);
     if (fallback.status !== 'ok') {
-      if (fallback.status === 'disabled') return { ...primary, error: `${primary.error ?? 'Bright Data could not extract event details'}. OpenAI fallback is off: add OPENAI_API_KEY to the local server environment.` };
+      if (fallback.status === 'disabled') return { ...primary, error: `${primary.error ?? 'Bright Data could not extract event details'}. OpenAI fallback is off: ${fallback.reason}.` };
       return { ...primary, error: `${primary.error ?? 'Bright Data could not extract event details'}. OpenAI fallback: ${fallback.reason}.` };
     }
     return {
@@ -108,7 +109,7 @@ export async function runResearch(kind: ResearchKind, url: string, opts: { baseU
       retrievedAt: fallback.record.source.retrievedAt,
       model: `${primary.model}; OpenAI ${fallback.model}`,
       sessionId: `${primary.sessionId}; ${fallback.responseId}`,
-      durationMs: primary.durationMs,
+      durationMs: Date.now() - runStartedAt,
       usage: { inputTokens: primary.usage.inputTokens + fallback.usage.inputTokens, outputTokens: primary.usage.outputTokens + fallback.usage.outputTokens },
       trace: [...primary.trace, { tool: 'openai.web_search', args: { url }, responseChars: 0, at: fallback.record.source.retrievedAt }],
       status: 'partial' as const,

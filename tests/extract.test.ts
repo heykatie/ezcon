@@ -131,7 +131,7 @@ describe('WAD session page extraction', () => {
 describe('live Luma event extraction', () => {
   const url = 'https://luma.com/example-event';
   const html = `<html><head><meta property="og:title" content="AI Builders Night"><meta property="og:description" content="Meet local builders"><script type="application/ld+json">${JSON.stringify({
-    '@context': 'https://schema.org', '@type': 'Event', name: 'AI Builders Night', description: 'Meet local builders',
+    '@context': 'https://schema.org', '@type': 'Event', name: 'AI Builders Night', url, timeZone: 'America/Los_Angeles', description: 'Meet local builders',
     startDate: '2026-11-03T18:00:00-08:00', endDate: '2026-11-03T20:30:00-08:00',
     location: { '@type': 'Place', name: 'Example Hall', address: { streetAddress: '1 Market St', addressLocality: 'San Francisco', addressRegion: 'CA' } },
   })}</script></head><body></body></html>`;
@@ -142,6 +142,7 @@ describe('live Luma event extraction', () => {
     expect(result.records[0]).toMatchObject({
       id: 'luma:example-event', title: 'AI Builders Night', summary: 'Meet local builders',
       start: '2026-11-03T18:00:00-08:00', end: '2026-11-03T20:30:00-08:00',
+      timezone: 'America/Los_Angeles',
       location: 'Example Hall, 1 Market St, San Francisco, CA', url,
       source: { url, status: 'verified', via: 'fixture' },
     });
@@ -150,5 +151,22 @@ describe('live Luma event extraction', () => {
   it('rejects unsupported hosts and incomplete event pages instead of guessing', () => {
     expect(() => parseLumaEvent(html, { sourceUrl: 'https://attacker.example/ai', retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' })).toThrow(/allowlisted/);
     expect(parseLumaEvent('<html><head><title>Event</title></head></html>', { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records).toEqual([]);
+  });
+
+  it('selects the JSON-LD event matching the requested page instead of the first event', () => {
+    const unrelated = { '@type': 'Event', url: 'https://luma.com/other', name: 'Other event', startDate: '2026-11-03T18:00:00-08:00', endDate: '2026-11-03T19:00:00-08:00', location: 'Other place' };
+    const requested = { '@type': 'Event', url, name: 'Requested event', startDate: '2026-11-04T18:00:00-08:00', endDate: '2026-11-04T19:00:00-08:00', timeZone: 'America/Los_Angeles', location: 'Requested place' };
+    const page = `<script type="application/ld+json">${JSON.stringify([unrelated, requested])}</script>`;
+    expect(parseLumaEvent(page, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records[0]?.title).toBe('Requested event');
+  });
+
+  it('rejects ambiguous or offset-free event dates rather than assigning the browser timezone', () => {
+    const ambiguous = `<script type="application/ld+json">${JSON.stringify([
+      { '@type': 'Event', name: 'One', startDate: '2026-11-04T18:00:00-08:00', endDate: '2026-11-04T19:00:00-08:00', location: 'A' },
+      { '@type': 'Event', name: 'Two', startDate: '2026-11-05T18:00:00-08:00', endDate: '2026-11-05T19:00:00-08:00', location: 'B' },
+    ])}</script>`;
+    expect(parseLumaEvent(ambiguous, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records).toEqual([]);
+    const offsetFree = `<script type="application/ld+json">${JSON.stringify({ '@type': 'Event', url, name: 'Unknown timezone', startDate: '2026-11-04T18:00:00', endDate: '2026-11-04T19:00:00', location: 'A' })}</script>`;
+    expect(parseLumaEvent(offsetFree, { sourceUrl: url, retrievedAt: '2026-10-24T22:00:00Z', via: 'fixture' }).records).toEqual([]);
   });
 });

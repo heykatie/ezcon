@@ -24,7 +24,7 @@ describe('OpenAI web-search fallback', () => {
       id: 'resp_test', model: 'gpt-5.5', output_text: eventJson,
       usage: { input_tokens: 120, output_tokens: 40 },
       output: [{ type: 'message', content: [{ type: 'output_text', text: eventJson, annotations: [
-        { type: 'url_citation', url_citation: { url, title: 'AI Builders Night · Luma' } },
+        { type: 'url_citation', url, title: 'AI Builders Night · Luma', start_index: 0, end_index: 10 },
       ] }] }],
     }));
     const result = await researchLumaWithOpenAI(url, { apiKey: 'test-key', creditsConfirmed: true, fetcher, retrievedAt: '2026-10-24T22:00:00.000Z' });
@@ -45,12 +45,12 @@ describe('OpenAI web-search fallback', () => {
     const noCitation = vi.fn().mockResolvedValue(response({ id: 'resp_test', output_text: eventJson, output: [], usage: {} }));
     expect((await researchLumaWithOpenAI(url, { apiKey: 'test', creditsConfirmed: true, fetcher: noCitation })).status).toBe('failed');
     const missingTime = JSON.stringify({ ...JSON.parse(eventJson), start: null, end: null });
-    const cited = vi.fn().mockResolvedValue(response({ id: 'resp_test', output_text: missingTime, output: [{ type: 'message', content: [{ type: 'output_text', text: missingTime, annotations: [{ type: 'url_citation', url_citation: { url, title: 'Luma event' } }] }] }], usage: {} }));
+    const cited = vi.fn().mockResolvedValue(response({ id: 'resp_test', output_text: missingTime, output: [{ type: 'message', content: [{ type: 'output_text', text: missingTime, annotations: [{ type: 'url_citation', url, title: 'Luma event' }] }] }], usage: {} }));
     expect((await researchLumaWithOpenAI(url, { apiKey: 'test', creditsConfirmed: true, fetcher: cited })).status).toBe('failed');
   });
 
   it('does not send unbounded prompts or secrets to the browser-facing API', async () => {
-    const fetcher = vi.fn().mockResolvedValue(response({ id: 'resp_test', output_text: eventJson, output: [{ type: 'message', content: [{ type: 'output_text', text: eventJson, annotations: [{ type: 'url_citation', url_citation: { url, title: 'Luma event' } }] }] }], usage: {} }));
+    const fetcher = vi.fn().mockResolvedValue(response({ id: 'resp_test', output_text: eventJson, output: [{ type: 'message', content: [{ type: 'output_text', text: eventJson, annotations: [{ type: 'url_citation', url, title: 'Luma event' }] }] }], usage: {} }));
     await researchLumaWithOpenAI(url, { apiKey: 'test-secret', creditsConfirmed: true, fetcher });
     expect(fetcher.mock.calls[0]![0]).toBe('https://api.openai.com/v1/responses');
     expect(fetcher.mock.calls[0]![1].headers.authorization).toBe('Bearer test-secret');
@@ -60,7 +60,7 @@ describe('OpenAI web-search fallback', () => {
   it('returns only cited Luma pages for an in-app event search', async () => {
     const eventUrl = 'https://luma.com/ai-builders-night';
     const text = JSON.stringify({ events: [{ title: 'AI Builders Night', url: eventUrl, summary: 'A local AI meetup', start: '2026-11-03T18:00:00-08:00', location: 'San Francisco' }] });
-    const fetcher = vi.fn().mockResolvedValue(response({ id: 'resp_search', model: 'gpt-5.5', output_text: text, usage: { input_tokens: 50, output_tokens: 20 }, output: [{ type: 'message', content: [{ type: 'output_text', text, annotations: [{ type: 'url_citation', url_citation: { url: eventUrl, title: 'AI Builders Night · Luma' } }] }] }] }));
+    const fetcher = vi.fn().mockResolvedValue(response({ id: 'resp_search', model: 'gpt-5.5', output_text: text, usage: { input_tokens: 50, output_tokens: 20 }, output: [{ type: 'message', content: [{ type: 'output_text', text, annotations: [{ type: 'url_citation', url: eventUrl, title: 'AI Builders Night · Luma' }] }] }] }));
     const result = await searchLumaEventsWithOpenAI('AI meetup', { apiKey: 'test', creditsConfirmed: true, fetcher });
     expect(result.status).toBe('ok');
     if (result.status !== 'ok') return;
@@ -74,6 +74,11 @@ describe('OpenAI web-search fallback', () => {
     const text = JSON.stringify({ events: [{ title: 'AI Builders Night', url: eventUrl, summary: null, start: null, location: null }] });
     const fetcher = vi.fn().mockResolvedValue(response({ output_text: text, output: [] }));
     expect((await searchLumaEventsWithOpenAI('AI meetup', { apiKey: 'test', creditsConfirmed: true, fetcher })).status).toBe('failed');
+  });
+
+  it('does not accept an unrelated HTTPS citation for event details', async () => {
+    const fetcher = vi.fn().mockResolvedValue(response({ id: 'resp_test', output_text: eventJson, output: [{ type: 'message', content: [{ type: 'output_text', text: eventJson, annotations: [{ type: 'url_citation', url: 'https://example.com/claimed-event', title: 'Unrelated page' }] }] }], usage: {} }));
+    expect(await researchLumaWithOpenAI(url, { apiKey: 'test', creditsConfirmed: true, fetcher })).toMatchObject({ status: 'failed', reason: expect.stringMatching(/matching.*Luma/i) });
   });
 
   it('requires a free-credit confirmation before any keyed request', async () => {

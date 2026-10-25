@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import type { Candidate, GraphPath, Meeting } from '../domain/graph-types';
 import type { ConferenceId, EventRecord, ExternalEventRecord, Goal, SessionRecord } from '../domain/types';
@@ -40,6 +40,8 @@ export interface PState {
   seeded?: boolean;
   /** Public event pages imported by the user; saved only in this browser profile. */
   liveEvents?: ExternalEventRecord[];
+  /** Self-reported meetings at imported events; kept in this local browser profile. */
+  externalMeetings?: Meeting[];
 }
 
 export interface Ctx {
@@ -428,8 +430,10 @@ export function Explore(ctx: Ctx) {
         <button role="tab" aria-selected={section === 'side-quests'} onClick={() => setSection('side-quests')}>Side quests</button>
       </div>
       {section === 'quests' ? (
-        upcoming ? (
-          <div className="stack" role="tabpanel" aria-label="Quests">
+        <div className="stack" role="tabpanel" aria-label="Quests">
+          <LiveEventSearch ctx={ctx} />
+          {upcoming ? (
+            <div className="stack">
             <div className="row" role="group" aria-label="Goals (optional, choose any)">
               {(Object.keys(GOAL_LABELS) as Goal[]).map((g) => (
                 <button key={g} className="chip" aria-pressed={ctx.ps.profile.goals.includes(g)} onClick={() => ctx.toggleGoal(g)}>
@@ -438,7 +442,6 @@ export function Explore(ctx: Ctx) {
               ))}
             </div>
             {ctx.ps.profile.goals.includes('career') && <HiringSection {...ctx} />}
-            <LiveEventSearch ctx={ctx} />
             <section className="stack" aria-labelledby="quests-h">
               <div className="section-title">
                 <h2 id="quests-h">Quests</h2>
@@ -453,10 +456,9 @@ export function Explore(ctx: Ctx) {
               ))}
             </section>
             <ResearchPanel ctx={ctx} />
-          </div>
-        ) : (
-          <div role="tabpanel" aria-label="Quests"><PastExplore {...ctx} /></div>
-        )
+            </div>
+          ) : <PastExplore {...ctx} />}
+        </div>
       ) : (
         <div className="stack" role="tabpanel" aria-label="Side quests">
           <h2>Side quests</h2>
@@ -488,6 +490,7 @@ function LiveEventSearch({ ctx }: { ctx: Ctx }) {
   const [searchResults, setSearchResults] = useState<Array<{ title: string; url: string; summary: string | null; start: string | null; location: string | null; sources: Array<{ url: string; title: string }> }>>([]);
   const [searching, setSearching] = useState(false);
   const [detailsEdited, setDetailsEdited] = useState(false);
+  const formRevision = useRef(0);
 
   const fill = (event: EventRecord) => {
     setTitle(event.title);
@@ -510,6 +513,8 @@ function LiveEventSearch({ ctx }: { ctx: Ctx }) {
     if (parsed.protocol !== 'https:' || !['luma.com', 'www.luma.com'].includes(parsed.hostname.toLowerCase()) || parsed.pathname === '/sf') {
       setError('Use an individual event page from luma.com, not a search or city page.'); return;
     }
+    const revision = formRevision.current;
+    const requestedUrl = parsed.toString();
     setBusy(true);
     try {
       if (!ctx.backend.research) {
@@ -517,7 +522,11 @@ function LiveEventSearch({ ctx }: { ctx: Ctx }) {
         window.open(parsed.toString(), '_blank', 'noopener,noreferrer');
         return;
       }
-      const result = await ctx.backend.research('luma-event', parsed.toString());
+      const result = await ctx.backend.research('luma-event', requestedUrl);
+      if (formRevision.current !== revision || url.trim() !== requestedUrl) {
+        setMessage('The form changed while details were loading. Your edits were kept; pull details again if you still want this page.');
+        return;
+      }
       const record = result.records[0];
       if (!record) throw new Error(result.error ?? 'No structured event details found on that page.');
       setUrl(record.url);
@@ -537,11 +546,11 @@ function LiveEventSearch({ ctx }: { ctx: Ctx }) {
     }
     const slugPart = parsed.pathname.split('/').filter(Boolean).at(-1)!.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 80) || 'event';
     const imported = !detailsEdited && importedSource?.url === parsed.toString() ? importedSource : null;
-    const timezone = imported ? (importedTimezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')) : (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+    const timezone = importedTimezone ?? (Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
     const record: ExternalEventRecord = {
       id: `luma:${slugPart}`, conference: 'external', sourceRecordId: slugPart,
       title: title.trim(), summary: summary.trim() || undefined,
-      start: imported ? eventDateTimeToIso(start, timezone) ?? new Date(start).toISOString() : new Date(start).toISOString(), end: imported ? eventDateTimeToIso(end, timezone) ?? new Date(end).toISOString() : new Date(end).toISOString(),
+      start: eventDateTimeToIso(start, timezone) ?? new Date(start).toISOString(), end: eventDateTimeToIso(end, timezone) ?? new Date(end).toISOString(),
       timezone, location: location.trim(),
       speakers: [], topics: [], sessionType: 'Event', url: parsed.toString(), catalogs: ['quest'],
       source: imported ?? { url: parsed.toString(), retrievedAt: new Date().toISOString(), via: 'manual-browser', status: 'unconfirmed', note: 'Details entered or edited by the user; verify against the linked event page.' },
@@ -563,7 +572,7 @@ function LiveEventSearch({ ctx }: { ctx: Ctx }) {
   };
 
   return <section className="card stack" aria-labelledby="live-events-h">
-    <div className="between"><div><h2 id="live-events-h">Find a real event</h2><p className="small muted">Search what’s happening, check the route, then add a stop.</p></div><span className="badge accent">Live</span></div>
+    <div className="between"><div><h2 id="live-events-h">Find a real event</h2><p className="small muted">Search what’s happening, check the route, then add a stop.</p></div><span className={`badge ${ctx.backend.eventSearch ? 'accent' : ''}`}>{ctx.backend.eventSearch ? 'Live search' : 'Manual import'}</span></div>
     <label className="field"><span className="small">What are you looking for?</span><input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void search()} placeholder="AI meetup, hackathon, hiring event…" /></label>
     <button className="btn small" disabled={searching || query.trim().length < 2} onClick={() => void search()}>{searching ? 'Searching live sources…' : 'Search Bay Area events'}</button>
     <a className="btn ghost small" href="https://luma.com/sf" target="_blank" rel="noopener noreferrer">Browse Luma ↗</a>
@@ -571,19 +580,19 @@ function LiveEventSearch({ ctx }: { ctx: Ctx }) {
       <div className="between"><strong>{event.title}</strong><a href={event.url} target="_blank" rel="noopener noreferrer">Open page ↗</a></div>
       <p className="small muted">{[event.start, event.location].filter(Boolean).join(' · ') || 'Date and venue not established; open the event page to check.'}</p>
       {event.summary && <p className="small">{event.summary}</p>}
-      <button className="btn ghost small" onClick={() => { setUrl(event.url); setResearchSources(event.sources); setError(''); }}>Use this event</button>
+      <button className="btn ghost small" onClick={() => { formRevision.current += 1; setUrl(event.url); setTitle(''); setStart(''); setEnd(''); setLocation(''); setSummary(''); setImportedSource(null); setImportedTimezone(null); setDetailsEdited(false); setResearchSources(event.sources); setError(''); }}>Use this event</button>
     </article>)}</div>}
-    <label className="field"><span className="small">Luma event link</span><input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://luma.com/your-event" /></label>
+    <label className="field"><span className="small">Luma event link</span><input type="url" value={url} onChange={(e) => { formRevision.current += 1; setUrl(e.target.value); setImportedSource(null); setImportedTimezone(null); }} placeholder="https://luma.com/your-event" /></label>
     <div className="row"><button className="btn small" disabled={busy || !url} onClick={pull}>{busy ? 'Pulling event details…' : 'Pull details from event page'}</button>{url && <a className="btn ghost small" href={url} target="_blank" rel="noopener noreferrer">Open event page ↗</a>}</div>
     <p className="tiny muted">{ctx.backend.mode === 'live' ? 'Live search uses OpenAI web search; Bright Data reads event pages first, with OpenAI as a fallback. AI-assisted details stay unconfirmed.' : 'Cached app: event details can be entered manually and will be marked unconfirmed.'}</p>
     {!!researchSources.length && <div className="small stack" aria-label="Research sources"><strong>Sources to check</strong>{researchSources.map((s) => <a key={s.url} href={s.url} target="_blank" rel="noopener noreferrer">{s.title} ↗</a>)}</div>}
     <details>
       <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Review or enter event details</summary>
       <div className="stack" style={{ marginTop: 10 }}>
-        <label className="field"><span className="small">Event name</span><input value={title} onChange={(e) => { setTitle(e.target.value); setDetailsEdited(true); }} /></label>
-        <div className="row"><label className="field"><span className="small">Starts</span><input type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); setDetailsEdited(true); }} /></label><label className="field"><span className="small">Ends</span><input type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); setDetailsEdited(true); }} /></label></div>
-        <label className="field"><span className="small">Venue / address</span><input value={location} onChange={(e) => { setLocation(e.target.value); setDetailsEdited(true); }} /></label>
-        <label className="field"><span className="small">What’s happening? (optional)</span><textarea value={summary} onChange={(e) => { setSummary(e.target.value); setDetailsEdited(true); }} /></label>
+        <label className="field"><span className="small">Event name</span><input value={title} onChange={(e) => { formRevision.current += 1; setTitle(e.target.value); setDetailsEdited(true); }} /></label>
+        <div className="row"><label className="field"><span className="small">Starts</span><input type="datetime-local" value={start} onChange={(e) => { formRevision.current += 1; setStart(e.target.value); setDetailsEdited(true); }} /></label><label className="field"><span className="small">Ends</span><input type="datetime-local" value={end} onChange={(e) => { formRevision.current += 1; setEnd(e.target.value); setDetailsEdited(true); }} /></label></div>
+        <label className="field"><span className="small">Venue / address</span><input value={location} onChange={(e) => { formRevision.current += 1; setLocation(e.target.value); setDetailsEdited(true); }} /></label>
+        <label className="field"><span className="small">What’s happening? (optional)</span><textarea value={summary} onChange={(e) => { formRevision.current += 1; setSummary(e.target.value); setDetailsEdited(true); }} /></label>
         <button className="btn primary" disabled={!title || !location || !start || !end} onClick={add}>Review commute &amp; add</button>
       </div>
     </details>
@@ -885,6 +894,7 @@ export function ConflictSheet({ item, conflicts, onChoose }: { item: ScheduleIte
 export function CheckInSheet({ ctx, item, onSubmit, onClose }: { ctx: Ctx; item: ScheduleItem; onSubmit: (c: CheckIn, person?: { id: string; name: string }, note?: string) => void; onClose: () => void }) {
   const [mode, setMode] = useState<CheckIn | undefined>();
   const [who, setWho] = useState('');
+  const [customPerson, setCustomPerson] = useState('');
   const [note, setNote] = useState('');
   const session = ctx.sessions.find((s) => s.id === item.eventId);
   const people = (session?.speakers ?? []).map((s) => ({ id: personId(s.name, s.company), name: s.name, detail: [s.title, s.company].filter(Boolean).join(', ') }));
@@ -911,7 +921,7 @@ export function CheckInSheet({ ctx, item, onSubmit, onClose }: { ctx: Ctx; item:
             <legend className="small" style={{ fontWeight: 800 }}>
               Who did you meet?
             </legend>
-            {people.length === 0 && <p className="small muted">No listed speakers for this event.</p>}
+            {people.length === 0 && <p className="small muted">Add the person you met. This private note stays in this browser profile.</p>}
             {people.map((p) => (
               <label key={p.id} className="row small" style={{ minHeight: 44 }}>
                 <input type="radio" name="who" value={p.id} checked={who === p.id} onChange={() => setWho(p.id)} />
@@ -919,6 +929,7 @@ export function CheckInSheet({ ctx, item, onSubmit, onClose }: { ctx: Ctx; item:
               </label>
             ))}
           </fieldset>
+          {people.length === 0 && <label className="field"><span className="small">Name</span><input value={customPerson} maxLength={120} onChange={(e) => setCustomPerson(e.target.value)} placeholder="Who did you meet?" /></label>}
           <label className="field">
             <span className="small">Private note (optional)</span>
             <textarea value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} placeholder="What did you talk about?" />
@@ -926,10 +937,11 @@ export function CheckInSheet({ ctx, item, onSubmit, onClose }: { ctx: Ctx; item:
           {ctx.ps.profile.fictional && <p className="tiny muted">Demo profile: this meeting is fictional and labeled as such.</p>}
           <button
             className="btn primary"
-            disabled={!who}
+            disabled={people.length ? !who : !customPerson.trim()}
             onClick={() => {
-              const p = people.find((x) => x.id === who)!;
-              onSubmit('met', { id: p.id, name: p.name }, note.trim() || undefined);
+              const selected = people.find((x) => x.id === who);
+              const name = selected?.name ?? customPerson.trim();
+              onSubmit('met', { id: selected?.id ?? personId(name), name }, note.trim() || undefined);
             }}
           >
             Confirm meeting
@@ -945,7 +957,7 @@ export function CheckInSheet({ ctx, item, onSubmit, onClose }: { ctx: Ctx; item:
 
 export function People(ctx: Ctx) {
   const [tab, setTab] = useState<'want' | 'met'>('want');
-  const meetings = ctx.meetings.filter((m) => m.eventId.startsWith(`${ctx.conference}:`));
+  const meetings = ctx.meetings.filter((m) => m.eventId.startsWith(`${ctx.conference}:`) || (m.eventId.startsWith('luma:') && (ctx.ps.liveEvents ?? []).some((event) => event.id === m.eventId)));
   const metIds = new Set(meetings.map((m) => m.personId));
   const want = new Map<string, { name: string; detail: string; why: string; photoUrl?: string }>();
   const addPerson = (s: EventRecord, why: string) =>
@@ -1279,7 +1291,12 @@ export function WhySheet({ title, paths, note, onClose }: { title: string; paths
 }
 
 export function TravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: EventRecord; onClose: () => void }) {
-  if (session.conference === 'external') return <ExternalTravelSheet ctx={ctx} session={session} onClose={onClose} />;
+  return session.conference === 'external'
+    ? <ExternalTravelSheet key={session.id} ctx={ctx} session={session} onClose={onClose} />
+    : <ConferenceTravelSheet key={session.id} ctx={ctx} session={session} onClose={onClose} />;
+}
+
+function ConferenceTravelSheet({ ctx, session, onClose }: { ctx: Ctx; session: SessionRecord; onClose: () => void }) {
   const travel = compareTravel([{ eventId: session.id, start: session.start, end: session.end }], ctx.ps.profile.budgetCents);
   const scheduled = isScheduled(ctx, session.id);
   const [route, setRoute] = useState<string | undefined>(ctx.ps.travelChoice);

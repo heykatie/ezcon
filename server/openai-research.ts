@@ -70,9 +70,17 @@ function citations(data: Record<string, unknown>): OpenAISource[] {
       const annotations = (part as Record<string, unknown>).annotations;
       if (!Array.isArray(annotations)) continue;
       for (const annotation of annotations) {
-        const cite = annotation && typeof annotation === 'object' ? (annotation as Record<string, unknown>).url_citation : null;
-        if (!cite || typeof cite !== 'object') continue;
-        const { url, title } = cite as Record<string, unknown>;
+        if (!annotation || typeof annotation !== 'object') continue;
+        const annotationRecord = annotation as Record<string, unknown>;
+        // Responses API url_citation annotations expose `url` and `title` directly.
+        // Accept the older nested form as a compatibility fallback for recorded fixtures.
+        const cite = annotationRecord.type === 'url_citation' && typeof annotationRecord.url === 'string'
+          ? annotationRecord
+          : annotationRecord.url_citation && typeof annotationRecord.url_citation === 'object'
+            ? annotationRecord.url_citation as Record<string, unknown>
+            : null;
+        if (!cite) continue;
+        const { url, title } = cite;
         if (typeof url !== 'string' || typeof title !== 'string') continue;
         try {
           const parsed = new URL(url);
@@ -88,11 +96,16 @@ function citedLumaUrl(value: string, sources: OpenAISource[]): OpenAISource | un
   try {
     const u = new URL(value);
     if (u.protocol !== 'https:' || !['luma.com', 'www.luma.com'].includes(u.hostname.toLowerCase()) || u.pathname === '/sf') return undefined;
+    const hostKey = (host: string) => host.toLowerCase().replace(/^www\./, '');
     return sources.find((source) => {
       const s = new URL(source.url);
-      return s.hostname.toLowerCase() === u.hostname.toLowerCase() && s.pathname.replace(/\/$/, '') === u.pathname.replace(/\/$/, '');
+      return s.protocol === 'https:' && hostKey(s.hostname) === hostKey(u.hostname) && s.pathname.replace(/\/$/, '') === u.pathname.replace(/\/$/, '');
     });
   } catch { return undefined; }
+}
+
+function hasExplicitOffset(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
 }
 
 /** Small, source-cited set of public Luma events. Candidate data is never marked verified. */
@@ -134,7 +147,7 @@ export async function searchLumaEventsWithOpenAI(query: string, opts: OpenAIOpti
     catch { return { status: 'failed', reason: 'OpenAI event search returned invalid results' }; }
     const events = parsed.events.flatMap((event) => {
       const source = citedLumaUrl(event.url, sources);
-      if (!source || !event.start || !Number.isFinite(Date.parse(event.start)) || Date.parse(event.start) <= Date.now()) return [];
+      if (!source || !event.start || !hasExplicitOffset(event.start) || !Number.isFinite(Date.parse(event.start)) || Date.parse(event.start) <= Date.now()) return [];
       return [{ ...event, url: source.url, sources: [source] }];
     });
     if (!events.length) return { status: 'failed', reason: 'No upcoming Luma event results had matching clickable citations' };
@@ -201,6 +214,7 @@ export async function researchLumaWithOpenAI(url: string, opts: OpenAIOptions = 
     try { new Intl.DateTimeFormat('en', { timeZone: parsed.timezone }); }
     catch { return { status: 'failed', reason: 'OpenAI returned an invalid event timezone' }; }
     const sources = citations(data);
+    if (!citedLumaUrl(input.toString(), sources)) return { status: 'failed', reason: 'OpenAI web search returned no citation matching the requested Luma event page' };
     if (!sources.length) return { status: 'failed', reason: 'OpenAI web search returned no clickable source citations' };
     const retrievedAt = opts.retrievedAt ?? new Date().toISOString();
     const slug = input.pathname.split('/').filter(Boolean).at(-1) ?? 'event';

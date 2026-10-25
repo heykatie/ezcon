@@ -181,10 +181,11 @@ export function App() {
   const now = clock.now ?? new Date().toISOString();
   const sessions = [...SESSIONS[conference], ...(ps?.liveEvents ?? [])];
   const titles = Object.fromEntries([...Object.values(SESSIONS).flat(), ...(ps?.liveEvents ?? [])].map((s) => [s.id, s.title]));
+  const allMeetings = [...meetings, ...(ps?.externalMeetings ?? [])];
 
   const derived = useMemo(() => {
     if (!ps || !backend) return undefined;
-    const rewards = deriveRewards(ps, meetings, titles);
+    const rewards = deriveRewards(ps, allMeetings, titles);
     const recs = rankRecommendations(candidates, SESSIONS[conference], { goals: ps.profile.goals, schedule: ps.schedule, now });
     const verifyAt = backend.mode === 'cached' ? roles.map((r) => r.checkedAt).sort().at(-1) : new Date().toISOString();
     const hiring = ps.profile.goals.includes('career') && CONFERENCES[conference].mode === 'upcoming'
@@ -193,7 +194,7 @@ export function App() {
     // Hiring touchpoints lead; don't repeat them in the general list.
     const hiringIds = new Set(hiring.map((h) => h.session.id));
     return { rewards, recs: recs.filter((r) => !hiringIds.has(r.session.id)), hiring };
-  }, [ps, backend, meetings, candidates, hiringPaths, roles, sessions, now, conference, titles]);
+  }, [ps, backend, allMeetings, candidates, hiringPaths, roles, sessions, now, conference, titles]);
 
   const showUndo = (message: string, previous: ScheduleItem[]) =>
     setToast({ message, action: 'Undo', onAction: () => (update((p) => ({ ...p, schedule: previous })), setToast(undefined)) });
@@ -243,7 +244,7 @@ export function App() {
     recs: derived.recs,
     hiring: derived.hiring,
     candidates,
-    meetings,
+    meetings: allMeetings,
     update,
     toggleGoal: (g: Goal) => update((p) => ({ ...p, profile: { ...p.profile, goals: p.profile.goals.includes(g) ? p.profile.goals.filter((x) => x !== g) : [...p.profile.goals, g] } })),
     add: (s) => {
@@ -273,13 +274,18 @@ export function App() {
   const checkIn = async (item: ScheduleItem, c: CheckIn, person?: { id: string; name: string }, note?: string) => {
     if (c === 'met' && person) {
       const meetingId = meetingIdFor(item.eventId, person.id);
-      try {
-        await backend.recordMeeting(ps.profile.id, { meetingId, personId: person.id, eventId: item.eventId, at: item.end, fictional: ps.profile.fictional, note });
-      } catch (e) {
-        setToast({ message: `Couldn’t save the meeting: ${(e as Error).message}` });
-        return;
+      const input = { meetingId, personId: person.id, personName: person.name, eventId: item.eventId, at: item.end, fictional: ps.profile.fictional, note };
+      if (item.eventId.startsWith('luma:')) {
+        update((p) => ({ ...p, externalMeetings: [...(p.externalMeetings ?? []).filter((m) => m.meetingId !== meetingId), input] }));
+      } else {
+        try {
+          await backend.recordMeeting(ps.profile.id, input);
+        } catch (e) {
+          setToast({ message: `Couldn’t save the meeting: ${(e as Error).message}` });
+          return;
+        }
+        setVersion((v) => v + 1);
       }
-      setVersion((v) => v + 1);
       setToast({ message: `Saved: you met ${person.name}. It’s in your memory now.` });
     }
     update((p) => ({ ...p, checkins: { ...p.checkins, [item.eventId]: c } }));
@@ -287,11 +293,21 @@ export function App() {
   };
 
   const undoMeeting = async (m: Meeting) => {
+    if (m.eventId.startsWith('luma:')) {
+      update((p) => {
+        const followups = { ...p.followups };
+        delete followups[m.meetingId];
+        return { ...p, externalMeetings: (p.externalMeetings ?? []).filter((item) => item.meetingId !== m.meetingId), followups, checkins: { ...p.checkins, [m.eventId]: checkinAfterUndo(allMeetings, m.meetingId, m.eventId) } };
+      });
+      setSheet(null);
+      setToast({ message: `Meeting with ${m.personName} removed; its badges were reversed.` });
+      return;
+    }
     await backend.removeMeeting(ps.profile.id, m.meetingId);
     update((p) => {
       const followups = { ...p.followups };
       delete followups[m.meetingId];
-      return { ...p, followups, checkins: { ...p.checkins, [m.eventId]: checkinAfterUndo(meetings, m.meetingId, m.eventId) } };
+      return { ...p, followups, checkins: { ...p.checkins, [m.eventId]: checkinAfterUndo(allMeetings, m.meetingId, m.eventId) } };
     });
     setVersion((v) => v + 1);
     setSheet(null);
@@ -304,7 +320,7 @@ export function App() {
   };
 
   const resetDemo = async () => {
-    for (const m of meetings) await backend.removeMeeting(ps.profile.id, m.meetingId);
+    for (const m of allMeetings.filter((meeting) => !meeting.eventId.startsWith('luma:'))) await backend.removeMeeting(ps.profile.id, m.meetingId);
     clearAll();
     window.location.reload();
   };

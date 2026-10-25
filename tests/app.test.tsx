@@ -155,6 +155,34 @@ describe('ezcon core flow', () => {
     expect(await screen.findByText('Michael Irwin')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Add to Schedule' })).toBeNull();
     expect(screen.queryByRole('heading', { name: 'Quests' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Find a real event' })).toBeTruthy();
+  });
+
+  it('lets a past-event replay search/import a real event and remember a custom attendee locally', async () => {
+    const user = await startDemo();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Conference' }), 'wad26na');
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Explore/ }));
+    await user.click(screen.getByText('Review or enter event details'));
+    await user.type(screen.getByLabelText('Luma event link'), 'https://luma.com/community-night');
+    await user.type(screen.getByLabelText('Event name'), 'Community Night');
+    fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-09-20T18:00' } });
+    fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-09-20T20:00' } });
+    await user.type(screen.getByLabelText('Venue / address'), 'Oakland, CA');
+    await user.click(screen.getByRole('button', { name: 'Review commute & add' }));
+    await user.click(await screen.findByRole('button', { name: 'Add event to Schedule' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Schedule/ }));
+    const event = await screen.findByText('Community Night');
+    const card = event.closest('li')!;
+    await user.click(within(card).getByRole('button', { name: 'How did it go?' }));
+    const dialog = await screen.findByRole('dialog', { name: 'How did it go?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Met someone' }));
+    await user.type(within(dialog).getByLabelText('Name'), 'Jordan Example');
+    await user.type(within(dialog).getByLabelText('Private note (optional)'), 'Met at the demo booth');
+    await user.click(within(dialog).getByRole('button', { name: 'Confirm meeting' }));
+    await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /People/ }));
+    await user.click(screen.getByRole('tab', { name: /Met/ }));
+    expect(await screen.findByText('Jordan Example')).toBeTruthy();
+    expect(stored().externalMeetings[0]).toMatchObject({ personName: 'Jordan Example', note: 'Met at the demo booth', eventId: expect.stringContaining('luma:') });
   });
 
   it('expands a session card in place for more information', async () => {
