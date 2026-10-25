@@ -83,7 +83,7 @@ export const DEMO_PROFILE: DemoProfile = {
   companionName: 'Bolt',
   color: '#7c6cf2',
   // The demo persona is fictional; its QR shares the ezcon creator's real public profile (approved by the owner).
-  links: { github: 'https://github.com/heykatie', linkedin: '', personal: '' },
+  links: { github: 'https://github.com/heykatie', linkedin: 'https://www.linkedin.com/in/katieleonght/', personal: '' },
 };
 
 export const BLANK_PROFILE: DemoProfile = {
