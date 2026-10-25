@@ -17,7 +17,7 @@ import { slug } from '../domain/ids';
 import { ROLES } from '../data/demo';
 import { Icon, type IconName } from './Icon';
 import { compareTravel, TravelOptions } from './TravelOptions';
-import { fmtDay, fmtRange, fmtStamp, fmtTime, localOf, money, PathView, Sheet, SourceLine } from './ui';
+import { fmtDay, fmtRange, fmtStamp, fmtTime, localOf, money, navigateTabs, PathView, Sheet, SourceLine } from './ui';
 
 export type CheckIn = 'met' | 'went' | 'skipped' | 'later';
 
@@ -425,9 +425,9 @@ export function Explore(ctx: Ctx) {
         <h1>Explore</h1>
         <p className="muted">{upcoming ? 'What could I do?' : 'What can I still do from this event?'}</p>
       </header>
-      <div className="segmented explore-sections" role="tablist" aria-label="Explore sections">
-        <button role="tab" aria-selected={section === 'quests'} onClick={() => setSection('quests')}>Quests</button>
-        <button role="tab" aria-selected={section === 'side-quests'} onClick={() => setSection('side-quests')}>Side quests</button>
+      <div className="segmented explore-sections" role="tablist" onKeyDown={navigateTabs} aria-label="Explore sections">
+        <button role="tab" aria-selected={section === 'quests'} tabIndex={section === 'quests' ? 0 : -1} onClick={() => setSection('quests')}>Quests</button>
+        <button role="tab" aria-selected={section === 'side-quests'} tabIndex={section === 'side-quests' ? 0 : -1} onClick={() => setSection('side-quests')}>Side quests</button>
       </div>
       {section === 'quests' ? (
         <div className="stack" role="tabpanel" aria-label="Quests">
@@ -734,9 +734,9 @@ export function Schedule(ctx: Ctx) {
           <p className="muted">{past ? 'What I did at this event' : 'What have I committed to?'}</p>
         </header>
         {days.length > 1 && (
-          <div className="segmented" role="tablist" aria-label="Day">
+          <div className="segmented" role="tablist" onKeyDown={navigateTabs} aria-label="Day">
             {days.map((d) => (
-              <button key={d} role="tab" aria-selected={d === activeDay} onClick={() => setDay(d)}>
+              <button key={d} role="tab" aria-selected={d === activeDay} tabIndex={d === activeDay ? 0 : -1} onClick={() => setDay(d)}>
                 {fmtDay(d + 'T12:00:00-07:00')}
               </button>
             ))}
@@ -816,7 +816,7 @@ function EventActions({ ctx, item }: { ctx: Ctx; item: ScheduleItem }) {
     <div className="stack" style={{ gap: 6 }}>
       {!ended && (
         <div className="card soft" style={{ padding: 10 }}>
-          <div className="between">
+          <div className="between prep-row">
             <span className="small">
               <b>Get ready:</b> {prep.main}
             </span>
@@ -980,11 +980,11 @@ export function People(ctx: Ctx) {
     <div className="stack">
       <div className="between">
         <h1>People</h1>
-        <div className="segmented" role="tablist" aria-label="People lists">
-          <button role="tab" aria-selected={tab === 'want'} onClick={() => setTab('want')}>
+        <div className="segmented" role="tablist" onKeyDown={navigateTabs} aria-label="People lists">
+          <button role="tab" aria-selected={tab === 'want'} tabIndex={tab === 'want' ? 0 : -1} onClick={() => setTab('want')}>
             Want to meet
           </button>
-          <button role="tab" aria-selected={tab === 'met'} onClick={() => setTab('met')}>
+          <button role="tab" aria-selected={tab === 'met'} tabIndex={tab === 'met' ? 0 : -1} onClick={() => setTab('met')}>
             Met ({meetings.length})
           </button>
         </div>
@@ -1169,9 +1169,9 @@ export function QrSheet({ ps, onClose, onEdit }: { ps: PState; onClose: () => vo
         </div>
       ) : (
         <div className="stack" style={{ justifyItems: 'center', textAlign: 'center' }}>
-          <div className="segmented" role="tablist" aria-label="Link to share">
+          <div className="segmented" role="tablist" onKeyDown={navigateTabs} aria-label="Link to share">
             {available.map((k) => (
-              <button key={k} role="tab" aria-selected={k === kind} onClick={() => setKind(k)}>
+              <button key={k} role="tab" aria-selected={k === kind} tabIndex={k === kind ? 0 : -1} onClick={() => setKind(k)}>
                 {LINK_LABEL[k]}
               </button>
             ))}

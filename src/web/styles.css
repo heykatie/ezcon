@@ -86,7 +86,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .main.split { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; }
   .main.split > aside { position: sticky; top: 72px; }
 }
-.stack { display: grid; gap: 16px; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .muted { color: var(--ink-2); }
@@ -138,8 +138,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sheet { width: min(640px, 100%); max-height: 92dvh; overflow: auto; background: var(--bg); border-radius: 24px 24px 0 0; padding: 22px 20px 28px; display: grid; gap: 18px; }
 @media (min-width: 700px) { .sheet { border-radius: 24px; } }
 
-.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 92px; z-index: 40; display: flex; gap: 12px; align-items: center; background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 999px; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
-.toast .btn { min-height: 36px; background: var(--bg); color: var(--ink); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 92px; z-index: 40; display: flex; gap: 12px; align-items: center; background: var(--ink); color: var(--bg); padding: 8px 8px 8px 16px; border-radius: 20px; box-shadow: var(--shadow); width: max-content; max-width: calc(100% - 32px); }
+.toast > span { min-width: 0; overflow-wrap: anywhere; }
+.toast .btn { flex-shrink: 0; min-height: 36px; background: var(--bg); color: var(--ink); }
 
 .path { display: grid; gap: 0; }
 .path-node { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); }
@@ -148,9 +149,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .path-edge b { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; }
 
 .timeline { display: grid; gap: 0; }
-.tl-item { display: grid; grid-template-columns: 64px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.tl-item { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
 .tl-item:last-child { border-bottom: 0; }
 .tl-time { font-weight: 800; font-size: 0.85rem; color: var(--ink-2); }
+.prep-row { flex-wrap: wrap; }
 .tl-kind-travel .tl-body { color: var(--ink-2); }
 .tl-kind-open .tl-body { color: var(--ink-3); font-style: italic; }
 
@@ -166,8 +168,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .speaker-photo { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--line); background: var(--surface-2); }
 .profile-photo { width: 88px; height: 88px; }
 .qr { width: min(260px, 70vw); aspect-ratio: 1; border-radius: 16px; background: #fff; padding: 10px; }
-.field { display: grid; gap: 4px; }
-.field input, .field textarea, .field select { min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 4px; }
+.field input, .field textarea, .field select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); }
 .field textarea { min-height: 110px; resize: vertical; }
 .error { color: var(--bad); font-size: 0.85rem; }
 .notice { border-radius: 14px; padding: 10px 12px; font-size: 0.85rem; background: var(--info-soft); color: var(--ink); }
