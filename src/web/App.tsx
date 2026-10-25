@@ -98,7 +98,14 @@ export function App() {
     if (!activeId) return setPs(undefined);
     const base = activeId === DEMO_PROFILE.id ? DEMO_PROFILE : BLANK_PROFILE;
     const stored = load<PState>(profileKey(activeId, 'state'));
-    setPs(stored ? { ...fresh(base), ...stored } : fresh(base));
+    setPs(stored ? {
+      ...fresh(base),
+      ...stored,
+      // Keep demo networking links current while preserving the user's other saved demo state.
+      profile: activeId === DEMO_PROFILE.id
+        ? { ...stored.profile, links: { ...stored.profile.links, github: DEMO_PROFILE.links.github, linkedin: DEMO_PROFILE.links.linkedin } }
+        : stored.profile,
+    } : fresh(base));
   }, [activeId]);
 
   const update = useCallback(
