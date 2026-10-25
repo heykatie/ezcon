@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import type { GraphPath } from '../domain/graph-types';
 import { Icon, type IconName } from './Icon';
 import type { SourceRef } from '../domain/types';
@@ -22,11 +22,13 @@ export const localOf = (iso: string) => {
 export function Sheet({ title, onClose, children, labelledBy }: { title: string; onClose: () => void; children: ReactNode; labelledBy?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     opener.current = document.activeElement;
     ref.current?.querySelector<HTMLElement>('button, a, input, textarea, select')?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { e.preventDefault(); close.current(); }
       if (e.key === 'Tab' && ref.current) {
         const f = [...ref.current.querySelectorAll<HTMLElement>('button, a[href], input, textarea, select')].filter((x) => !x.hasAttribute('disabled'));
         if (!f.length) return;
@@ -41,7 +43,7 @@ export function Sheet({ title, onClose, children, labelledBy }: { title: string;
       document.removeEventListener('keydown', onKey);
       (opener.current as HTMLElement | null)?.focus?.();
     };
-  }, [onClose]);
+  }, []);
   const id = labelledBy ?? `sheet-${title.replace(/\W+/g, '-').toLowerCase()}`;
   return (
     <div className="sheet-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -148,4 +150,17 @@ export function Toast({ message, action, onAction, onDone }: { message: string; 
       )}
     </div>
   );
+}
+
+/** Horizontal tabs use one Tab stop; arrows wrap and activate the adjacent panel. */
+export function navigateTabs(e: ReactKeyboardEvent<HTMLDivElement>) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+  const tabs = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')].filter((tab) => !tab.disabled);
+  const current = tabs.indexOf(document.activeElement as HTMLButtonElement);
+  if (current < 0 || !tabs.length) return;
+  const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1
+    : (current + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+  e.preventDefault();
+  tabs[next]!.focus();
+  tabs[next]!.click();
 }
