@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Core flow through the real UI: opportunity → schedule (undo, conflicts) → travel comparison.
-import { act, cleanup, render, screen, within, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../src/web/App';
 
@@ -231,16 +231,23 @@ describe('ezcon core flow', () => {
     expect(within(passport).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
   });
 
-  it('saves a raffle ticket number with a confirmed entry', async () => {
+  it('autosaves a raffle ticket and schedules a reminder before its draw', async () => {
     const user = await startDemo();
     await openExplore(user);
     await user.click(screen.getByRole('tab', { name: 'Side quests' }));
     expect(screen.getByRole('heading', { name: 'Side quests' })).toBeTruthy();
     const raffle = screen.getByRole('heading', { name: 'Tailscale keyboard raffle' }).closest('article')!;
     await user.type(within(raffle).getByRole('textbox', { name: /Ticket number/ }), '0427');
-    await user.click(within(raffle).getByRole('button', { name: 'Save ticket' }));
-    expect(within(raffle).getByText('Ticket #0427')).toBeTruthy();
+    expect(within(raffle).getByText('Ticket saved')).toBeTruthy();
     expect(stored().raffleTickets).toEqual([expect.objectContaining({ number: '0427' })]);
+
+    const drawTime = within(raffle).getByLabelText('Draw time for Tailscale keyboard raffle');
+    fireEvent.change(drawTime, { target: { value: '2026-10-28T17:00' } });
+    expect(stored().raffleTickets[0]).toEqual(expect.objectContaining({
+      drawAt: '2026-10-29T00:00:00.000Z',
+      remindAt: '2026-10-28T23:45:00.000Z',
+    }));
+    expect(within(raffle).getByText(/Reminder set for/)).toBeTruthy();
   });
 
   it('shows sourced historical WAD giveaways and clearly fictional raffle-ticket history', async () => {
