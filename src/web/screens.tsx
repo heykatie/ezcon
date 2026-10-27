@@ -54,6 +54,8 @@ export interface Ctx {
   hiring: HiringConnection[];
   candidates: Candidate[];
   meetings: Meeting[];
+  exploreSection: 'quests' | 'side-quests';
+  setExploreSection: (section: 'quests' | 'side-quests') => void;
   update: (fn: (p: PState) => PState) => void;
   toggleGoal: (g: Goal) => void;
   add: (s: EventRecord) => void;
@@ -62,7 +64,8 @@ export interface Ctx {
   openCheckIn: (item: ScheduleItem) => void;
   openPerson: (id: string) => void;
   openTravel: (s: EventRecord) => void;
-  openLevelUp: () => void;
+  openAchievements: () => void;
+  openRaffles: () => void;
   openProfile: () => void;
   goTab: (t: 'today' | 'discover' | 'schedule' | 'people') => void;
 }
@@ -84,6 +87,10 @@ export function Today(ctx: Ctx) {
   const start = !next ? ctx.hiring.find((h) => !isScheduled(ctx, h.session.id)) : undefined;
   const prep = next ? prepFor(next, ctx) : undefined;
   const prepDone = next ? !!ps.prepDone[next.eventId] : false;
+  const hiringIds = new Set(ctx.hiring.map((h) => h.session.id));
+  const recommendation = ctx.recs.find((r) => matchesGoals(r.session, ps.profile.goals, hiringIds));
+  const hasConnectionBadge = unlockedAccessories(ps.rewards).length > 0;
+  const sideQuest = SIDE_QUESTS.find((q) => q.conference === ctx.conference && !q.historical);
   const applied = (ps.applications ?? []).length > 0;
   const steps: Array<{ label: string; done: boolean; action: string; go: () => void }> = [
     { label: 'Add an opportunity to Schedule', done: upcoming.length > 0, action: 'Explore', go: () => ctx.goTab('discover') },
@@ -99,16 +106,16 @@ export function Today(ctx: Ctx) {
       <button className="btn primary" onClick={() => ctx.goTab('people')}>See people &amp; follow up</button>
       <button className="btn" onClick={() => ctx.goTab('schedule')}>Review past schedule</button>
     </section>
-    <button className="btn" onClick={ctx.openLevelUp}>Achievements · {ps.rewards.awards.length} badges</button>
+    <button className="btn" onClick={ctx.openAchievements}>Achievements · {ps.rewards.awards.length} badges</button>
   </div>;
 
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="between">
+        <div className="between today-greeting">
           <div>
             <h1>Today</h1>
-            <p className="muted">What should I do now?</p>
+            <p className="muted">Good things are ahead.</p>
           </div>
           <button className="icon-btn" style={{ width: 64, height: 64, padding: 0 }} onClick={ctx.openProfile} aria-label="Customize companion and profile">
             <Companion kind={ps.profile.companion} color={ps.profile.color} size={60} label={`${ps.profile.companionName}, your ${COMPANIONS[ps.profile.companion]}`} />
@@ -157,6 +164,36 @@ export function Today(ctx: Ctx) {
         )}
       </section>
 
+      {recommendation && (
+        <section className="card stack today-recommendation" aria-labelledby="today-recommendation-h">
+          <span className="eyebrow">Picked for your goals</span>
+          <h2 id="today-recommendation-h">{recommendation.session.title}</h2>
+          <p className="small muted">
+            {fmtRange(recommendation.session.start, recommendation.session.end)}
+            {recommendation.session.location ? ` · ${recommendation.session.location}` : ''}
+          </p>
+          {recommendation.session.speakers[0] && <p className="small muted">{recommendation.session.speakers[0].name}{recommendation.session.speakers[0].company ? ` · ${recommendation.session.speakers[0].company}` : ''}</p>}
+          <p className="small">{recommendation.reasons[0] ?? 'A good fit for your conference goals.'}</p>
+          <div className="row">
+            <button className="btn primary small" onClick={() => ctx.add(recommendation.session)}>Add to my day</button>
+            <button className="btn small" onClick={() => ctx.openWhy(recommendation.session.title, recommendation.paths, whyNote(ctx))}>Why this fits</button>
+          </div>
+        </section>
+      )}
+
+      {sideQuest && (
+        <button className="card today-side-quest" onClick={ctx.openRaffles} aria-label="View raffle details">
+          <span className="side-quest-icon" aria-hidden="true">🎟️</span>
+          <span>
+            <span className="eyebrow">Optional side quest</span>
+            <b>{sideQuest.title}</b>
+            <span className="small muted">{sideQuest.prize} · {sideQuest.where}</span>
+            <span className="tiny muted">{sideQuest.draw ?? sideQuest.unknowns.find((x) => x.toLowerCase().includes('draw time')) ?? 'Draw time not published'}</span>
+          </span>
+          <span className="badge">View details ›</span>
+        </button>
+      )}
+
       {prep && next && (
         <section className="card soft between" aria-label="Get ready">
           <span className="small">
@@ -194,9 +231,6 @@ export function Today(ctx: Ctx) {
           <h2 id="plan-h">
             Your plan · {doneCount} of {steps.length} done
           </h2>
-            <button className="btn small" onClick={ctx.openLevelUp}>
-            Achievements · {ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'badge' : 'badges'}
-          </button>
         </div>
         <ol className="stack" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 6 }}>
           {steps.map((x, i) => (
@@ -216,6 +250,15 @@ export function Today(ctx: Ctx) {
           ))}
         </ol>
       </section>
+
+      <button className="card today-badge-strip" onClick={ctx.openAchievements} aria-label={hasConnectionBadge ? 'Connection badge earned. View achievements' : 'Next up: Connection badge. Meet someone to unlock a star scarf'}>
+        <Companion kind={ps.profile.companion} color={ps.profile.color} size={42} label="" />
+        <span>
+          <b>{hasConnectionBadge ? 'Connection badge earned!' : 'Next up: Connection badge'}</b>
+          <span className="small muted">{hasConnectionBadge ? 'Your companion has a new accessory.' : 'Meet someone to unlock a star scarf.'}</span>
+        </span>
+        <span className="badge">{ps.rewards.awards.length} {ps.rewards.awards.length === 1 ? 'badge' : 'badges'} ›</span>
+      </button>
     </div>
   );
 }
@@ -412,7 +455,8 @@ function SessionCard({ ctx, session, reasons, paths }: { ctx: Ctx; session: Even
 export function Explore(ctx: Ctx) {
   const conf = CONFERENCES[ctx.conference];
   const upcoming = localOf(ctx.now).slice(0, 10) <= conf.endDate;
-  const [section, setSection] = useState<'quests' | 'side-quests'>('quests');
+  const section = ctx.exploreSection;
+  const setSection = ctx.setExploreSection;
   const hiringIds = new Set(ctx.hiring.map((h) => h.session.id));
   const matchingRecs = ctx.recs.filter((r) => matchesGoals(r.session, ctx.ps.profile.goals, hiringIds));
   const recIds = new Set(matchingRecs.map((r) => r.session.id));
@@ -1097,9 +1141,9 @@ export function PersonSheet({ ctx, id, onClose, onUndoMeeting }: { ctx: Ctx; id:
 }
 
 // ---------------------------------------------------------------------------------------
-// Passport, profile and QR
+// Achievements, profile and QR
 
-export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: { ps: PState; onClose: () => void; onToggleAccessory: () => void; onCustomize: () => void }) {
+export function AchievementsSheet({ ps, onClose, onToggleAccessory, onCustomize }: { ps: PState; onClose: () => void; onToggleAccessory: () => void; onCustomize: () => void }) {
   const unlocked = unlockedAccessories(ps.rewards).includes(ACCESSORY.id);
   const count = (s: Badge) => ps.rewards.awards.filter((a) => a.badge === s);
   return (
@@ -1115,11 +1159,15 @@ export function PassportSheet({ ps, onClose, onToggleAccessory, onCustomize }: {
         </div>
       </div>
       <div className="badge-grid">
-        {(['explorer', 'connection', 'follow-through'] as Badge[]).map((s) => (
+        {([
+          ['explorer', '🧭', 'Explore a booth or event'],
+          ['connection', '🤝', 'Meet someone new'],
+          ['follow-through', '✨', 'Prepare, apply or follow up'],
+        ] as Array<[Badge, string, string]>).map(([s, icon, hint]) => (
           <div key={s} className={`badge-item ${count(s).length ? 'got pop' : ''}`}>
-            {BADGE_TEXT[s]}
-            <br />
-            {count(s).length ? `×${count(s).length}` : 'not yet'}
+            <span aria-hidden="true" className="badge-emoji">{icon}</span>
+            <b>{BADGE_TEXT[s]}</b>
+            <span className="small">{count(s).length ? `Earned ×${count(s).length}` : `Ready to earn · ${hint}`}</span>
           </div>
         ))}
       </div>
@@ -1568,8 +1616,8 @@ function RaffleCard({ q, ctx }: { q: SideQuest; ctx: Ctx }) {
           <p className="tiny muted">Choose the reminder time, or enter the raffle draw time and ezcon will remind you 15 minutes before. Enter times in {CONFERENCES[q.conference].timezone}.</p>
           <label className="field"><span className="small">Remind me at</span><input type="datetime-local" aria-label={`Reminder time for ${q.title}`} value={eventLocalDateTime(saved.remindAt, CONFERENCES[q.conference].timezone)} onChange={(e) => updateReminder('remindAt', e.target.value)} /></label>
           <label className="field"><span className="small">Raffle draw time (optional)</span><input type="datetime-local" aria-label={`Draw time for ${q.title}`} value={eventLocalDateTime(saved.drawAt, CONFERENCES[q.conference].timezone)} onChange={(e) => updateReminder('drawAt', e.target.value)} /></label>
-          {saved.remindAt && <p className="small">Reminder set for {fmtStamp(saved.remindAt)}{saved.remindedAt ? ' · delivered' : ' · ezcon needs to be open at that time'}</p>}
-          {permission === 'granted' ? <p className="tiny">Browser alerts enabled</p> : permission === 'unsupported' ? <p className="tiny muted">This browser does not support system alerts; the reminder will appear in ezcon.</p> : permission === 'denied' ? <p className="tiny muted">Browser alerts are blocked in site settings. The reminder will appear in ezcon when it is open.</p> : <button className="btn small" onClick={async () => { const result = await Notification.requestPermission(); setPermission(result); }}>Enable browser alerts</button>}
+          {saved.remindAt && <p className="small">Reminder set for {fmtStamp(saved.remindAt)}{saved.remindedAt ? ' · delivered' : permission === 'granted' ? ' · system alert while ezcon is open' : ' · open ezcon at that time'}</p>}
+          {permission === 'granted' ? <p className="tiny">System notifications allowed</p> : permission === 'unsupported' ? <p className="tiny muted">This browser does not support system alerts; the reminder will appear in ezcon.</p> : permission === 'denied' ? <p className="tiny muted">System notifications are blocked in site settings. The reminder can still appear in ezcon when it is open.</p> : <button className="btn small" onClick={async () => { const result = await Notification.requestPermission(); setPermission(result); }}>{saved.remindAt ? 'Allow system notifications' : 'Enable browser alerts'}</button>}
         </section>}
       </>}
       <SourceLine source={q.source} />

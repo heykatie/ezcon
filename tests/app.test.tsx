@@ -39,6 +39,33 @@ describe('ezcon core flow', () => {
     expect(screen.getByText('Cached snapshot · Oct 24, 2026')).toBeTruthy();
     expect(screen.getByText('Fictional demo profile')).toBeTruthy();
     expect(screen.getByText(/Simulated clock/)).toBeTruthy();
+    expect(screen.getByText('Good things are ahead.')).toBeTruthy();
+    expect(screen.getByText('Picked for your goals')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Connection badge earned/ })).toBeTruthy();
+  });
+
+  it('does not label a recommendation as goal-matched when only fun is selected', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const goals = screen.getByRole('group', { name: 'Goals (optional, choose any)' });
+    for (const name of ['Find my next opportunity', 'Learn & build', 'Meet people']) {
+      const button = within(goals).getByRole('button', { name });
+      if (button.getAttribute('aria-pressed') === 'true') fireEvent.click(button);
+    }
+    const fun = within(goals).getByRole('button', { name: 'Explore & have fun' });
+    if (fun.getAttribute('aria-pressed') !== 'true') fireEvent.click(fun);
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
+    expect(screen.queryByText('Picked for your goals')).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Build once, run on any agent/ })).toBeNull();
+  });
+
+  it('surfaces a sourced optional raffle from Today and opens its details directly', async () => {
+    const user = await startDemo();
+    expect(screen.getByText(/One of three 8BitDo Retro 87 mechanical keyboards/)).toBeTruthy();
+    expect(screen.getByText(/Draw time not published/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'View raffle details' }));
+    expect(screen.getByRole('tab', { name: 'Side quests' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'Tailscale keyboard raffle' })).toBeTruthy();
   });
 
   it('shows hiring connections only for the career goal, with an employer apply link kept separate from scheduling', async () => {
@@ -257,9 +284,10 @@ describe('ezcon core flow', () => {
     const card = screen.getAllByRole('article', { name: /Hiring connection/ })[0]!;
     await user.click(within(card).getByRole('button', { name: 'Mark as applied' }));
     await user.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
-    await user.click(screen.getByRole('button', { name: /Achievements · \d+ badges?/ }));
-    const passport = await screen.findByRole('dialog', { name: 'Achievements' });
-    expect(within(passport).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /Connection badge earned\. View achievements/ }));
+    const achievements = await screen.findByRole('dialog', { name: 'Achievements' });
+    expect(within(achievements).getByText(/Follow-through — Applied to Software Engineer - Forward Deployed Engineer at Microsoft/)).toBeTruthy();
+    expect(within(achievements).getAllByText(/Earned ×/).length).toBeGreaterThan(0);
   });
 
   it('autosaves a raffle ticket and schedules a reminder before its draw', async () => {
@@ -279,6 +307,40 @@ describe('ezcon core flow', () => {
       remindAt: '2026-10-28T23:45:00.000Z',
     }));
     expect(within(raffle).getByText(/Reminder set for/)).toBeTruthy();
+  });
+
+  it('fires a browser system notification at the selected raffle reminder time', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    await user.click(screen.getByRole('tab', { name: 'Side quests' }));
+    const raffle = screen.getByRole('heading', { name: 'Tailscale keyboard raffle' }).closest('article')!;
+    await user.type(within(raffle).getByRole('textbox', { name: /Ticket number/ }), '0427');
+    let notification: { onclick: ((event: Event) => void) | null; close: ReturnType<typeof vi.fn> } | undefined;
+    const NotificationMock = vi.fn(function (this: any) {
+      this.close = vi.fn();
+      notification = this;
+    });
+    vi.spyOn(window, 'focus').mockImplementation(() => {});
+    Object.defineProperty(NotificationMock, 'permission', { value: 'granted', configurable: true });
+    vi.stubGlobal('Notification', NotificationMock);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-28T15:00:00.000Z'));
+    try {
+      await act(async () => fireEvent.change(within(raffle).getByLabelText('Remind me at'), { target: { value: '2026-10-28T08:01' } }));
+      await act(() => vi.advanceTimersByTimeAsync(60_000));
+      expect(NotificationMock).toHaveBeenCalledWith('ezcon raffle reminder', expect.objectContaining({ body: expect.stringContaining('Tailscale keyboard raffle') }));
+      expect(screen.getByText(/Reminder set for .*delivered/)).toBeTruthy();
+      fireEvent.click(screen.getByRole('tab', { name: 'Quests' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Open raffle' }));
+      expect(screen.getByRole('tab', { name: 'Side quests' }).getAttribute('aria-selected')).toBe('true');
+      fireEvent.click(screen.getByRole('tab', { name: 'Quests' }));
+      await act(async () => { notification?.onclick?.(new Event('click')); });
+      expect(screen.getByRole('tab', { name: 'Side quests' }).getAttribute('aria-selected')).toBe('true');
+      expect(notification?.close).toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    }
   });
 
   it('shows sourced historical WAD giveaways and clearly fictional raffle-ticket history', async () => {

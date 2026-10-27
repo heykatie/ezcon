@@ -17,7 +17,7 @@ import { HeaderSearch } from './HeaderSearch';
 import { toScheduleItem } from '../domain/recommend';
 import { Sheet, Toast } from './ui';
 import {
-  CheckInSheet, ConflictSheet, Explore, PassportSheet, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
+  AchievementsSheet, CheckInSheet, ConflictSheet, Explore, People, PersonSheet, ProfileSheet, QrSheet, Schedule, Today, TravelSheet, WhySheet,
   type CheckIn, type Ctx, type PState,
 } from './screens';
 
@@ -28,7 +28,7 @@ type SheetState =
   | { kind: 'checkin'; item: ScheduleItem }
   | { kind: 'person'; id: string }
   | { kind: 'travel'; session: EventRecord }
-  | { kind: 'qr' | 'profile' | 'menu' | 'passport' }
+  | { kind: 'qr' | 'profile' | 'menu' | 'achievements' }
   | null;
 
 // The demo profile starts with a fictional, already-finished day at WAD 2026 so the past
@@ -79,6 +79,7 @@ export function App() {
   const [clockId, setClockId] = useState<string>(() => load<string>('clock') ?? 'real');
   const [conference, setConference] = useState<ConferenceId>(() => load<ConferenceId>('conference') ?? 'universe26');
   const [tab, setTab] = useState<Tab>('today');
+  const [exploreSection, setExploreSection] = useState<'quests' | 'side-quests'>('quests');
   const [sheet, setSheet] = useState<SheetState>(null);
   const [toast, setToast] = useState<{ message: string; action?: string; onAction?: () => void }>();
   const [ps, setPs] = useState<PState>();
@@ -122,32 +123,57 @@ export function App() {
     [],
   );
 
-  // Local raffle reminders fire while ezcon is open. If a reminder elapsed while it was
-  // closed, show it once when the profile is opened again.
+  // Local raffle reminders use the browser notification API while ezcon is open. If the
+  // app was closed or a background timer was throttled, deliver once when it resumes.
   const raffleReminderKey = JSON.stringify((ps?.raffleTickets ?? []).map((t) => [t.questId, t.remindAt, t.remindedAt]));
   useEffect(() => {
     if (!ps) return;
-    const timers: number[] = [];
+    const cleanups: Array<() => void> = [];
     for (const ticket of ps.raffleTickets ?? []) {
       if (!ticket.remindAt || ticket.remindedAt) continue;
-      const delay = Date.parse(ticket.remindAt) - Date.now();
+      const dueAt = Date.parse(ticket.remindAt);
+      if (!Number.isFinite(dueAt)) continue;
+      let timer: number | undefined;
+      let fired = false;
+      const cancel = () => {
+        fired = true;
+        if (timer !== undefined) window.clearTimeout(timer);
+        document.removeEventListener('visibilitychange', checkWhenVisible);
+      };
       const fire = () => {
+        if (fired) return;
+        fired = true;
+        document.removeEventListener('visibilitychange', checkWhenVisible);
         update((current) => ({
           ...current,
           raffleTickets: (current.raffleTickets ?? []).map((item) => item.questId === ticket.questId && item.remindAt === ticket.remindAt && !item.remindedAt ? { ...item, remindedAt: new Date().toISOString() } : item),
         }));
         const title = SIDE_QUESTS.find((q) => q.id === ticket.questId)?.title ?? 'your raffle';
-        setToast({ message: `Raffle reminder: ${title}`, action: 'Open Explore', onAction: () => setTab('discover') });
+        const openRaffles = () => { setExploreSection('side-quests'); setTab('discover'); };
+        setToast({ message: `Raffle reminder: ${title}`, action: 'Open raffle', onAction: openRaffles });
         try {
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification('ezcon raffle reminder', { body: `Check the draw for ${title}.` });
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            const notification = new Notification('ezcon raffle reminder', { body: `Check the draw for ${title}.` });
+            notification.onclick = () => { openRaffles(); window.focus(); notification.close(); };
+          }
         } catch {
           // In-app reminder remains available when system notifications are unsupported.
         }
       };
-      if (delay <= 0) fire();
-      else timers.push(window.setTimeout(fire, Math.min(delay, 2_147_000_000)));
+      function checkWhenVisible() {
+        if (!document.hidden && Date.now() >= dueAt) fire();
+      }
+      const scheduleNextCheck = () => {
+        if (fired) return;
+        const remaining = dueAt - Date.now();
+        if (remaining <= 0) fire();
+        else timer = window.setTimeout(scheduleNextCheck, Math.min(remaining, 2_147_000_000));
+      };
+      document.addEventListener('visibilitychange', checkWhenVisible);
+      scheduleNextCheck();
+      cleanups.push(cancel);
     }
-    return () => timers.forEach(window.clearTimeout);
+    return () => cleanups.forEach((cancel) => cancel());
   }, [raffleReminderKey, ps?.profile.id, update]);
 
   // Sync the profile into the graph, then load graph-derived data.
@@ -245,6 +271,8 @@ export function App() {
     hiring: derived.hiring,
     candidates,
     meetings: allMeetings,
+    exploreSection,
+    setExploreSection,
     update,
     toggleGoal: (g: Goal) => update((p) => ({ ...p, profile: { ...p.profile, goals: p.profile.goals.includes(g) ? p.profile.goals.filter((x) => x !== g) : [...p.profile.goals, g] } })),
     add: (s) => {
@@ -266,9 +294,10 @@ export function App() {
     openCheckIn: (item) => setSheet({ kind: 'checkin', item }),
     openPerson: (id) => setSheet({ kind: 'person', id }),
     openTravel: (session) => setSheet({ kind: 'travel', session }),
-    openLevelUp: () => setSheet({ kind: 'passport' }),
+    openAchievements: () => setSheet({ kind: 'achievements' }),
+    openRaffles: () => { setExploreSection('side-quests'); setTab('discover'); },
     openProfile: () => setSheet({ kind: 'profile' }),
-    goTab: setTab,
+    goTab: (nextTab) => { if (nextTab === 'discover') setExploreSection('quests'); setTab(nextTab); },
   };
 
   const checkIn = async (item: ScheduleItem, c: CheckIn, person?: { id: string; name: string }, note?: string) => {
@@ -357,6 +386,7 @@ export function App() {
           onSelectConference={(c) => {
             save('conference', c);
             setConference(c);
+            setExploreSection('quests');
             setTab('discover');
           }}
         />
@@ -412,7 +442,7 @@ export function App() {
       )}
       {sheet?.kind === 'checkin' && <CheckInSheet ctx={ctx} item={sheet.item} onClose={() => setSheet(null)} onSubmit={(c, p, n) => checkIn(sheet.item, c, p, n)} />}
       {sheet?.kind === 'person' && <PersonSheet ctx={ctx} id={sheet.id} onClose={() => setSheet(null)} onUndoMeeting={undoMeeting} />}
-      {sheet?.kind === 'passport' && <PassportSheet ps={psView} onClose={() => setSheet(null)} onToggleAccessory={() => update((p) => ({ ...p, accessoryOn: !p.accessoryOn }))} onCustomize={() => setSheet({ kind: 'profile' })} />}
+      {sheet?.kind === 'achievements' && <AchievementsSheet ps={psView} onClose={() => setSheet(null)} onToggleAccessory={() => update((p) => ({ ...p, accessoryOn: !p.accessoryOn }))} onCustomize={() => setSheet({ kind: 'profile' })} />}
       {sheet?.kind === 'travel' && <TravelSheet ctx={ctx} session={sheet.session} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'qr' && <QrSheet ps={psView} onClose={() => setSheet(null)} onEdit={() => setSheet({ kind: 'profile' })} />}
       {sheet?.kind === 'profile' && (

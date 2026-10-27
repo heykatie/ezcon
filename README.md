@@ -39,7 +39,7 @@ The four main tabs are **Today**, **Explore**, **Schedule**, and **People**. Pro
 | People and memory | Records profile-scoped meetings and notes, prevents duplicate meeting writes, supports undo and reconnect, and offers editable follow-up drafts. | Meetings are self-reported; ezcon never sends the drafts. |
 | Applications and badges | Tracks self-reported applications, visits, preparation, and follow-through with deterministic badges. | These are personal progress records, not employer or organizer confirmations. |
 | My QR | Generates a QR code locally for a selected HTTPS profile link. | It is a plain URL QR, not a conference identity or admission credential. |
-| Raffle tickets and reminders | Saves a ticket number and/or resized photo on the device; accepts a reminder time or a draw time with a reminder 15 minutes before. | Manual number entry; no OCR or organizer entry submission. Reminders need the app open; overdue reminders can appear on reopening. System alerts require browser support and permission. |
+| Raffle tickets and reminders | Saves a ticket number and/or resized photo on the device; accepts a reminder time or a draw time with a reminder 15 minutes before. Today surfaces the next sourced raffle and opens its details directly. | Manual number entry; no OCR or organizer entry submission. Browser system notifications need permission and ezcon open; overdue reminders are surfaced when it reopens. No background push or guaranteed alarms. |
 | Historical side quests | Displays sourced WAD North America 2026 raffle and giveaway examples with unknown conditions called out. | Read-only replay. Fictional sample tickets do not create entries, reminders, or rewards. |
 | Research evidence | Local mode can show tool calls, elapsed time, source URL, retrieval time, and parsed session fields. | Public cached mode displays a recorded result, not a new fetch. |
 | Live event search | Local mode can search cited upcoming Luma events in the Bay Area, pull event details, show their source links, open current Google Maps commute routes, and add selected events to Schedule. | Search requires a privately configured OpenAI API key and confirmed free/sponsor credits. OpenAI-assisted details are marked unconfirmed. External event commute links open Maps; ezcon does not claim live fares, drive times, parking prices, or availability. |
@@ -220,7 +220,7 @@ The [official PTC criteria](https://www.wemakedevs.org/hackathons/ptc) require a
 
 README inspection checkpoint: **October 24, 2026**, against repository commit `6e7d114`. The public demo returned HTTP 200 and rendered its cached/fictional labels and four-tab interface. That confirms public frontend availability, not a deployed live backend.
 
-The default suite passes **173 tests**, including raffle autosave, draw-time reminders, continuous note entry, dialog focus restoration, and keyboard tab navigation. The production build, including TypeScript checks, passed, and `git diff --check` found no whitespace errors. Graph integration and live provider checks were not rerun for these UI/documentation updates; the default suite does not establish live provider reliability.
+The default suite passes **175 tests**, including raffle autosave, draw-time reminders, browser notification delivery, Today recommendations, raffle navigation, continuous note entry, dialog focus restoration, and keyboard tab navigation. The production build, including TypeScript checks, passed, and `git diff --check` found no whitespace errors. Graph integration and live provider checks were not rerun for these UI/documentation updates; the default suite does not establish live provider reliability.
 
 Other current limits:
 
@@ -228,7 +228,7 @@ Other current limits:
 - Employer checks cover specific roles and can become stale. Experience filtering is a narrow heuristic, not a full assessment of qualifications, location, work authorization, or hiring likelihood.
 - Live extraction is source-specific. Full Universe catalog ingestion, continuous source freshness, and arbitrary conference import remain incomplete.
 - Follow-ups are editable drafts, not AI messaging automation. No email, application, registration, raffle entry, or prize claim is submitted by ezcon.
-- Reminders are browser timers, not background push or guaranteed alarms. Storage limits, cleared site data, browser throttling, and unsupported alerts can affect persistence or delivery.
+- Reminders use browser timers and system notifications while ezcon is open, not background push or guaranteed alarms. Storage limits, cleared site data, browser throttling, and unsupported or denied alerts can affect persistence or delivery.
 - Phone-width (320px and 390px) and keyboard smoke checks cover the main screens, raffle form, note editing, and dialogs. These checks and component tests do not establish full accessibility conformance; physical-device and screen-reader testing remain outstanding.
 - No hosted authenticated backend, cross-device sync, live indoor positioning, or validated accessible booth routing is implemented.
 
