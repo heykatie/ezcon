@@ -87,7 +87,8 @@ export function Today(ctx: Ctx) {
   const start = !next ? ctx.hiring.find((h) => !isScheduled(ctx, h.session.id)) : undefined;
   const prep = next ? prepFor(next, ctx) : undefined;
   const prepDone = next ? !!ps.prepDone[next.eventId] : false;
-  const recommendation = ctx.recs[0];
+  const hiringIds = new Set(ctx.hiring.map((h) => h.session.id));
+  const recommendation = ctx.recs.find((r) => matchesGoals(r.session, ps.profile.goals, hiringIds));
   const hasConnectionBadge = unlockedAccessories(ps.rewards).length > 0;
   const sideQuest = SIDE_QUESTS.find((q) => q.conference === ctx.conference && !q.historical);
   const applied = (ps.applications ?? []).length > 0;

@@ -149,11 +149,12 @@ export function App() {
           raffleTickets: (current.raffleTickets ?? []).map((item) => item.questId === ticket.questId && item.remindAt === ticket.remindAt && !item.remindedAt ? { ...item, remindedAt: new Date().toISOString() } : item),
         }));
         const title = SIDE_QUESTS.find((q) => q.id === ticket.questId)?.title ?? 'your raffle';
-        setToast({ message: `Raffle reminder: ${title}`, action: 'Open Explore', onAction: () => setTab('discover') });
+        const openRaffles = () => { setExploreSection('side-quests'); setTab('discover'); };
+        setToast({ message: `Raffle reminder: ${title}`, action: 'Open raffle', onAction: openRaffles });
         try {
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             const notification = new Notification('ezcon raffle reminder', { body: `Check the draw for ${title}.` });
-            notification.onclick = () => window.focus();
+            notification.onclick = () => { openRaffles(); window.focus(); notification.close(); };
           }
         } catch {
           // In-app reminder remains available when system notifications are unsupported.

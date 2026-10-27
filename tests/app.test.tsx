@@ -44,6 +44,21 @@ describe('ezcon core flow', () => {
     expect(screen.getByRole('button', { name: /Connection badge earned/ })).toBeTruthy();
   });
 
+  it('does not label a recommendation as goal-matched when only fun is selected', async () => {
+    const user = await startDemo();
+    await openExplore(user);
+    const goals = screen.getByRole('group', { name: 'Goals (optional, choose any)' });
+    for (const name of ['Find my next opportunity', 'Learn & build', 'Meet people']) {
+      const button = within(goals).getByRole('button', { name });
+      if (button.getAttribute('aria-pressed') === 'true') fireEvent.click(button);
+    }
+    const fun = within(goals).getByRole('button', { name: 'Explore & have fun' });
+    if (fun.getAttribute('aria-pressed') !== 'true') fireEvent.click(fun);
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', { name: /Today/ }));
+    expect(screen.queryByText('Picked for your goals')).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Build once, run on any agent/ })).toBeNull();
+  });
+
   it('surfaces a sourced optional raffle from Today and opens its details directly', async () => {
     const user = await startDemo();
     expect(screen.getByText(/One of three 8BitDo Retro 87 mechanical keyboards/)).toBeTruthy();
@@ -300,7 +315,12 @@ describe('ezcon core flow', () => {
     await user.click(screen.getByRole('tab', { name: 'Side quests' }));
     const raffle = screen.getByRole('heading', { name: 'Tailscale keyboard raffle' }).closest('article')!;
     await user.type(within(raffle).getByRole('textbox', { name: /Ticket number/ }), '0427');
-    const NotificationMock = vi.fn();
+    let notification: { onclick: ((event: Event) => void) | null; close: ReturnType<typeof vi.fn> } | undefined;
+    const NotificationMock = vi.fn(function (this: any) {
+      this.close = vi.fn();
+      notification = this;
+    });
+    vi.spyOn(window, 'focus').mockImplementation(() => {});
     Object.defineProperty(NotificationMock, 'permission', { value: 'granted', configurable: true });
     vi.stubGlobal('Notification', NotificationMock);
     vi.useFakeTimers();
@@ -310,8 +330,16 @@ describe('ezcon core flow', () => {
       await act(() => vi.advanceTimersByTimeAsync(60_000));
       expect(NotificationMock).toHaveBeenCalledWith('ezcon raffle reminder', expect.objectContaining({ body: expect.stringContaining('Tailscale keyboard raffle') }));
       expect(screen.getByText(/Reminder set for .*delivered/)).toBeTruthy();
+      fireEvent.click(screen.getByRole('tab', { name: 'Quests' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Open raffle' }));
+      expect(screen.getByRole('tab', { name: 'Side quests' }).getAttribute('aria-selected')).toBe('true');
+      fireEvent.click(screen.getByRole('tab', { name: 'Quests' }));
+      await act(async () => { notification?.onclick?.(new Event('click')); });
+      expect(screen.getByRole('tab', { name: 'Side quests' }).getAttribute('aria-selected')).toBe('true');
+      expect(notification?.close).toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
+      vi.restoreAllMocks();
     }
   });
 
